@@ -186,6 +186,31 @@ body.reduce-motion .die.rolling{animation:none}
 .help ul{margin:0 0 8px;padding-left:20px}
 .help li{margin-bottom:4px;font-size:13.5px;color:#c9c9d4}
 .help code{background:#101018;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+
+/* ---------- telas estreitas (celular / APK) ---------- */
+@media(max-width:640px){
+  body{font-size:14px}
+  .wrap{padding:10px}
+  .hud{grid-template-columns:repeat(3,1fr);gap:7px}
+  .hud .card-b{padding:8px 9px}
+  .hud .stat .lbl,.hud .lbl{font-size:9.5px;letter-spacing:.03em}
+  .hud .big{font-size:15px}
+  .card-h{padding:10px 12px}
+  .card-b{padding:12px}
+  .scene-tags{top:7px;left:7px;gap:4px}
+  .scene-tags .tag{font-size:9.5px;padding:1px 7px}
+  .scene-tags .tag.opc{display:none}       /* empresa e dia da semana: so no desktop */
+  .bubble{font-size:10.5px;padding:5px 8px;max-width:58%;right:7px;top:7px}
+  .act{min-height:0}
+  .act .d{font-size:11px}
+  .tabs{gap:5px}
+  .tab{padding:6px 11px;font-size:12px}
+  .log{max-height:260px}
+  .veil{padding:10px;align-items:flex-start}
+  .veil .card{margin:auto 0}
+  .btn{padding:10px 14px}                  /* alvo de toque maior */
+  .mg-cell{font-size:24px}
+}
 </style>
 </head>
 <body>
@@ -856,6 +881,7 @@ function checarFim(g){
 function fim(g, venceu, titulo, texto){
   g.fim = { venceu, titulo, texto };
   g.screen = venceu ? "vitoria" : "derrota";
+  apagarSave();          // run encerrada e run encerrada: sem CONTINUAR pra desfazer a morte
   return true;
 }
 
@@ -1556,9 +1582,9 @@ function telaJogo(){
             <canvas id="scene" width="960" height="300"></canvas>
             <div class="scene-tags">
               <span class="tag acc">Mes ${g.mes} · Dia ${g.dia}/30</span>
-              <span class="tag">${nomeDia(g.dia)}${ehFimDeSemana(g.dia)?" · folga":""}</span>
+              <span class="tag opc">${nomeDia(g.dia)}${ehFimDeSemana(g.dia)?" · folga":""}</span>
               <span class="tag blue">${esc(cid.nome)}</span>
-              <span class="tag">${st.em} ${esc(g.empresa)}</span>
+              <span class="tag opc">${st.em} ${esc(g.empresa)}</span>
             </div>
             <div class="bubble" id="bubble"></div>
           </div>
@@ -1751,13 +1777,23 @@ const FASES = ["manha","tarde","noite","madrugada"];
 
 function faseDoDia(g){ return FASES[clamp(g.paMax - g.pa, 0, 3)]; }
 
+/* Em tela estreita o canvas passa a 540x300: mesma altura de desenho, menos
+   largura, entao a cena aparece bem mais alta em vez de virar uma tira fina. */
+function ajustarCanvas(cv){
+  const caixa = cv.parentElement ? cv.parentElement.clientWidth : 960;
+  const alvo = caixa > 0 && caixa < 560 ? 540 : 960;
+  if (cv.width !== alvo){ cv.width = alvo; cv.height = 300; }
+}
+
 function iniciarCena(){
   cancelAnimationFrame(Cena.raf);
   const cv = document.getElementById("scene");
   if (!cv) return;
+  ajustarCanvas(cv);
   const loop = () => {
     const c = document.getElementById("scene");
     if (!c || !G || G.screen !== "jogo"){ Cena.raf = 0; return; }
+    ajustarCanvas(c);
     Cena.t += 1;
     desenharCena(c);
     Cena.raf = requestAnimationFrame(loop);
@@ -1790,10 +1826,11 @@ function desenharCena(cv){
 
   /* sol / lua */
   const noturno = fase === "noite" || fase === "madrugada";
+  const astroX = W * 0.84;
   ctx.fillStyle = noturno ? "#e8e8f0" : "#fff3b0";
-  ctx.beginPath(); ctx.arc(W - 150, 62, noturno ? 22 : 30, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(astroX, 62, noturno ? 22 : 30, 0, Math.PI * 2); ctx.fill();
   if (noturno){
-    ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(W - 160, 54, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(astroX - 10, 54, 20, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,.75)";
     for (let i = 0; i < 40; i++){
       const x = (i * 137.5) % W, y = (i * 61.8) % (chao * 0.6);
@@ -1859,7 +1896,7 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
   ctx.fillStyle = escuro;
 
   if (scen === "metro" || scen === "ind" || scen === "porto"){
-    for (let i = 0; i < 16; i++){
+    for (let i = 0; i < Math.ceil(W / 62); i++){
       const x = i * 62, h = 60 + ((i * 53) % 90);
       ctx.fillStyle = i % 2 ? escuro : medio;
       ctx.fillRect(x, chao - h, 52, h);
@@ -1871,7 +1908,7 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
     }
     if (scen === "ind"){                                    /* chamines com fumaca */
       ctx.fillStyle = escuro;
-      for (const cx of [140, 470, 760]){
+      for (const cx of [0.15, 0.49, 0.79].map(f => Math.round(W * f))){
         ctx.fillRect(cx, chao - 170, 26, 170);
         ctx.fillStyle = "rgba(200,200,210,.20)";
         for (let s = 0; s < 5; s++){
@@ -1883,13 +1920,13 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
     }
     if (scen === "porto"){                                   /* guindastes */
       ctx.strokeStyle = "#7a4a2a"; ctx.lineWidth = 6;
-      for (const cx of [220, 600]){
+      for (const cx of [0.23, 0.63].map(f => Math.round(W * f))){
         ctx.beginPath(); ctx.moveTo(cx, chao); ctx.lineTo(cx, chao - 150);
         ctx.lineTo(cx + 110, chao - 150); ctx.moveTo(cx + 70, chao - 150);
         ctx.lineTo(cx + 70, chao - 90); ctx.stroke();
       }
       ctx.fillStyle = "#b8543a";
-      for (let i = 0; i < 7; i++) ctx.fillRect(60 + i * 90, chao - 26, 74, 26);
+      for (let i = 0; i < Math.ceil(W / 90); i++) ctx.fillRect(60 + i * 90, chao - 26, 74, 26);
     }
   } else if (scen === "praia"){
     const mar = ctx.createLinearGradient(0, chao - 120, 0, chao);
@@ -1904,7 +1941,7 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
     ctx.fillStyle = noturno ? "#c9b98a" : "#e8d9a8";
     ctx.fillRect(0, chao - 16, W, 16);
     ctx.fillStyle = escuro;                                  /* coqueiros */
-    for (const cx of [90, 300, 840]){
+    for (const cx of [0.09, 0.31, 0.87].map(f => Math.round(W * f))){
       ctx.fillRect(cx, chao - 96, 8, 96);
       for (let a = -2; a <= 2; a++){
         ctx.beginPath(); ctx.moveTo(cx + 4, chao - 96);
@@ -1913,14 +1950,14 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
       }
     }
   } else if (scen === "serra"){
-    for (let i = 0; i < 5; i++){
+    for (let i = 0; i < Math.ceil(W / 230) + 1; i++){
       const cx = i * 230 - 60, h = 150 + (i % 3) * 45;
       ctx.fillStyle = i % 2 ? escuro : medio;
       ctx.beginPath(); ctx.moveTo(cx, chao); ctx.lineTo(cx + 130, chao - h);
       ctx.lineTo(cx + 270, chao); ctx.closePath(); ctx.fill();
     }
     ctx.fillStyle = noturno ? "#0e1a12" : "#2c4a2e";        /* mata */
-    for (let i = 0; i < 30; i++){
+    for (let i = 0; i < Math.ceil(W / 34); i++){
       const x = i * 34, h = 26 + (i * 13) % 22;
       ctx.beginPath(); ctx.moveTo(x, chao); ctx.lineTo(x + 14, chao - h); ctx.lineTo(x + 28, chao); ctx.fill();
     }
@@ -1930,7 +1967,7 @@ function desenharSkyline(ctx, W, chao, scen, noturno, t){
     for (let x = 0; x <= W; x += 40) ctx.lineTo(x, chao - 60 - Math.sin(x / 130) * 28);
     ctx.lineTo(W, chao); ctx.fill();
     ctx.fillStyle = noturno ? "#1b3320" : "#4d8a4a";        /* pes de cafe */
-    for (let i = 0; i < 24; i++){
+    for (let i = 0; i < Math.ceil(W / 40); i++){
       const x = 20 + i * 40, y = chao - 20 - (i % 3) * 8;
       ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.fill();
       ctx.fillRect(x - 2, y, 4, 20);
@@ -2023,7 +2060,7 @@ function mgOnibus(L, fim){
       <div id="mgMark" style="position:absolute;top:0;bottom:0;width:4px;background:var(--acc)"></div>
     </div>
     <div class="flex" style="justify-content:space-between"><span class="small muted">Tentativa <b id="mgR">1</b>/3</span><span class="small">Acertos: <b id="mgA">0</b></span></div>
-    <button class="btn btn-p btn-block btn-lg" id="mgGo">PARAR! (espaco)</button>
+    <button class="btn btn-p btn-block btn-lg" id="mgGo">PARAR!</button>
     <button class="btn btn-block" id="mgQuit">Desistir</button>`);
 
   const zEl = b.querySelector("#mgZona"), mEl = b.querySelector("#mgMark");

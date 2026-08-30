@@ -1,0 +1,6 @@
+# ferramentas baixadas e artefatos de build
+libs/
+build/
+venv/
+# chave de assinatura: gerada localmente, nunca versionada
+keystore/

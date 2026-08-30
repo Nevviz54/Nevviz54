@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manifesto do Simulador CLT ES.
+
+  android:icon e android:label apontam para ids do resources.arsc gerado por
+  tools/GerarRecursos.java. Aparecem aqui como hexadecimal porque o pyaxml
+  infere o tipo pelo texto; tools/compilar_manifesto.py converte esses valores
+  de INT_HEX para REFERENCE depois de codificar (o PackageManager so aceita
+  referencia nesses dois atributos).
+
+  configChanges = 0x40007fff cobre TODAS as mudancas de configuracao, para que
+  girar a tela nao recrie a Activity (o que reiniciaria o WebView no meio da run).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="es.clt.simulador"
+    android:versionCode="1"
+    android:versionName="1.0"
+    android:installLocation="auto">
+
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
+
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true" />
+
+    <application
+        android:icon="0x7f010000"
+        android:label="0x7f020000"
+        android:hardwareAccelerated="true"
+        android:allowBackup="true"
+        android:supportsRtl="true">
+
+        <activity
+            android:name="es.clt.simulador.MainActivity"
+            android:launchMode="singleTop"
+            android:configChanges="0x40007fff"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

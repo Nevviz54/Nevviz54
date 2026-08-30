@@ -242,6 +242,23 @@ mês com ficha limpa, cinco cursos e a Fênix Capixaba (ser demitido e voltar a 
 
 ## 12. Rodando o jogo
 
+### No computador
+
 Abra `index.html` em qualquer navegador moderno. Não precisa de servidor,
 build, npm nem conexão. O progresso é salvo sozinho no `localStorage`
 (botão **CONTINUAR** no menu).
+
+### No celular (Android)
+
+Instale o `SimuladorCLT-ES.apk` (~55 KB). Requer **Android 7.0 ou superior**.
+O app não pede nenhuma permissão e funciona 100% offline.
+
+Como o APK vem de fora da Play Store, o Android vai pedir para você autorizar
+"instalar apps de fontes desconhecidas" para o aplicativo que estiver abrindo o
+arquivo (Chrome, Arquivos, Drive…). Autorize, volte e instale.
+
+A interface se adapta à tela do celular: HUD compacto de 6 blocos, a cena 2D
+fica mais alta e proporcional, e todas as ações e minigames funcionam no toque.
+Girar a tela não reinicia a partida.
+
+O código da casca nativa e o script que monta o APK estão em `android/`.
