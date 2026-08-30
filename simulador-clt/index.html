@@ -215,8 +215,81 @@ body.reduce-motion .die.rolling{animation:none}
 </head>
 <body>
 <div id="crt"></div>
-<div id="app"></div>
+
+<div id="app">
+  <!-- Conteudo estatico: fica visivel ate o jogo desenhar por cima. Se voce ve
+       esta tela parada, o navegador abriu o arquivo mas o script nao rodou. -->
+  <div class="center">
+    <div style="text-align:center;max-width:540px">
+      <h1 style="font-size:clamp(26px,7vw,48px);font-weight:900;letter-spacing:-.03em">SIMULADOR CLT ES</h1>
+      <p class="muted" style="margin-top:10px">Carregando o jogo...</p>
+      <noscript>
+        <div class="card" style="margin-top:18px;padding:18px;border-color:#7a2626">
+          <b style="color:#ff5d5d">O JavaScript esta desativado neste navegador.</b>
+          <p class="small muted" style="margin:8px 0 0">O jogo inteiro roda em JavaScript.
+          Ative nas configuracoes do navegador e recarregue a pagina.</p>
+        </div>
+      </noscript>
+    </div>
+  </div>
+</div>
+
 <div id="layer"></div>
+
+<script>
+/* ===========================================================================
+   Bloco de diagnostico. Fica separado de proposito: se o script principal
+   tiver erro de sintaxe, ele nem chega a executar - mas este aqui ja rodou e
+   captura o erro. Escrito em ES5 puro para funcionar ate em navegador velho.
+   =========================================================================== */
+(function () {
+  window.__cltCarregou = false;
+
+  function mostrar(titulo, detalhe) {
+    var alvo = document.getElementById("app");
+    if (!alvo) return;
+    var caixa =
+      '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px">' +
+      '<div style="max-width:640px;width:100%;border:1px solid #7a2626;background:#16161c;border-radius:14px;padding:22px">' +
+      '<h2 style="margin:0 0 10px;font-size:19px;color:#ff5d5d">' + titulo + "</h2>" +
+      '<p style="margin:0 0 14px;color:#c5c5d0;font-size:14px">O jogo nao conseguiu iniciar. ' +
+      "Copie o texto abaixo e mande pra quem esta te ajudando:</p>" +
+      '<pre style="white-space:pre-wrap;word-break:break-word;background:#0a0a0c;border:1px solid #2a2a35;' +
+      'border-radius:10px;padding:12px;color:#9a9aa8;font-size:12px;margin:0">' + detalhe + "</pre>" +
+      '<p style="margin:14px 0 0;color:#6a6a78;font-size:12px">Se voce baixou o arquivo, confira que ele ' +
+      "terminou de baixar inteiro (cerca de 127 KB) e que a extensao e <b>.html</b>.</p>" +
+      "</div></div>";
+    if (window.__cltCarregou) {
+      var faixa = document.createElement("div");
+      faixa.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#3a1414;" +
+        "color:#ffb3b3;font:12px system-ui,sans-serif;padding:10px 14px;border-top:1px solid #7a2626";
+      faixa.textContent = titulo + " - " + detalhe;
+      document.body.appendChild(faixa);
+    } else {
+      alvo.innerHTML = caixa;
+    }
+  }
+
+  function escapar(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  window.addEventListener("error", function (e) {
+    var onde = e.lineno ? " (linha " + e.lineno + ", coluna " + e.colno + ")" : "";
+    mostrar("Erro de JavaScript", escapar((e.message || "erro desconhecido") + onde +
+      "\n\n" + navigator.userAgent));
+  });
+
+  /* Rede de seguranca: se em 5s o jogo nao tiver sinalizado que carregou e
+     nenhum erro foi capturado, algo travou de forma silenciosa. */
+  setTimeout(function () {
+    if (!window.__cltCarregou && !document.querySelector("#app pre")) {
+      mostrar("O jogo nao terminou de carregar",
+        escapar("Nenhum erro foi reportado pelo navegador.\n\n" + navigator.userAgent));
+    }
+  }, 5000);
+})();
+</script>
 
 <script>
 "use strict";
@@ -2366,6 +2439,7 @@ if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").m
 /* ================================ 18. BOOT =============================== */
 G = { screen:"menu" };
 render();
+window.__cltCarregou = true;   // avisa o bloco de diagnostico que deu tudo certo
 </script>
 </body>
 </html>
