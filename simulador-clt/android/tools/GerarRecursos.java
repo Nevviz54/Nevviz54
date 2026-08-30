@@ -18,7 +18,7 @@ import java.io.OutputStream;
  */
 public class GerarRecursos {
 
-    private static final String PACOTE = "es.clt.simulador";
+    private static final String PACOTE = "com.dfbg.simuladorcltes";
 
     public static void main(String[] args) throws Exception {
         TableBlock tabela = new TableBlock();

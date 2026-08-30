@@ -24,7 +24,7 @@ OUT="$AQUI/build"
 STAGE="$OUT/stage"
 CENTRAL="https://repo1.maven.org/maven2"
 
-PKG="es.clt.simulador"
+PKG="com.dfbg.simuladorcltes"
 MIN_SDK=24
 APK_FINAL="$OUT/SimuladorCLT-ES.apk"
 

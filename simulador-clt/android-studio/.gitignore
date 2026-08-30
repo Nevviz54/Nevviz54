@@ -1,0 +1,7 @@
+# o index.html e copiado pelo build a partir de simulador-clt/index.html
+app/src/main/assets/index.html
+.gradle/
+build/
+app/build/
+local.properties
+.idea/

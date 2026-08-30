@@ -1,0 +1,34 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.dfbg.simuladorcltes'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.dfbg.simuladorcltes'
+        minSdk 23
+        targetSdk 34          // ver README: 35 forca edge-to-edge no Android 15
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // A MainActivity e a mesma dos dois caminhos de build: um arquivo so,
+    // sem copia divergente.
+    sourceSets {
+        main { java.srcDirs = ['../../android/src'] }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+// O jogo vive em simulador-clt/index.html. Em vez de manter uma copia de 170 KB
+// dentro de assets/, o build copia a versao atual antes de empacotar.
+def jogo = rootProject.file('../index.html')
+tasks.register('copiarJogo', Copy) {
+    from jogo
+    into layout.projectDirectory.dir('src/main/assets')
+}
+tasks.named('preBuild') { dependsOn 'copiarJogo' }

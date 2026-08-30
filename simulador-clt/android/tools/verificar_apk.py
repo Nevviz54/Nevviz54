@@ -73,12 +73,12 @@ def main(caminho):
     # ---- leitura como APK de verdade ------------------------------------
     a = APK(str(apk_path))
     checar(a.is_valid_APK(), "androguard reconhece como APK valido", "androguard rejeitou o APK")
-    checar(a.get_package() == "es.clt.simulador",
+    checar(a.get_package() == "com.dfbg.simuladorcltes",
            f"package = {a.get_package()}", f"package errado: {a.get_package()}")
     checar(a.get_app_name() == "Simulador CLT ES",
            f"nome do app = {a.get_app_name()}", f"nome errado: {a.get_app_name()}")
     principal = a.get_main_activity()
-    checar(principal == "es.clt.simulador.MainActivity",
+    checar(principal == "com.dfbg.simuladorcltes.MainActivity",
            f"activity de lancamento = {principal}", f"activity de lancamento errada: {principal}")
     checar(str(a.get_min_sdk_version()) == "24",
            f"minSdkVersion = {a.get_min_sdk_version()} (Android 7.0+)",
@@ -99,9 +99,9 @@ def main(caminho):
     # ---- bytecode --------------------------------------------------------
     dex = DEX(a.get_dex())
     metodos = {f"{m.get_class_name()}->{m.get_name()}" for m in dex.get_methods()}
-    for esperado in ("Les/clt/simulador/MainActivity;->onCreate",
-                     "Les/clt/simulador/MainActivity;->lerAsset",
-                     "Les/clt/simulador/MainActivity;->onKeyDown"):
+    for esperado in ("Lcom/dfbg/simuladorcltes/MainActivity;->onCreate",
+                     "Lcom/dfbg/simuladorcltes/MainActivity;->lerAsset",
+                     "Lcom/dfbg/simuladorcltes/MainActivity;->onKeyDown"):
         checar(esperado in metodos, f"dex contem {esperado.split('->')[1]}()",
                f"dex nao tem {esperado}")
 

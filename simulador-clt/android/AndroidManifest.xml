@@ -9,10 +9,12 @@
   referencia nesses dois atributos).
 
   configChanges = 0x40007fff cobre TODAS as mudancas de configuracao, para que
-  girar a tela nao recrie a Activity (o que reiniciaria o WebView no meio da run).
+  nada recrie a Activity (o que reiniciaria o WebView no meio da run).
+  screenOrientation = 0x1 e SCREEN_ORIENTATION_PORTRAIT; vai como numero porque
+  o compilador de manifesto usado aqui nao resolve o nome do enum.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="es.clt.simulador"
+    package="com.dfbg.simuladorcltes"
     android:versionCode="1"
     android:versionName="1.0"
     android:installLocation="auto">
@@ -36,8 +38,9 @@
         android:supportsRtl="true">
 
         <activity
-            android:name="es.clt.simulador.MainActivity"
+            android:name="com.dfbg.simuladorcltes.MainActivity"
             android:launchMode="singleTop"
+            android:screenOrientation="0x00000001"
             android:configChanges="0x40007fff"
             android:exported="true">
             <intent-filter>
