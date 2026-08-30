@@ -7,9 +7,9 @@ Jogo 2D de sobrevivência trabalhista capixaba, movido a dados.
 📱 **No Android:** instale [`SimuladorCLT-ES.apk`](SimuladorCLT-ES.apk) (~60 KB, Android 7.0+,
 sem permissões, funciona offline). Detalhes e como rebuildar em [`android/`](android/).
 
-- 🎲 **5 rolagens** definem sua vida: região (d6), cidade (d6), setor (d6), empresa (d6) e origem (2d6).
-- 🗺️ **6 regiões do ES · 36 cidades reais**, cada uma com aluguel, passagem, clima, cenário 2D e vantagem/desvantagem próprios.
-- 🏗️ **16 setores · 96 cargos** baseados em profissões reais da economia capixaba. Você **sempre** começa no degrau mais baixo.
+- 🎲 **5 rolagens de d12**, lançadas uma de cada vez com animação: região, cidade, setor, empresa e origem. **Dado alto = lugar melhor** — e dentro de cada número ainda há sorteio.
+- 🗺️ **12 regiões do ES · as 78 cidades reais do estado**, ordenadas da mais dura à melhor, cada uma com aluguel, passagem, clima, cenário 2D e vantagem/desvantagem próprios.
+- 🏗️ **16 setores · 96 cargos · 192 empresas** baseados na economia capixaba real. Você **sempre** começa no degrau mais baixo, e a firma sorteada vale de −6% a +12% no salário.
 - 📈 **Progressão de carreira**: 5 promoções até o topo, cada uma exigindo Desempenho, Qualificação, Rede, tempo de casa e ficha limpa.
 - 🧾 **Holerite CLT de verdade**: insalubridade, periculosidade, hora extra a 50%, adicional noturno, INSS progressivo, IRRF, vale-transporte, FGTS, rescisão.
 - 🎮 **4 minigames** (ônibus, meta, cliente difícil, conferência de carga) ligados ao seu setor.

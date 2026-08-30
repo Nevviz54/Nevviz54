@@ -220,6 +220,25 @@ body.fonte-g{font-size:16.5px}
 body.reduce-motion .splash *{animation:none !important;opacity:1 !important;
   transform:none !important;letter-spacing:.1em}
 
+/* ---------- rolagem sequencial dos dados ---------- */
+.rol-linha{display:flex;align-items:center;gap:14px;padding:11px 4px;
+  border-bottom:1px solid var(--line);transition:opacity .3s}
+.rol-linha:last-child{border-bottom:0}
+.rol-linha.apagada{opacity:.32}
+.d12{width:54px;height:54px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:21px;font-weight:900;color:#0a0a0c;line-height:1;
+  clip-path:polygon(50% 2%,97% 36%,79% 94%,21% 94%,3% 36%);transition:background .3s}
+.d12.girando{animation:d12-gira .28s linear infinite}
+@keyframes d12-gira{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-9deg) scale(1.07)}
+  50%{transform:rotate(0) scale(.95)}75%{transform:rotate(9deg) scale(1.07)}
+  100%{transform:rotate(0) scale(1)}}
+body.reduce-motion .d12.girando{animation:none}
+.rol-txt{min-width:0;flex:1}
+.rol-rot{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2)}
+.rol-res{font-size:15px;font-weight:700;margin-top:2px;line-height:1.25}
+.rol-sub{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.35}
+@media(max-width:640px){ .d12{width:46px;height:46px;font-size:18px} .rol-res{font-size:14px} }
+
 /* ---------- menu de opcoes ---------- */
 .opc-grupo{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   color:var(--acc);margin:18px 0 2px}
@@ -364,7 +383,7 @@ const el = (t, cls, html) => { const n = document.createElement(t);
 const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v));
 const dN   = (f) => 1 + Math.floor(Math.random() * f);
 const d6   = () => dN(6);
-const d2x6 = () => d6() + d6();
+const d12  = () => dN(12);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const chance = (p) => Math.random() < p;
 const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -390,126 +409,112 @@ function C(nome, tag, dif, aluguel, sal, fare, scen, heat, setores, perk, debuff
   return { nome, tag, dif, aluguel, sal, fare, scen, heat, setores, perk, debuff };
 }
 
+/* Rolagem 1 (d12): regiao. Ordenadas da mais dura para a melhor -> quanto
+   maior o dado, melhor o lugar onde voce cai.
+   Rolagem 2 (d12): cidade dentro da regiao, tambem ordenada da pior pra melhor.
+   As 78 cidades do Espirito Santo estao aqui. */
 const REGIOES = [
-  { id: 1, nome: "Grande Vitoria", desc: "Concreto, transito e transcol lotado.", cidades: [
-    C("Vitoria", "Capital / Elite", 4, 1450, 1.10, 4.40, "metro", 2,
-      ["portuario","bancario","varejo","callcenter","saude","construcao","turismo","transporte"],
-      "Networking de elite: +25% de ganho de Rede.", null),
-    C("Vila Velha", "Praia e Fabrica", 3, 1180, 1.04, 4.40, "praia", 2,
-      ["varejo","construcao","turismo","portuario","confeccao","saude","callcenter"],
-      "Praia libera: descanso na areia recupera mais Sanidade.", null),
-    C("Serra", "Peao de Firma", 2, 1020, 1.02, 4.40, "ind", 2,
-      ["siderurgia","portuario","varejo","callcenter","moveleiro","transporte","construcao"],
-      null, "Rotina industrial da CIVIT: -1 Energia extra por turno."),
-    C("Cariacica", "Modo Sobrevivencia", 1, 880, 0.98, 4.40, "ind", 2,
-      ["portuario","transporte","varejo","construcao","callcenter","pesca"],
-      null, "Logistica hostil: cada turno gasta 1 passagem a mais."),
-    C("Viana", "Beira de Rodovia", 1, 800, 0.96, 4.40, "ind", 2,
-      ["portuario","transporte","moveleiro","varejo","construcao","agro"],
-      "Aluguel barato: sobra troco no fim do mes.", "Longe de tudo: -2 Energia por turno."),
-    C("Fundao", "Vizinho Silencioso", 2, 760, 0.95, 4.40, "campo", 1,
-      ["agro","celulose","varejo","construcao","turismo","transporte"],
-      "Cidade calma: +2 Sanidade ao dormir.", null),
+  { id:1, nome:"Extremo Norte", desc:"O fim do mapa capixaba: pasto, mamao e estrada de chao.", cidades:[
+    C("Mucurici","Fim da Linha",0,460,0.87,3.20,"campo",3,["agro","varejo","transporte"],null,"Cidade minuscula: quase nao abre vaga e a promocao arrasta."),
+    C("Ponto Belo","Poeira e Pasto",0,480,0.88,3.20,"campo",3,["agro","varejo","construcao"],null,"Servico rural pesado: Energia despenca."),
+    C("Montanha","Extremo Norte",0,520,0.89,3.30,"campo",3,["agro","varejo","construcao","transporte"],"Custo de vida minimo do estado.",null),
+    C("Pinheiros","Mamao e Estrada",1,560,0.90,3.40,"campo",3,["agro","varejo","transporte","construcao"],"Fazendas contratam o ano todo.",null),
+    C("Boa Esperanca","Cafe do Norte",1,580,0.91,3.40,"campo",3,["agro","varejo","construcao","saude"],"Comercio aquece na safra.",null),
+    C("Pedro Canario","Beira da BR",1,600,0.92,3.50,"campo",3,["agro","transporte","varejo","construcao","celulose"],"Entroncamento: sempre tem frete.","Servico pesado: Energia sofre."),
   ]},
-  { id: 2, nome: "Sul Capixaba", desc: "Granito, calor e cafe da montanha.", cidades: [
-    C("Cachoeiro de Itapemirim", "Calor e Granito", 2, 950, 0.99, 4.10, "ind", 3,
-      ["rochas","saude","varejo","transporte","construcao","confeccao","agro"],
-      null, "Calor infernal: Fome sobe mais rapido."),
-    C("Castelo", "Pedra e Cafe", 2, 700, 0.94, 3.80, "serra", 2,
-      ["rochas","agro","varejo","construcao","turismo"],
-      "Custo de vida baixo.", null),
-    C("Alegre", "Interior Universitario", 2, 680, 0.93, 3.80, "serra", 2,
-      ["agro","varejo","saude","construcao","turismo"],
-      "Cidade estudantil: cursos custam 20% menos.", null),
-    C("Muniz Freire", "Roca Pura", 1, 600, 0.91, 3.60, "campo", 2,
-      ["agro","varejo","construcao","transporte"],
-      "Aluguel de interior.", "Poucas vagas: promocao exige mais Rede."),
-    C("Mimoso do Sul", "Divisa com Minas", 1, 620, 0.91, 3.60, "campo", 2,
-      ["agro","varejo","transporte","construcao","pesca"],
-      null, "Chuva e enchente: eventos ruins mais frequentes."),
-    C("Guacui", "Cafe do Caparao", 2, 660, 0.93, 3.60, "serra", 1,
-      ["agro","varejo","turismo","construcao","saude"],
-      "Clima ameno: -1 Fome por dia.", null),
+  { id:2, nome:"Noroeste do Granito", desc:"Pedreira, po no ar e sol que nao pede licenca.", cidades:[
+    C("Agua Doce do Norte","Pedra Bruta",0,500,0.88,3.30,"campo",3,["rochas","agro","varejo"],null,"Po de pedra: Energia e Sanidade sofrem."),
+    C("Alto Rio Novo","Ponta do Mapa",0,510,0.88,3.30,"campo",3,["agro","varejo","construcao"],null,"Isolada: quase nao ha curso disponivel."),
+    C("Mantenopolis","Divisa de Minas",1,550,0.90,3.40,"campo",3,["agro","rochas","varejo","transporte"],"Aluguel de interior.",null),
+    C("Vila Pavao","Colonia Pomerana",1,570,0.91,3.40,"campo",2,["agro","varejo","moveleiro","construcao"],"Comunidade unida: Rede sobe mais facil.",null),
+    C("Ecoporanga","Sertao Capixaba",1,590,0.91,3.50,"campo",3,["agro","rochas","varejo","transporte","construcao"],"Pecuaria forte: bico rural frequente.",null),
+    C("Barra de Sao Francisco","Mar de Granito",2,660,0.94,3.60,"campo",3,["rochas","agro","varejo","transporte","construcao"],"Polo de rochas: hora extra abundante.","Trabalho bruto: risco de advertencia por acidente."),
   ]},
-  { id: 3, nome: "Litoral Sul", desc: "Praia, turismo, porto e petroleo.", cidades: [
-    C("Guarapari", "Verao Eterno", 3, 1050, 1.00, 4.20, "praia", 3,
-      ["turismo","varejo","saude","construcao","pesca","transporte"],
-      "Alta temporada: gorjeta e bicos rendem mais.", "Fora de temporada o comercio seca."),
-    C("Anchieta", "Polo Industrial", 3, 900, 1.08, 4.00, "porto", 2,
-      ["petroleo","portuario","siderurgia","construcao","pesca","turismo"],
-      "Polo industrial: salarios locais mais altos.", null),
-    C("Piuma", "Vila de Pescador", 2, 720, 0.94, 3.80, "praia", 2,
-      ["pesca","turismo","varejo","construcao"],
-      "Praia libera: +Sanidade no descanso.", "Cidade pequena: escada de carreira curta."),
-    C("Marataizes", "Praia e Peixe", 1, 700, 0.92, 3.80, "praia", 3,
-      ["pesca","turismo","varejo","construcao","agro"],
-      null, "Sazonalidade dura: eventos de renda instavel."),
-    C("Itapemirim", "Porto e Cana", 1, 660, 0.93, 3.80, "porto", 3,
-      ["portuario","agro","pesca","construcao","transporte"],
-      null, "Calor e poeira: -1 Energia por turno."),
-    C("Presidente Kennedy", "Terra do Royalty", 4, 900, 1.12, 3.80, "campo", 2,
-      ["petroleo","agro","construcao","portuario","varejo"],
-      "Royalties do petroleo: bicos e servicos pagam melhor.", null),
+  { id:3, nome:"Interior do Rio Doce", desc:"Cafe, gado e cidades que cabem numa praca.", cidades:[
+    C("Sao Domingos do Norte","Roca e Silencio",0,500,0.88,3.30,"campo",3,["agro","varejo","construcao"],null,"Poucas empresas: promocao demora mais."),
+    C("Aguia Branca","Cafe e Ladeira",1,540,0.90,3.40,"campo",3,["agro","varejo","construcao","transporte"],"Custo de vida baixo.",null),
+    C("Governador Lindenberg","Cidade Nova",1,560,0.90,3.40,"campo",3,["agro","varejo","moveleiro","construcao"],"Municipio jovem: obra sempre rolando.",null),
+    C("Marilandia","Beira do Doce",1,580,0.91,3.50,"campo",3,["agro","moveleiro","varejo","construcao"],"Movelaria local contrata.",null),
+    C("Pancas","Pontoes Capixabas",2,620,0.92,3.50,"serra",2,["agro","turismo","varejo","construcao"],"Turismo de aventura: bico de fim de semana.",null),
+    C("Baixo Guandu","Porta do Rio Doce",2,680,0.94,3.60,"campo",3,["agro","construcao","varejo","transporte","rochas"],"Entroncamento com Minas: mais vagas.","Cidade pequena: pouca oferta de curso."),
   ]},
-  { id: 4, nome: "Regiao Serrana", desc: "Montanha, cafe, colonia e frio de verdade.", cidades: [
-    C("Domingos Martins", "Montanha Alema", 3, 780, 0.96, 4.00, "serra", 0,
-      ["agro","turismo","varejo","moveleiro","construcao"],
-      "Clima frio: Fome sobe devagar e Sanidade se recupera melhor.", null),
-    C("Santa Teresa", "Colonia Italiana", 3, 760, 0.96, 4.00, "serra", 0,
-      ["agro","turismo","varejo","saude","construcao"],
-      "Vida tranquila: +3 Sanidade ao dormir.", null),
-    C("Venda Nova do Imigrante", "Agroturismo", 3, 800, 0.98, 4.00, "serra", 0,
-      ["agro","turismo","varejo","moveleiro","construcao"],
-      "Agroturismo: bicos de fim de semana rendem bem.", null),
-    C("Afonso Claudio", "Cafe e Ladeira", 2, 640, 0.92, 3.80, "serra", 1,
-      ["agro","varejo","construcao","transporte","moveleiro"],
-      "Aluguel baixo.", null),
-    C("Santa Maria de Jetiba", "Capital do Ovo", 2, 700, 0.95, 3.80, "campo", 1,
-      ["agro","varejo","transporte","construcao","moveleiro"],
-      "Agro forte: emprego estavel, menos risco de demissao.", null),
-    C("Marechal Floriano", "Serra Perto", 2, 720, 0.95, 4.00, "serra", 0,
-      ["agro","turismo","varejo","construcao"],
-      "Perto da Grande Vitoria: passagem mais barata.", null),
+  { id:4, nome:"Caparao", desc:"Cafe de altitude, neblina e o pico mais alto do estado.", cidades:[
+    C("Divino de Sao Lourenco","Pe do Pico",0,480,0.87,3.20,"serra",1,["agro","turismo","varejo"],"Clima frio: Fome sobe devagar.","A menor economia do estado."),
+    C("Dores do Rio Preto","Caparao Puro",0,500,0.88,3.20,"serra",1,["agro","turismo","varejo"],"Frio da serra: Sanidade recupera melhor.","Quase nenhuma industria."),
+    C("Ibitirama","Nascente do Braco",1,520,0.89,3.30,"serra",1,["agro","turismo","varejo","construcao"],"Cachoeira e trilha: descanso eficiente.",null),
+    C("Irupi","Cafe de Altitude",1,550,0.90,3.30,"serra",1,["agro","varejo","construcao","transporte"],"Safra de cafe: bico garantido.",null),
+    C("Muniz Freire","Roca Pura",1,590,0.91,3.50,"campo",2,["agro","varejo","construcao","transporte"],"Aluguel de interior.","Poucas vagas: promocao exige mais Rede."),
+    C("Ibatiba","Beira da Serra",1,580,0.91,3.40,"serra",1,["agro","varejo","construcao","moveleiro"],"Comercio de passagem movimenta a cidade.",null),
+    C("Iuna","Cafe e Neblina",2,620,0.92,3.50,"serra",0,["agro","varejo","saude","construcao","turismo"],"Cidade polo do Caparao.",null),
   ]},
-  { id: 5, nome: "Noroeste e Rio Doce", desc: "Cafe, granito, moveis e o sol que nao perdoa.", cidades: [
-    C("Colatina", "Princesa do Norte", 2, 860, 0.97, 4.00, "campo", 3,
-      ["confeccao","agro","varejo","saude","transporte","construcao","moveleiro"],
-      "Polo de confeccao: roupa nova barata, +Rede.", "Sol assassino: Energia cai mais rapido."),
-    C("Linhares", "Lago e Movelaria", 3, 900, 1.00, 4.00, "campo", 3,
-      ["moveleiro","celulose","agro","varejo","saude","construcao","transporte"],
-      "Polo moveleiro: mais vagas, promocao um pouco mais facil.", null),
-    C("Baixo Guandu", "Divisa do Rio Doce", 1, 620, 0.91, 3.60, "campo", 3,
-      ["agro","construcao","varejo","transporte","rochas"],
-      null, "Cidade pequena: pouca oferta de curso."),
-    C("Nova Venecia", "Granito do Norte", 2, 700, 0.95, 3.80, "campo", 3,
-      ["rochas","agro","varejo","construcao","transporte"],
-      "Polo de rochas: hora extra abundante.", "Po de pedra: Energia sofre."),
-    C("Barra de Sao Francisco", "Mar de Granito", 1, 660, 0.94, 3.60, "campo", 3,
-      ["rochas","agro","varejo","transporte","construcao"],
-      null, "Trabalho bruto: risco de advertencia por acidente."),
-    C("Sao Gabriel da Palha", "Cafe Conilon", 2, 640, 0.92, 3.60, "campo", 3,
-      ["agro","varejo","construcao","transporte","confeccao"],
-      "Safra de cafe: bicos rurais frequentes.", null),
+  { id:5, nome:"Sul Rural", desc:"Cana, casario antigo e a divisa com o Rio.", cidades:[
+    C("Sao Jose do Calcado","Ponta Sul",0,500,0.88,3.30,"campo",2,["agro","varejo","construcao"],null,"Cidade esvaziando: emprego escasso."),
+    C("Apiaca","Divisa Fluminense",1,520,0.89,3.30,"campo",2,["agro","varejo","transporte"],"Aluguel barato.",null),
+    C("Bom Jesus do Norte","Beira do Itabapoana",1,540,0.90,3.40,"campo",2,["agro","varejo","construcao","saude"],"Cidade gemea: comercio dobrado.",null),
+    C("Muqui","Casario e Cana",1,560,0.90,3.40,"campo",3,["agro","varejo","turismo","construcao"],"Patrimonio historico: turismo cresce.",null),
+    C("Mimoso do Sul","Divisa com Minas",1,620,0.91,3.50,"campo",2,["agro","varejo","transporte","construcao","pesca"],null,"Chuva e enchente: eventos ruins mais frequentes."),
+    C("Jeronimo Monteiro","Cana e Universidade",2,600,0.92,3.50,"campo",3,["agro","varejo","saude","construcao"],"Campus na cidade: cursos custam 20% menos.",null),
+    C("Atilio Vivacqua","Vizinha do Polo",2,640,0.93,3.60,"campo",3,["rochas","agro","varejo","construcao","transporte"],"Perto de Cachoeiro: mais vagas.",null),
   ]},
-  { id: 6, nome: "Litoral Norte", desc: "Celulose, petroleo, praia deserta e estrada longa.", cidades: [
-    C("Aracruz", "Cidade da Celulose", 3, 880, 1.05, 4.00, "ind", 2,
-      ["celulose","portuario","construcao","varejo","transporte","pesca"],
-      "Industria de celulose: salario acima da media.", null),
-    C("Sao Mateus", "Norte Grande", 2, 780, 0.97, 3.90, "campo", 3,
-      ["petroleo","agro","celulose","varejo","saude","construcao","transporte"],
-      null, "Calor do norte: hidratacao custa caro."),
-    C("Conceicao da Barra", "Dunas e Itaunas", 1, 640, 0.92, 3.80, "praia", 3,
-      ["pesca","turismo","agro","varejo","construcao"],
-      "Praia deserta: descanso muito eficiente.", "Emprego escasso fora da temporada."),
-    C("Jaguare", "Cafe e Mamao", 2, 620, 0.93, 3.60, "campo", 3,
-      ["agro","celulose","varejo","transporte","construcao"],
-      "Fazendas contratam sempre.", null),
-    C("Pedro Canario", "Beira da BR", 1, 580, 0.90, 3.60, "campo", 3,
-      ["agro","transporte","varejo","construcao","celulose"],
-      "Aluguel mais barato do estado.", "Servico pesado: Energia despenca."),
-    C("Montanha", "Extremo Norte", 1, 560, 0.90, 3.60, "campo", 3,
-      ["agro","varejo","construcao","transporte"],
-      "Custo de vida minimo.", "Poucas empresas: promocao demora mais."),
+  { id:6, nome:"Cafeeira do Norte", desc:"Conilon ate onde a vista alcanca.", cidades:[
+    C("Vila Valerio","Conilon Puro",1,540,0.90,3.40,"campo",3,["agro","varejo","construcao"],"Safra farta: bico rural sempre.",null),
+    C("Rio Bananal","Cafe e Gado",1,570,0.91,3.40,"campo",3,["agro","varejo","construcao","transporte"],"Custo de vida baixo.",null),
+    C("Sooretama","Reserva e Roca",1,600,0.92,3.50,"campo",3,["agro","celulose","varejo","transporte"],"Corredor logistico: frete constante.","Calor sem tregua."),
+    C("Jaguare","Cafe e Mamao",2,640,0.93,3.60,"campo",3,["agro","celulose","varejo","transporte","construcao"],"Fazendas contratam sempre.",null),
+    C("Sao Gabriel da Palha","Capital do Conilon",2,680,0.94,3.60,"campo",3,["agro","varejo","construcao","transporte","confeccao"],"Safra de cafe: bicos rurais frequentes.",null),
+    C("Nova Venecia","Granito do Norte",2,720,0.96,3.80,"campo",3,["rochas","agro","varejo","construcao","transporte","saude"],"Polo de rochas: hora extra abundante.","Po de pedra: Energia sofre."),
+  ]},
+  { id:7, nome:"Serrana Central", desc:"Ladeira, cafe e colonia pomerana.", cidades:[
+    C("Laranja da Terra","Vale Pomerano",0,500,0.88,3.30,"serra",1,["agro","varejo","construcao"],"Clima ameno: Fome sobe devagar.","Economia minuscula."),
+    C("Itarana","Serra Escondida",1,530,0.89,3.40,"serra",1,["agro","varejo","moveleiro","construcao"],"Vida tranquila: +2 Sanidade ao dormir.",null),
+    C("Sao Roque do Canaa","Cafe e Cachoeira",1,560,0.90,3.40,"serra",1,["agro","turismo","varejo","construcao"],"Turismo rural: bico de fim de semana.",null),
+    C("Brejetuba","Cafe de Montanha",1,570,0.90,3.40,"serra",1,["agro","varejo","construcao","transporte"],"Safra forte: renda extra na colheita.",null),
+    C("Conceicao do Castelo","Serra do Sul",1,600,0.91,3.50,"serra",1,["agro","varejo","turismo","construcao","moveleiro"],"Cidade calma: Sanidade recupera melhor.",null),
+    C("Itaguacu","Pedra e Cafe",2,620,0.92,3.50,"serra",1,["agro","rochas","varejo","construcao"],"Marmoraria local contrata.",null),
+    C("Afonso Claudio","Cafe e Ladeira",2,660,0.93,3.60,"serra",1,["agro","varejo","construcao","transporte","moveleiro","saude"],"Cidade polo da serra central.",null),
+  ]},
+  { id:8, nome:"Montanhas Capixabas", desc:"Frio de verdade, colonia europeia e agroturismo.", cidades:[
+    C("Santa Leopoldina","Colonia Antiga",1,620,0.92,3.80,"serra",1,["agro","turismo","varejo","construcao"],"Perto da Grande Vitoria.","Estrada ruim: transporte custa mais."),
+    C("Marechal Floriano","Serra Perto",2,720,0.95,4.00,"serra",0,["agro","turismo","varejo","construcao","moveleiro"],"Perto da capital: passagem mais barata.",null),
+    C("Santa Maria de Jetiba","Capital do Ovo",2,720,0.96,3.90,"campo",1,["agro","varejo","transporte","construcao","moveleiro"],"Agro forte: emprego estavel, menos risco de demissao.",null),
+    C("Santa Teresa","Colonia Italiana",3,780,0.97,4.00,"serra",0,["agro","turismo","varejo","saude","construcao"],"Vida tranquila: +3 Sanidade ao dormir.",null),
+    C("Domingos Martins","Montanha Alema",3,790,0.97,4.00,"serra",0,["agro","turismo","varejo","moveleiro","construcao","saude"],"Clima frio: Fome sobe devagar e Sanidade se recupera melhor.",null),
+    C("Venda Nova do Imigrante","Agroturismo",3,820,0.99,4.00,"serra",0,["agro","turismo","varejo","moveleiro","construcao","saude"],"Agroturismo: bicos de fim de semana rendem bem.",null),
+  ]},
+  { id:9, nome:"Sul do Marmore", desc:"Serraria, tear e a capital nacional do granito.", cidades:[
+    C("Vargem Alta","Pedra e Cafe",1,620,0.92,3.60,"serra",2,["rochas","agro","varejo","construcao"],"Marmoraria contrata direto.","Po de pedra no ar o dia todo."),
+    C("Guacui","Cafe do Caparao",2,680,0.94,3.70,"serra",1,["agro","varejo","turismo","construcao","saude"],"Clima ameno: Fome sobe devagar.",null),
+    C("Alegre","Interior Universitario",2,700,0.94,3.80,"serra",2,["agro","varejo","saude","construcao","turismo"],"Cidade estudantil: cursos custam 20% menos.",null),
+    C("Castelo","Pedra e Cafe",2,720,0.95,3.80,"serra",2,["rochas","agro","varejo","construcao","turismo","moveleiro"],"Custo de vida baixo pro tamanho da cidade.",null),
+    C("Cachoeiro de Itapemirim","Calor e Granito",3,980,1.00,4.10,"ind",3,["rochas","saude","varejo","transporte","construcao","confeccao","agro","bancario"],"Capital do granito: vaga nao falta.","Calor infernal: Fome sobe mais rapido."),
+  ]},
+  { id:10, nome:"Litoral Sul", desc:"Praia, pesca, porto e o petroleo do Kennedy.", cidades:[
+    C("Rio Novo do Sul","Vale Pequeno",1,600,0.91,3.60,"campo",2,["agro","varejo","construcao","transporte"],"Aluguel barato.","Cidade pequena: escada de carreira curta."),
+    C("Iconha","Banana e Vale",1,640,0.92,3.70,"campo",2,["agro","varejo","construcao","pesca"],"Custo de vida baixo.",null),
+    C("Itapemirim","Porto e Cana",1,680,0.94,3.80,"porto",3,["portuario","agro","pesca","construcao","transporte"],null,"Calor e poeira: -1 Energia por turno."),
+    C("Marataizes","Praia e Peixe",1,720,0.93,3.80,"praia",3,["pesca","turismo","varejo","construcao","agro"],null,"Sazonalidade dura: renda instavel."),
+    C("Alfredo Chaves","Serra e Mar",2,700,0.94,3.80,"serra",1,["agro","turismo","varejo","construcao"],"Entre a serra e a praia: descanso eficiente.",null),
+    C("Piuma","Vila de Pescador",2,740,0.95,3.80,"praia",2,["pesca","turismo","varejo","construcao"],"Praia libera: +Sanidade no descanso.","Cidade pequena: escada de carreira curta."),
+    C("Anchieta","Polo Industrial",3,920,1.09,4.00,"porto",2,["petroleo","portuario","siderurgia","construcao","pesca","turismo"],"Polo industrial: salarios locais mais altos.",null),
+    C("Guarapari","Verao Eterno",3,1080,1.01,4.20,"praia",3,["turismo","varejo","saude","construcao","pesca","transporte","bancario"],"Alta temporada: gorjeta e bico rendem mais.","Fora de temporada o comercio seca."),
+    C("Presidente Kennedy","Terra do Royalty",4,920,1.12,3.80,"campo",2,["petroleo","agro","construcao","portuario","varejo"],"Royalties do petroleo: bicos e servicos pagam muito melhor.",null),
+  ]},
+  { id:11, nome:"Doce e Litoral Norte", desc:"Celulose, movelaria, confeccao e praia deserta.", cidades:[
+    C("Ibiracu","Beira da BR",1,640,0.93,3.90,"campo",2,["agro","celulose","varejo","transporte","construcao"],"Corredor da BR-101: frete constante.",null),
+    C("Conceicao da Barra","Dunas e Itaunas",1,660,0.93,3.80,"praia",3,["pesca","turismo","agro","varejo","construcao","celulose"],"Praia deserta: descanso muito eficiente.","Emprego escasso fora da temporada."),
+    C("Joao Neiva","Vizinha do Polo",2,680,0.95,3.90,"campo",2,["celulose","agro","varejo","construcao","transporte"],"Perto de Aracruz: vaga em industria.",null),
+    C("Fundao","Vizinho Silencioso",2,760,0.96,4.10,"campo",1,["agro","celulose","varejo","construcao","turismo","transporte"],"Cidade calma: +2 Sanidade ao dormir.",null),
+    C("Sao Mateus","Norte Grande",2,800,0.98,3.90,"campo",3,["petroleo","agro","celulose","varejo","saude","construcao","transporte","bancario"],"Economia diversificada pro tamanho.","Calor do norte: hidratacao custa caro."),
+    C("Colatina","Princesa do Norte",2,880,0.98,4.00,"campo",3,["confeccao","agro","varejo","saude","transporte","construcao","moveleiro","bancario"],"Polo de confeccao: roupa nova barata, +Rede.","Sol assassino: Energia cai mais rapido."),
+    C("Linhares","Lago e Movelaria",3,920,1.01,4.00,"campo",3,["moveleiro","celulose","agro","varejo","saude","construcao","transporte","bancario"],"Polo moveleiro: mais vagas e promocao um pouco mais facil.",null),
+    C("Aracruz","Cidade da Celulose",3,900,1.06,4.00,"ind",2,["celulose","portuario","construcao","varejo","transporte","pesca","saude"],"Industria de celulose: salario acima da media.",null),
+  ]},
+  { id:12, nome:"Grande Vitoria", desc:"Concreto, transito, porto e o melhor salario do estado.", cidades:[
+    C("Viana","Beira de Rodovia",1,820,0.97,4.40,"ind",2,["portuario","transporte","moveleiro","varejo","construcao","agro"],"Aluguel barato pra regiao metropolitana.","Longe de tudo: -2 Energia por turno."),
+    C("Cariacica","Modo Sobrevivencia",1,900,0.99,4.40,"ind",2,["portuario","transporte","varejo","construcao","callcenter","pesca","siderurgia"],null,"Logistica hostil: cada turno gasta 1 passagem a mais."),
+    C("Serra","Peao de Firma",2,1050,1.03,4.40,"ind",2,["siderurgia","portuario","varejo","callcenter","moveleiro","transporte","construcao","saude","bancario"],"Maior parque industrial do estado: vaga nao falta.","Rotina industrial da CIVIT: -1 Energia extra por turno."),
+    C("Vila Velha","Praia e Fabrica",3,1200,1.05,4.40,"praia",2,["varejo","construcao","turismo","portuario","confeccao","saude","callcenter","bancario"],"Praia libera: descanso na areia recupera mais Sanidade.",null),
+    C("Vitoria","Capital / Elite",4,1480,1.12,4.40,"metro",2,["portuario","bancario","varejo","callcenter","saude","construcao","turismo","transporte","petroleo"],"Networking de elite: +25% de ganho de Rede.",null),
   ]},
 ];
 
@@ -528,7 +533,7 @@ const START_DIF = [
    base = salario base nacional de referencia (multiplicado pelo fator da cidade)
    ========================================================================== */
 const SETORES = {
-  siderurgia: { nome:"Siderurgia e Metalurgia", em:"⚙️", cor:"#c96f2f", mg:"meta",
+  siderurgia: { nome:"Siderurgia e Metalurgia", em:"⚙️", cor:"#c96f2f", mg:"meta", q:8,
     insal:0.20, peric:false, noturno:true, jornada:220,
     cargos:[
       { n:"Ajudante de Producao",       base:1560 },
@@ -538,7 +543,7 @@ const SETORES = {
       { n:"Lider de Turno",             base:4600 },
       { n:"Supervisor de Producao",     base:6200 },
     ]},
-  portuario: { nome:"Logistica e Porto", em:"🚢", cor:"#3d7ea6", mg:"conferencia",
+  portuario: { nome:"Logistica e Porto", em:"🚢", cor:"#3d7ea6", mg:"conferencia", q:7,
     insal:0, peric:true, noturno:true, jornada:220,
     cargos:[
       { n:"Ajudante de Carga e Descarga", base:1550 },
@@ -548,7 +553,7 @@ const SETORES = {
       { n:"Supervisor de Patio",          base:4300 },
       { n:"Coordenador de Operacoes",     base:5900 },
     ]},
-  varejo: { nome:"Comercio e Varejo", em:"🛒", cor:"#c94f7c", mg:"cliente",
+  varejo: { nome:"Comercio e Varejo", em:"🛒", cor:"#c94f7c", mg:"cliente", q:2,
     insal:0, peric:false, noturno:false, jornada:220, comissao:true,
     cargos:[
       { n:"Empacotador",            base:1518 },
@@ -558,7 +563,7 @@ const SETORES = {
       { n:"Subgerente de Loja",     base:3000 },
       { n:"Gerente de Loja",        base:4400 },
     ]},
-  callcenter: { nome:"Teleatendimento", em:"🎧", cor:"#8a63d2", mg:"cliente",
+  callcenter: { nome:"Teleatendimento", em:"🎧", cor:"#8a63d2", mg:"cliente", q:1,
     insal:0, peric:false, noturno:true, jornada:180,
     cargos:[
       { n:"Atendente de Telemarketing", base:1518 },
@@ -568,7 +573,7 @@ const SETORES = {
       { n:"Supervisor de Operacoes",    base:4000 },
       { n:"Coordenador de Celula",      base:5400 },
     ]},
-  construcao: { nome:"Construcao Civil", em:"🧱", cor:"#b8862f", mg:"meta",
+  construcao: { nome:"Construcao Civil", em:"🧱", cor:"#b8862f", mg:"meta", q:6,
     insal:0.20, peric:true, noturno:false, jornada:220,
     cargos:[
       { n:"Servente de Obra",       base:1518 },
@@ -578,7 +583,7 @@ const SETORES = {
       { n:"Mestre de Obras",        base:4700 },
       { n:"Tecnico em Edificacoes", base:6000 },
     ]},
-  petroleo: { nome:"Petroleo e Gas", em:"🛢️", cor:"#4c5b6b", mg:"conferencia",
+  petroleo: { nome:"Petroleo e Gas", em:"🛢️", cor:"#4c5b6b", mg:"conferencia", q:10,
     insal:0, peric:true, noturno:true, jornada:220,
     cargos:[
       { n:"Auxiliar de Manutencao",     base:1900 },
@@ -588,7 +593,7 @@ const SETORES = {
       { n:"Tecnico de Seguranca",       base:6200 },
       { n:"Supervisor de Turno",        base:8200 },
     ]},
-  rochas: { nome:"Marmore e Granito", em:"🪨", cor:"#8b8378", mg:"meta",
+  rochas: { nome:"Marmore e Granito", em:"🪨", cor:"#8b8378", mg:"meta", q:5,
     insal:0.20, peric:false, noturno:true, jornada:220,
     cargos:[
       { n:"Ajudante de Serraria",     base:1520 },
@@ -598,7 +603,7 @@ const SETORES = {
       { n:"Encarregado de Producao",  base:4100 },
       { n:"Gerente de Planta",        base:5800 },
     ]},
-  agro: { nome:"Agronegocio e Cafe", em:"🌱", cor:"#4f8a3d", mg:"meta",
+  agro: { nome:"Agronegocio e Cafe", em:"🌱", cor:"#4f8a3d", mg:"meta", q:3,
     insal:0.20, peric:false, noturno:false, jornada:220,
     cargos:[
       { n:"Trabalhador Rural",         base:1518 },
@@ -608,7 +613,7 @@ const SETORES = {
       { n:"Encarregado de Lavoura",    base:3600 },
       { n:"Tecnico Agricola",          base:4800 },
     ]},
-  celulose: { nome:"Celulose e Florestal", em:"🌲", cor:"#2f7a5a", mg:"conferencia",
+  celulose: { nome:"Celulose e Florestal", em:"🌲", cor:"#2f7a5a", mg:"conferencia", q:9,
     insal:0.20, peric:false, noturno:true, jornada:220,
     cargos:[
       { n:"Auxiliar Florestal",           base:1700 },
@@ -618,7 +623,7 @@ const SETORES = {
       { n:"Lider de Area",                base:5500 },
       { n:"Supervisor de Turno",          base:7000 },
     ]},
-  turismo: { nome:"Turismo e Hotelaria", em:"🏨", cor:"#d98a3a", mg:"cliente",
+  turismo: { nome:"Turismo e Hotelaria", em:"🏨", cor:"#d98a3a", mg:"cliente", q:4,
     insal:0, peric:false, noturno:true, jornada:220, gorjeta:true,
     cargos:[
       { n:"Auxiliar de Cozinha",  base:1518 },
@@ -628,7 +633,7 @@ const SETORES = {
       { n:"Chefe de Recepcao",    base:3100 },
       { n:"Gerente de Hotel",     base:4600 },
     ]},
-  saude: { nome:"Saude", em:"🩺", cor:"#3aa6a6", mg:"cliente",
+  saude: { nome:"Saude", em:"🩺", cor:"#3aa6a6", mg:"cliente", q:8,
     insal:0.20, peric:false, noturno:true, jornada:180,
     cargos:[
       { n:"Maqueiro",                    base:1518 },
@@ -638,7 +643,7 @@ const SETORES = {
       { n:"Supervisor de Escala",        base:4200 },
       { n:"Coordenador de Enfermagem",   base:5600 },
     ]},
-  bancario: { nome:"Bancario e Financeiro", em:"🏦", cor:"#c9a227", mg:"conferencia",
+  bancario: { nome:"Bancario e Financeiro", em:"🏦", cor:"#c9a227", mg:"conferencia", q:11,
     insal:0, peric:false, noturno:false, jornada:180,
     cargos:[
       { n:"Jovem Aprendiz Bancario",  base:1200 },
@@ -648,7 +653,7 @@ const SETORES = {
       { n:"Gerente de Relacionamento",base:5400 },
       { n:"Gerente de Agencia",       base:8000 },
     ]},
-  moveleiro: { nome:"Moveis e Madeira", em:"🪚", cor:"#a06b3a", mg:"meta",
+  moveleiro: { nome:"Moveis e Madeira", em:"🪚", cor:"#a06b3a", mg:"meta", q:7,
     insal:0.20, peric:false, noturno:false, jornada:220,
     cargos:[
       { n:"Auxiliar de Marcenaria",  base:1520 },
@@ -658,7 +663,7 @@ const SETORES = {
       { n:"Encarregado de Producao", base:4100 },
       { n:"Supervisor Industrial",   base:5500 },
     ]},
-  confeccao: { nome:"Confeccao e Textil", em:"🧵", cor:"#c95f9b", mg:"meta",
+  confeccao: { nome:"Confeccao e Textil", em:"🧵", cor:"#c95f9b", mg:"meta", q:4,
     insal:0, peric:false, noturno:false, jornada:220, comissao:true,
     cargos:[
       { n:"Auxiliar de Costura",      base:1518 },
@@ -668,7 +673,7 @@ const SETORES = {
       { n:"Encarregado(a) de Producao", base:3700 },
       { n:"Gerente de Producao",      base:5000 },
     ]},
-  pesca: { nome:"Pesca e Frigorifico", em:"🐟", cor:"#4a86b8", mg:"conferencia",
+  pesca: { nome:"Pesca e Frigorifico", em:"🐟", cor:"#4a86b8", mg:"conferencia", q:3,
     insal:0.20, peric:false, noturno:true, jornada:220,
     cargos:[
       { n:"Auxiliar de Frigorifico",  base:1520 },
@@ -678,7 +683,7 @@ const SETORES = {
       { n:"Encarregado de Beneficiamento", base:3700 },
       { n:"Gerente de Unidade",       base:5000 },
     ]},
-  transporte: { nome:"Transporte e Mobilidade", em:"🚌", cor:"#5b8f4e", mg:"onibus",
+  transporte: { nome:"Transporte e Mobilidade", em:"🚌", cor:"#5b8f4e", mg:"onibus", q:6,
     insal:0, peric:true, noturno:true, jornada:220,
     cargos:[
       { n:"Auxiliar de Patio",          base:1518 },
@@ -691,49 +696,55 @@ const SETORES = {
 };
 
 /* Rolagem 4 (d6): a empresa. Nomes genericos por setor, sabor capixaba. */
+/* Rolagem 4 (d12): a empresa. Cada setor tem 12 empregadores ordenados do
+   mais precario para o melhor - a posicao vira um fator de 0,94 a 1,12 no
+   salario base. Tirar 12 aqui e cair na firma boa do ramo. */
 const EMPRESAS = {
-  siderurgia:["Siderurgica de Tubarao","Metalurgica Capixaba","Usina de Pelotizacao","Aciaria do Litoral","Laminacao Atlantico","Fundicao Sao Torquato"],
-  portuario:["Terminal Portuario Capixaba","Armazem Geral Atlantico","Operadora Portuaria Vitoria","Patio de Conteineres Sul","Complexo Logistico Norte","Transportadora Litoral"],
-  varejo:["Supermercado Extra Bom Preco","Rede Mais Capixaba","Loja de Departamentos Praia","Atacarejo do Bairro","Magazine Centro","Padaria e Mercearia Boa Vista"],
-  callcenter:["Central de Atendimento Capixaba","Contact Center Litoral","Telesservicos ES","Suporte 24h Vitoria","Operadora Movel Regional","Cobranca e Credito Sul"],
-  construcao:["Construtora Praia Grande","Empreiteira Morro do Moreno","Obras e Reformas Capixaba","Incorporadora Litoral","Engenharia Rio Doce","Predial Serra Norte"],
-  petroleo:["Base de Operacoes Onshore","Manutencao Industrial Offshore","Terminal de Gas Natural","Servicos de Sonda Capixaba","Unidade de Tratamento de Gas","Caldeiraria Industrial Sul"],
-  rochas:["Marmoraria Sul Capixaba","Serraria de Granito","Beneficiadora de Rochas","Pedreira Pedra Azul","Polidora de Chapas","Exportadora de Marmore"],
-  agro:["Fazenda Cafe da Montanha","Cooperativa Agricola Capixaba","Beneficiadora de Cafe Conilon","Granja Santa Clara","Armazem de Graos","Sitio Frutas do Vale"],
-  celulose:["Unidade de Celulose Litoral","Viveiro Florestal Capixaba","Colheita Florestal Norte","Fabrica de Papel Rio Doce","Terminal de Madeira","Manejo Florestal Sul"],
-  turismo:["Hotel Beira-Mar","Pousada do Morro","Restaurante da Orla","Resort Praia Grande","Quiosque do Cais","Churrascaria Capixaba"],
-  saude:["Hospital Municipal","Clinica Santa Rita","Pronto Atendimento 24h","UPA Regional","Laboratorio Vida","Home Care Capixaba"],
-  bancario:["Banco Regional Capixaba","Cooperativa de Credito","Financeira Litoral","Agencia Centro","Correspondente Bancario","Banco Digital Sul"],
-  moveleiro:["Fabrica de Moveis Linhares","Marcenaria Rio Doce","Industria de Estofados","Moveis Planejados Norte","Serraria e Madeireira","Montagem Industrial Movel"],
-  confeccao:["Confeccao Princesa do Norte","Faccao de Jeans","Malharia Capixaba","Industria de Uniformes","Atelie de Moda Colatina","Costura Express"],
-  pesca:["Frigorifico de Pescado","Entreposto de Peixe","Camara Fria do Litoral","Beneficiadora de Camarao","Pesqueira Barra do Sul","Peixaria Industrial"],
-  transporte:["Viacao Urbana Capixaba","Transportadora de Cargas","Garagem Municipal","Fretamento Litoral","Logistica Rodoviaria ES","Van Escolar Regional"],
+  siderurgia:["Oficina de Solda Terceirizada","Ferro-Velho Industrial","Serralheria do Bairro","Caldeiraria Terceirizada","Fundicao Sao Torquato","Metalurgica Capixaba","Trefilaria do Litoral","Laminacao Atlantico","Aciaria do Litoral","Usina de Pelotizacao","Siderurgica de Tubarao","Complexo Siderurgico Integrado"],
+  portuario:["Chapa Avulso do Cais","Cooperativa de Estiva","Armazem Geral Atlantico","Transportadora Litoral","Patio de Conteineres Sul","Deposito Alfandegado","Operadora Portuaria Vitoria","Complexo Logistico Norte","Terminal de Graneis","Terminal Portuario Capixaba","Terminal de Conteineres","Operador Logistico Internacional"],
+  varejo:["Mercadinho da Esquina","Padaria e Mercearia Boa Vista","Loja de 1,99","Bazar do Centro","Sacolao do Bairro","Atacarejo do Bairro","Magazine Centro","Loja de Departamentos Praia","Rede Mais Capixaba","Supermercado Extra Bom Preco","Hipermercado Regional","Rede Nacional de Varejo"],
+  callcenter:["Cobranca e Credito Sul","Televendas Terceirizado","Telesservicos ES","Suporte 24h Vitoria","Central de Atendimento Capixaba","Contact Center Litoral","SAC de Concessionaria","Operadora Movel Regional","Central de Relacionamento Bancario","Suporte Tecnico Corporativo","Central de Servicos Compartilhados","Hub de Atendimento Nacional"],
+  construcao:["Empreiteira de Fundo de Quintal","Obras e Reformas Capixaba","Predial Serra Norte","Empreiteira Morro do Moreno","Construtora Praia Grande","Reforma e Acabamento Litoral","Engenharia Rio Doce","Incorporadora Litoral","Construtora de Grande Porte","Consorcio de Obra Publica","Incorporadora Nacional","Consorcio de Infraestrutura Portuaria"],
+  petroleo:["Manutencao Terceirizada de Campo","Caldeiraria Industrial Sul","Servicos de Sonda Capixaba","Andaimes e Isolamento Industrial","Base de Operacoes Onshore","Manutencao Industrial Offshore","Terminal de Gas Natural","Unidade de Tratamento de Gas","Planta de Processamento Onshore","Operadora de Campo Terrestre","Unidade Offshore de Producao","Operadora Internacional de E&P"],
+  rochas:["Serraria de Fundo de Quintal","Marmoraria de Bairro","Serraria de Granito","Polidora de Chapas","Pedreira Pedra Azul","Beneficiadora de Rochas","Marmoraria Sul Capixaba","Industria de Tear Multifio","Exportadora de Marmore","Grupo de Rochas Ornamentais","Complexo de Beneficiamento","Exportadora Internacional de Rochas"],
+  agro:["Diarista de Lavoura","Sitio Frutas do Vale","Granja Santa Clara","Fazenda Cafe da Montanha","Armazem de Graos","Beneficiadora de Cafe Conilon","Cooperativa Agricola Capixaba","Exportadora de Cafe","Agroindustria de Frutas","Grupo Agropecuario Regional","Trading de Cafe","Exportadora Agricola Nacional"],
+  celulose:["Turma de Roco Terceirizada","Viveiro Florestal Capixaba","Manejo Florestal Sul","Colheita Florestal Norte","Terminal de Madeira","Serraria Industrial","Unidade de Celulose Litoral","Fabrica de Papel Rio Doce","Planta de Celulose Branqueada","Complexo Florestal Integrado","Unidade Industrial de Grande Porte","Grupo Global de Celulose"],
+  turismo:["Quiosque do Cais","Barraca de Praia","Lanchonete da Rodoviaria","Pousada do Morro","Churrascaria Capixaba","Restaurante da Orla","Hotel Beira-Mar","Hotel Executivo Centro","Resort Praia Grande","Rede Hoteleira Regional","Resort All Inclusive","Rede Hoteleira Internacional"],
+  saude:["Home Care Capixaba","Posto de Saude da Familia","Clinica Popular","Laboratorio Vida","Clinica Santa Rita","Pronto Atendimento 24h","UPA Regional","Hospital Municipal","Hospital Estadual de Urgencia","Hospital Privado de Medio Porte","Hospital de Referencia","Rede Hospitalar Nacional"],
+  bancario:["Correspondente Bancario","Financeira de Bairro","Loja de Credito Consignado","Financeira Litoral","Cooperativa de Credito","Agencia Centro","Banco Digital Sul","Banco Regional Capixaba","Agencia de Alta Renda","Banco Multiplo Nacional","Corretora de Investimentos","Banco de Investimento"],
+  moveleiro:["Marcenaria de Garagem","Serraria e Madeireira","Marcenaria Rio Doce","Montagem Industrial Movel","Industria de Estofados","Moveis Planejados Norte","Fabrica de Moveis Linhares","Industria Moveleira Integrada","Fabrica com Linha Automatizada","Grupo Moveleiro Regional","Industria Exportadora de Moveis","Grupo Moveleiro Nacional"],
+  confeccao:["Costura em Casa","Faccao de Jeans","Atelie de Moda Colatina","Costura Express","Malharia Capixaba","Industria de Uniformes","Confeccao Princesa do Norte","Industria de Moda Intima","Confeccao com Marca Propria","Grupo Textil Regional","Industria Textil Verticalizada","Grupo de Moda Nacional"],
+  pesca:["Barco de Pesca Artesanal","Peixaria do Mercado","Entreposto de Peixe","Peixaria Industrial","Camara Fria do Litoral","Pesqueira Barra do Sul","Beneficiadora de Camarao","Frigorifico de Pescado","Industria de Pescado Congelado","Frigorifico Exportador","Complexo Pesqueiro Industrial","Exportadora Internacional de Pescado"],
+  transporte:["Van Escolar Regional","Mototaxi e Entrega","Fretamento Litoral","Garagem Municipal","Transportadora de Cargas","Logistica Rodoviaria ES","Viacao Urbana Capixaba","Empresa de Onibus Intermunicipal","Transportadora de Cargas Pesadas","Grupo de Transporte Regional","Operador Logistico Nacional","Grupo Logistico Multimodal"],
 };
+const fatorEmpresa = (idx) => 0.94 + (idx / 11) * 0.18;
 
-/* Rolagem 5 (2d6): de onde voce veio. Modificador de inicio. */
-const ORIGENS = {
-  2:  { n:"Herdou a divida da familia", d:"O nome sujo veio de heranca.",
-        ap:(g)=>{ g.divida=1400; g.dividaParc=140; g.sanidade-=6; } },
-  3:  { n:"Dormindo no sofa do primo", d:"Sem aluguel por enquanto, sem privacidade nunca.",
-        ap:(g)=>{ g.mesesSemAluguel=2; g.sanidade-=4; } },
-  4:  { n:"Veio do interior de mala e cuia", d:"Pensao barata, cama de mola.",
-        ap:(g)=>{ g.aluguel=Math.round(g.aluguel*0.8); g.dinheiro+=60; } },
-  5:  { n:"Ex-estagiario sem reserva", d:"Contrato acabou, a conta continuou.",
-        ap:(g)=>{ g.dinheiro=Math.max(20,g.dinheiro-60); g.qualificacao+=6; } },
-  6:  { n:"Recem-formado no curso tecnico", d:"Diploma quente na mao.",
-        ap:(g)=>{ g.qualificacao+=18; } },
-  7:  { n:"Padrao CLT: so a roupa do corpo", d:"Nem bonus, nem desgraca.", ap:()=>{} },
-  8:  { n:"Tem uma bike velha", d:"Da pra fugir da catraca umas vezes.",
-        ap:(g)=>{ g.bike=true; } },
-  9:  { n:"Celular bom e internet decente", d:"Da pra fingir profissionalismo online.",
-        ap:(g)=>{ g.rede+=14; g.qualificacao+=4; } },
-  10: { n:"Guardou um dinheirinho", d:"Colchao financeiro fininho, mas existe.",
-        ap:(g)=>{ g.dinheiro+=650; } },
-  11: { n:"Moto financiada na garagem", d:"Liberdade em 36 parcelas.",
-        ap:(g)=>{ g.moto=true; g.divida=5400; g.dividaParc=430; } },
-  12: { n:"Tem um tio na firma", d:"O famoso QI: Quem Indica.",
-        ap:(g)=>{ g.rede+=30; g.desempenho+=8; } },
-};
+/* Rolagem 5 (d12): de onde voce veio. Ordenadas da pior bagagem para a melhor. */
+const ORIGENS = [
+  { n:"Herdou a divida da familia", d:"O nome sujo veio de heranca.",
+    ap:(g)=>{ g.divida=1400; g.dividaParc=140; g.sanidade-=6; } },
+  { n:"Saiu de casa brigado", d:"Sem apoio, sem volta, sem plano B.",
+    ap:(g)=>{ g.dinheiro=Math.max(15,g.dinheiro-90); g.sanidade-=9; g.rede-=4; } },
+  { n:"Ex-estagiario sem reserva", d:"Contrato acabou, a conta continuou.",
+    ap:(g)=>{ g.dinheiro=Math.max(20,g.dinheiro-60); g.qualificacao+=6; } },
+  { n:"Dormindo no sofa do primo", d:"Sem aluguel por enquanto, sem privacidade nunca.",
+    ap:(g)=>{ g.mesesSemAluguel=2; g.sanidade-=4; } },
+  { n:"Veio do interior de mala e cuia", d:"Pensao barata, cama de mola.",
+    ap:(g)=>{ g.aluguel=Math.round(g.aluguel*0.8); g.dinheiro+=60; } },
+  { n:"Padrao CLT: so a roupa do corpo", d:"Nem bonus, nem desgraca.", ap:()=>{} },
+  { n:"Tem uma bike velha", d:"Da pra fugir da catraca todo dia.",
+    ap:(g)=>{ g.bike=true; } },
+  { n:"Moto financiada na garagem", d:"Liberdade em 36 parcelas.",
+    ap:(g)=>{ g.moto=true; g.divida=5400; g.dividaParc=430; } },
+  { n:"Celular bom e internet decente", d:"Da pra fingir profissionalismo online.",
+    ap:(g)=>{ g.rede+=14; g.qualificacao+=4; } },
+  { n:"Recem-formado no curso tecnico", d:"Diploma quente na mao.",
+    ap:(g)=>{ g.qualificacao+=18; } },
+  { n:"Guardou um dinheirinho", d:"Colchao financeiro fininho, mas existe.",
+    ap:(g)=>{ g.dinheiro+=650; g.sanidade+=4; } },
+  { n:"Tem um tio na firma", d:"O famoso QI: Quem Indica.",
+    ap:(g)=>{ g.rede+=30; g.desempenho+=8; } },
+];
 
 /* ============================ 3. FOLHA DE PAGAMENTO ========================
    Tabelas didaticas com referencia de 2025. Nao servem de consultoria fiscal,
@@ -912,19 +923,43 @@ function salarioDoCargo(regiao, cidade, setor, nivel){
   return Math.round(SETORES[setor].cargos[nivel].base * cid.sal / 10) * 10;
 }
 
-/* --------------------- criacao de personagem (os dados) ------------------- */
+/* --------------------- criacao de personagem (os dados) -------------------
+   Cinco rolagens de d12. Toda lista esta ordenada da pior para a melhor
+   opcao, entao dado alto = lugar melhor, setor melhor, firma melhor.
+   Dentro de cada numero ainda ha sorteio: a rolagem mira numa posicao da
+   lista e escolhe entre os dois vizinhos, para 12 nunca cair sempre igual.
+   ========================================================================== */
+function escolherPorRolagem(lista, rolagem){
+  const n = lista.length;
+  if (n <= 1) return { item: lista[0], idx: 0 };
+  const alvo = ((rolagem - 1) / 11) * (n - 1);
+  const lo = Math.max(0, Math.round(alvo - 0.5));
+  const hi = Math.min(n - 1, Math.round(alvo + 0.5));
+  const idx = lo >= hi ? lo : rint(lo, hi);
+  return { item: lista[idx], idx };
+}
+
+/* Setores da cidade ordenados do pior para o melhor emprego. */
+const setoresDaCidade = (cid) =>
+  cid.setores.slice().sort((a, b) => SETORES[a].q - SETORES[b].q);
+
 function rolarPersonagem(){
-  const r1 = d6();                                  // regiao
-  const r2 = d6();                                  // cidade
-  const regiao = r1 - 1, cidade = r2 - 1;
-  const cid = REGIOES[regiao].cidades[cidade];
-  // rolagem 3: setor. d6 dentro da lista de setores da cidade (com re-roll ate caber)
-  const r3 = d6();
-  const setor = cid.setores[(r3 - 1) % cid.setores.length];
-  const r4 = d6();                                  // empresa
-  const empresa = EMPRESAS[setor][(r4 - 1) % EMPRESAS[setor].length];
-  const r5 = d2x6();                                // origem
-  return { r1, r2, r3, r4, r5, regiao, cidade, setor, empresa, origem: ORIGENS[r5] };
+  const r1 = d12(), reg = escolherPorRolagem(REGIOES, r1);
+  const r2 = d12(), cid = escolherPorRolagem(reg.item.cidades, r2);
+  const r3 = d12(), lista = setoresDaCidade(cid.item);
+  const set = escolherPorRolagem(lista, r3);
+  const r4 = d12(), emp = escolherPorRolagem(EMPRESAS[set.item], r4);
+  const r5 = d12(), ori = escolherPorRolagem(ORIGENS, r5);
+  return { r1, r2, r3, r4, r5, total: r1 + r2 + r3 + r4 + r5,
+           regiao: reg.idx, cidade: cid.idx, setor: set.item,
+           empresa: emp.item, empresaIdx: emp.idx,
+           origem: ori.item, origemIdx: ori.idx };
+}
+
+/* Salario do cargo ja com o peso da empresa sorteada. */
+function salarioBaseDe(g, nivel){
+  return Math.round(salarioDoCargo(g.regiao, g.cidade, g.setor, nivel)
+                    * (g.empresaFator || 1) / 10) * 10;
 }
 
 function novoJogo(rolagem){
@@ -940,7 +975,10 @@ function novoJogo(rolagem){
     fgts:0, horasExtras:0, horasNoturnas:0, faltas:0, adiantamento:0,
     divida:0, dividaParc:0, mesesSemAluguel:0, bike:false, moto:false,
     regiao:rolagem.regiao, cidade:rolagem.cidade, setor:rolagem.setor,
-    nivel:0, empresa:rolagem.empresa, origemNome:rolagem.origem.n,
+    nivel:0, empresa:rolagem.empresa, empresaIdx:rolagem.empresaIdx,
+    empresaFator:fatorEmpresa(rolagem.empresaIdx), origemNome:rolagem.origem.n,
+    rolagens:{ r1:rolagem.r1, r2:rolagem.r2, r3:rolagem.r3, r4:rolagem.r4, r5:rolagem.r5,
+               total:rolagem.total },
     aluguel:cid.aluguel, valeTransporte:true, planoSaude:false,
     trabalhouHoje:false, pediuAumento:false, usouVale:false, faltouOntem:false,
     diasComFome:0, avaliacoesRuins:0, vendasFeitas:0, reajuste:0,
@@ -949,7 +987,7 @@ function novoJogo(rolagem){
          ganhoTotal:0, gastoTotal:0, minigamesVencidos:0, recolocacoes:0, cursosFeitos:0 },
     conquistas:[],
   };
-  g.salarioBase = salarioDoCargo(g.regiao, g.cidade, g.setor, 0);
+  g.salarioBase = salarioBaseDe(g, 0);
   rolagem.origem.ap(g);                       // aplica o modificador de origem
   g.energia = clamp(g.energia); g.sanidade = clamp(g.sanidade); g.fome = clamp(g.fome);
   g.qualificacao = clamp(g.qualificacao); g.rede = clamp(g.rede);
@@ -1255,9 +1293,13 @@ const ACOES = [
     return { e:{ dinheiro:-12, sanidade:-3 }, txt:"Nenhum numero. Como sempre." }; }},
 ];
 
+/* No interior o curso sai mais caro: quase sempre e em outra cidade, com
+   deslocamento e hospedagem por conta de quem estuda. */
 function custoCurso(g, c){
   const cid = cidadeAtual(g);
-  return /cursos custam/.test(cid.perk||"") ? Math.round(c.custo*0.8) : c.custo;
+  let v = c.custo * (1 + (2 - cid.dif) * 0.16);
+  if (/cursos custam/.test(cid.perk || "")) v *= 0.8;
+  return Math.round(v / 5) * 5;
 }
 function linhaReq(nome, atual, alvo, inverso){
   const ok = inverso ? atual < alvo : atual >= alvo;
@@ -1463,7 +1505,7 @@ function avaliar(g){
   if (falta.length === 0){
     g.nivel++; g.st.promocoes++;
     const antes = g.salarioBase;
-    g.salarioBase = Math.round(salarioDoCargo(g.regiao, g.cidade, g.setor, g.nivel) * (1 + g.reajuste));
+    g.salarioBase = Math.round(salarioBaseDe(g, g.nivel) * (1 + g.reajuste));
     g.diasNoCargo = 0;
     g.desempenho = 45; g.avaliacoesRuins = 0;
     const aluguelAntes = g.aluguel;
@@ -1513,12 +1555,14 @@ function demitir(g){
 
   /* re-rola setor e empresa na mesma cidade (novos dados) */
   const cid = cidadeAtual(g);
-  const r3 = d6(), r4 = d6();
-  g.setor = cid.setores[(r3 - 1) % cid.setores.length];
-  g.empresa = EMPRESAS[g.setor][(r4 - 1) % EMPRESAS[g.setor].length];
+  const r3 = d12(), set = escolherPorRolagem(setoresDaCidade(cid), r3);
+  const r4 = d12(), emp = escolherPorRolagem(EMPRESAS[set.item], r4);
+  g.setor = set.item;
+  g.empresa = emp.item; g.empresaIdx = emp.idx; g.empresaFator = fatorEmpresa(emp.idx);
+  g.recolocacaoRolagens = { r3, r4 };
   g.nivel = 0; g.diasNoCargo = 0; g.desempenho = 40; g.advertencias = 0;
   g.avaliacoesRuins = 0; g.reajuste = 0;
-  g.salarioBase = salarioDoCargo(g.regiao, g.cidade, g.setor, 0);
+  g.salarioBase = salarioBaseDe(g, 0);
   g.rede = clamp(Math.round(g.rede * 0.75));
   g.horasExtras = 0; g.horasNoturnas = 0; g.faltas = 0; g.adiantamento = 0;
   aplicar(g, { sanidade:-18 });
@@ -1530,6 +1574,7 @@ function demitir(g){
     html:`<p>Duas avaliacoes ruins seguidas. O RH agradeceu seus servicos com um aperto de mao frio.</p>
       <div class="pay"><div class="h">Rescisao</div>
         <div class="l"><span>FGTS + multa de 40% + aviso previo</span><b class="c-ok">${money0(rescisao)}</b></div>
+        <div class="l"><span>Dados da recolocacao</span><b>setor ${r3} · empresa ${r4} (d12)</b></div>
         <div class="l"><span>Nova vaga (novos dados)</span><b>${esc(cargoAtual(g).n)}</b></div>
         <div class="l"><span>Nova empresa</span><b>${esc(g.empresa)}</b></div>
         <div class="l"><span>Setor</span><b>${esc(setorAtual(g).nome)}</b></div>
@@ -1600,11 +1645,13 @@ const DIFICULDADES = {
 };
 const difJogo = (g) => DIFICULDADES[(g && g.dificuldade) || CFG.dificuldade] || DIFICULDADES.clt;
 
-/* Requisitos de promocao ja ajustados pela dificuldade da partida. */
+/* Requisitos de promocao ajustados pela dificuldade da partida e pelo porte da
+   cidade: no interior a fila anda devagar porque nao ha vaga acima; na capital
+   abre cargo o tempo todo. E o que da peso mecanico ao "dado alto e melhor". */
 function reqPromo(g, nivel){
   const base = REQ_PROMO[nivel];
   if (!base) return null;
-  const m = difJogo(g).req;
+  const m = difJogo(g).req * (1.12 - cidadeAtual(g).dif * 0.045);
   return { des: Math.round(base.des * m), qual: Math.round(base.qual * m),
            rede: Math.round(base.rede * m), dias: Math.round(base.dias * m),
            advMax: Math.round(base.advMax / m) };
@@ -1894,7 +1941,7 @@ function telaMenu(){
     </div>
 
     <div class="card"><div class="card-b stack">
-      <p class="small muted" style="margin:0">Os dados decidem onde voce nasce e o que voce faz. O cargo <b>sempre</b> comeca no degrau mais baixo. O resto e com voce: bater ponto, aguentar o turno, estudar, fazer rede e arrancar a promocao antes que a Sanidade acabe.</p>
+      <p class="small muted" style="margin:0">Cinco <b>dados de doze faces</b> decidem onde voce nasce e o que voce faz — e quanto maior o numero, melhor o lugar. O cargo <b>sempre</b> comeca no degrau mais baixo. O resto e com voce: bater ponto, aguentar o turno, estudar, fazer rede e arrancar a promocao antes que a Sanidade acabe.</p>
       <div class="flex">
         <button class="btn btn-p btn-lg" data-go="rolar">🎲 NOVA JORNADA</button>
         ${temSave ? `<button class="btn btn-lg" data-go="continuar">💾 CONTINUAR</button>` : ""}
@@ -1903,7 +1950,7 @@ function telaMenu(){
       </div>
     </div></div>
 
-    <div class="card"><div class="card-h"><h3>6 regioes · 36 cidades · 16 setores · 96 cargos</h3></div>
+    <div class="card"><div class="card-h"><h3>12 regioes · 78 cidades reais · 16 setores · 192 empresas</h3></div>
       <div class="card-b">
         <div class="cities">
           ${REGIOES.map(r => `<div class="city">
@@ -1928,52 +1975,152 @@ function telaMenu(){
   </div></div>`;
 }
 
-/* ----------------------------- tela: rolagem ----------------------------- */
+/* ----------------------------- tela: rolagem -----------------------------
+   Os cinco d12 sao lancados um de cada vez: o dado gira, para, revela o
+   resultado e so entao o proximo comeca. Da pra pular a animacao.
+   ========================================================================== */
 let rolagemAtual = null;
-function telaRolagem(anim){
+let rolUI = { etapa:0, girando:false, timers:[], giro:0 };
+
+const ETAPAS_ROL = [
+  { rot:"REGIAO",  ico:"🗺️",
+    txt:(r)=>REGIOES[r.regiao].nome,
+    sub:(r)=>REGIOES[r.regiao].desc },
+  { rot:"CIDADE",  ico:"🏙️",
+    txt:(r)=>REGIOES[r.regiao].cidades[r.cidade].nome,
+    sub:(r)=>REGIOES[r.regiao].cidades[r.cidade].tag + " · aluguel " +
+             money0(REGIOES[r.regiao].cidades[r.cidade].aluguel) },
+  { rot:"SETOR",   ico:"🏭",
+    txt:(r)=>SETORES[r.setor].em + " " + SETORES[r.setor].nome,
+    sub:(r)=>"Voce entra como " + SETORES[r.setor].cargos[0].n },
+  { rot:"EMPRESA", ico:"🏢",
+    txt:(r)=>r.empresa,
+    sub:(r)=>{ const f = Math.round((fatorEmpresa(r.empresaIdx) - 1) * 100);
+               return (f >= 0 ? "+" : "") + f + "% no salario base"; } },
+  { rot:"ORIGEM",  ico:"🎒",
+    txt:(r)=>r.origem.n,
+    sub:(r)=>r.origem.d },
+];
+
+const corDado = (v) => v <= 3 ? "var(--bad)" : v <= 6 ? "var(--warn)"
+                     : v <= 9 ? "var(--blue)" : "var(--ok)";
+
+function limparRolagem(){ rolUI.timers.forEach(t => { clearTimeout(t); clearInterval(t); });
+                          rolUI.timers = []; }
+
+function iniciarRolagem(){
+  limparRolagem();
+  rolagemAtual = rolarPersonagem();
+  rolUI = { etapa:0, girando:true, timers:[], giro:dN(12) };
+  telaRolagem();
+  girarDado();
+}
+
+/* Gira o dado da etapa atual, para, revela e chama a proxima. */
+function girarDado(){
+  const flick = setInterval(() => {
+    rolUI.giro = dN(12);
+    const el = document.getElementById("dadoAtivo");
+    if (el) el.textContent = rolUI.giro;
+  }, 55);
+  rolUI.timers.push(flick);
+
+  rolUI.timers.push(setTimeout(() => {
+    clearInterval(flick);
+    rolUI.girando = false;
+    SOM.efeito("dado");
+    telaRolagem();
+    rolUI.timers.push(setTimeout(() => {
+      rolUI.etapa++;
+      if (rolUI.etapa < ETAPAS_ROL.length){
+        rolUI.girando = true; telaRolagem(); girarDado();
+      } else {
+        SOM.efeito("acordar"); telaRolagem();
+      }
+    }, 460));
+  }, 800));
+}
+
+function pularRolagem(){
+  limparRolagem();
+  rolUI.etapa = ETAPAS_ROL.length; rolUI.girando = false;
+  telaRolagem();
+}
+
+function classificarSorte(total){
+  if (total <= 15) return { n:"Azar de doer", c:"var(--bad)" };
+  if (total <= 25) return { n:"Vida dura", c:"var(--warn)" };
+  if (total <= 35) return { n:"Na media capixaba", c:"var(--dim)" };
+  if (total <= 45) return { n:"Sorte boa", c:"var(--blue)" };
+  return { n:"Sorte grande", c:"var(--ok)" };
+}
+
+function telaRolagem(){
   const r = rolagemAtual;
+  if (!r) return;
+  const pronto = rolUI.etapa >= ETAPAS_ROL.length;
+  const valores = [r.r1, r.r2, r.r3, r.r4, r.r5];
+
+  const linhas = ETAPAS_ROL.map((et, i) => {
+    const revelado = i < rolUI.etapa || pronto;
+    const ativo = i === rolUI.etapa && !pronto;
+    const v = revelado ? valores[i] : (ativo && rolUI.girando ? rolUI.giro : "?");
+    const cor = revelado ? corDado(valores[i]) : (ativo ? "var(--acc)" : "#26262f");
+    const escuro = revelado || ativo;
+    return `<div class="rol-linha ${escuro ? "" : "apagada"}">
+      <div class="d12 ${ativo && rolUI.girando ? "girando" : ""}" style="background:${cor}"
+           ${ativo ? 'id="dadoAtivo"' : ""}>${v}</div>
+      <div class="rol-txt">
+        <div class="rol-rot">${et.ico} ${et.rot}</div>
+        ${revelado
+          ? `<div class="rol-res">${esc(et.txt(r))}</div>
+             <div class="rol-sub">${esc(et.sub(r))}</div>`
+          : `<div class="rol-res" style="color:var(--dim2)">${ativo ? "rolando..." : "aguardando"}</div>`}
+      </div>
+    </div>`;
+  }).join("");
+
   const cid = REGIOES[r.regiao].cidades[r.cidade];
-  const st  = SETORES[r.setor];
-  const sal = salarioDoCargo(r.regiao, r.cidade, r.setor, 0);
-  const rolar = anim ? " rolling" : "";
+  const st = SETORES[r.setor];
+  const sal = Math.round(salarioDoCargo(r.regiao, r.cidade, r.setor, 0) * fatorEmpresa(r.empresaIdx) / 10) * 10;
+  const sorte = classificarSorte(r.total);
+
   app().innerHTML = `
-  <div class="center"><div class="stack" style="width:100%;max-width:660px">
+  <div class="center"><div class="stack" style="width:100%;max-width:640px">
     <div style="text-align:center">
-      <h2 style="font-size:26px;font-weight:900">A SORTE ESTA LANCADA</h2>
-      <p class="small muted">Cinco rolagens definem sua vida. Voce nao escolhe nada disso.</p>
+      <h2 style="font-size:24px;font-weight:900">A SORTE ESTA LANCADA</h2>
+      <p class="small muted" style="margin-top:6px">Cinco dados de doze faces, um de cada vez.
+        Quanto maior o numero, melhor o que vem — e dentro de cada numero ainda ha sorteio.</p>
     </div>
-    <div class="dice">
-      <div class="die${rolar}">${r.r1}</div><div class="die${rolar}">${r.r2}</div>
-      <div class="die${rolar}">${r.r3}</div><div class="die${rolar}">${r.r4}</div>
-      <div class="die${rolar}" style="width:auto;padding:0 14px">${r.r5}</div>
-    </div>
-    <div class="card"><div class="card-b">
-      <div class="rollline">
-        <div class="k">d6 · Regiao</div><div><b>${esc(REGIOES[r.regiao].nome)}</b> <span class="tiny muted">— ${esc(REGIOES[r.regiao].desc)}</span></div>
-        <div class="k">d6 · Cidade</div><div><b>${esc(cid.nome)}</b> <span class="tag">${esc(cid.tag)}</span></div>
-        <div class="k">d6 · Setor</div><div>${st.em} <b>${esc(st.nome)}</b></div>
-        <div class="k">d6 · Empresa</div><div><b>${esc(r.empresa)}</b></div>
-        <div class="k">2d6 · Origem</div><div><b>${esc(r.origem.n)}</b> <span class="tiny muted">— ${esc(r.origem.d)}</span></div>
-      </div>
-      <div style="height:1px;background:var(--line);margin:14px 0"></div>
-      <div class="pay">
-        <div class="h">Seu contrato inicial (sempre o degrau mais baixo)</div>
-        <div class="l"><span>Cargo</span><b>${esc(st.cargos[0].n)}</b></div>
-        <div class="l"><span>Salario base</span><b class="c-ok">${money0(sal)}</b></div>
-        <div class="l"><span>Aluguel</span><b class="c-bad">${money0(cid.aluguel)}</b></div>
-        <div class="l"><span>Passagem</span><b>${money(cid.fare)}</b></div>
-        <div class="l"><span>Escada de carreira</span><b>${st.cargos.length} cargos ate ${esc(st.cargos[st.cargos.length-1].n)}</b></div>
-      </div>
-      ${cid.perk   ? `<p class="small c-ok" style="margin-top:10px">▲ ${esc(cid.perk)}</p>` : ""}
-      ${cid.debuff ? `<p class="small c-bad" style="margin:4px 0 0">▼ ${esc(cid.debuff)}</p>` : ""}
+
+    <div class="card"><div class="card-b" style="display:flex;flex-direction:column;gap:4px">
+      ${linhas}
     </div></div>
-    <div class="flex" style="justify-content:center">
-      <button class="btn btn-p btn-lg" data-go="aceitar">ASSINAR A CARTEIRA</button>
-      <button class="btn btn-lg" data-go="rolar">🎲 ROLAR DE NOVO</button>
-      <button class="btn btn-lg" data-go="menu">VOLTAR</button>
-    </div>
+
+    ${pronto ? `
+      <div class="card"><div class="card-b">
+        <div class="pay">
+          <div class="h">Seu contrato inicial (sempre o degrau mais baixo)</div>
+          <div class="l"><span>Cargo</span><b>${esc(st.cargos[0].n)}</b></div>
+          <div class="l"><span>Salario base</span><b class="c-ok">${money0(sal)}</b></div>
+          <div class="l"><span>Aluguel</span><b class="c-bad">${money0(cid.aluguel)}</b></div>
+          <div class="l"><span>Passagem</span><b>${money(cid.fare)}</b></div>
+          <div class="l"><span>Escada de carreira</span><b>${st.cargos.length} cargos ate ${esc(st.cargos[st.cargos.length-1].n)}</b></div>
+          <div class="l tot"><span>Soma dos dados</span>
+            <b style="color:${sorte.c}">${r.total} de 60 — ${sorte.n}</b></div>
+        </div>
+        ${cid.perk   ? `<p class="small c-ok" style="margin-top:10px">▲ ${esc(cid.perk)}</p>` : ""}
+        ${cid.debuff ? `<p class="small c-bad" style="margin:4px 0 0">▼ ${esc(cid.debuff)}</p>` : ""}
+      </div></div>
+      <div class="flex" style="justify-content:center">
+        <button class="btn btn-p btn-lg" data-go="aceitar">ASSINAR A CARTEIRA</button>
+        <button class="btn btn-lg" data-go="rolar">🎲 ROLAR DE NOVO</button>
+        <button class="btn btn-lg" data-go="menu">VOLTAR</button>
+      </div>`
+    : `<div class="flex" style="justify-content:center">
+         <button class="btn" data-go="pularRolagem">Pular animacao</button>
+       </div>`}
   </div></div>`;
-  if (anim){ SOM.efeito("dado"); setTimeout(()=>telaRolagem(false), 420); }
 }
 
 /* ------------------------------- tela: jogo ------------------------------ */
@@ -2123,7 +2270,7 @@ function telaFim(){
 function render(){
   if (G && G.screen === "splash"){ SOM.pararMusica(); telaSplash(); pintarLayer(); return; }
   if (!G || G.screen === "menu") { SOM.tocarMusica("menu"); telaMenu(); pintarLayer(); return; }
-  if (G.screen === "rolagem")    { SOM.tocarMusica("menu"); telaRolagem(true); pintarLayer(); return; }
+  if (G.screen === "rolagem")    { SOM.tocarMusica("menu"); telaRolagem(); pintarLayer(); return; }
   if (G.screen === "vitoria" || G.screen === "derrota"){
     SOM.pararMusica(); telaFim(); pintarLayer(); return;
   }
@@ -2182,7 +2329,7 @@ function modalFicha(){
         <div class="l"><span>Cargo</span><b>${esc(cargoAtual(g).n)}</b></div>
       </div>
       <div class="pay"><div class="h">Escada de carreira</div>
-        ${setorAtual(g).cargos.map((c,i)=>`<div class="l"><span>${i+1}. ${esc(c.n)}${i===g.nivel?" <span class='tag acc'>voce</span>":""}</span><b>${money0(Math.round(c.base*cidadeAtual(g).sal/10)*10)}</b></div>`).join("")}
+        ${setorAtual(g).cargos.map((c,i)=>`<div class="l"><span>${i+1}. ${esc(c.n)}${i===g.nivel?" <span class='tag acc'>voce</span>":""}</span><b>${money0(salarioBaseDe(g,i))}</b></div>`).join("")}
       </div>
       <div class="pay"><div class="h">Previa do holerite (se o mes fechasse agora)</div>
         <div class="l"><span>Proventos</span><b class="c-ok">${money(h.proventos)}</b></div>
@@ -2717,14 +2864,21 @@ const TEXTO_AJUDA = `
 <h4>A ideia</h4>
 <p class="small">Voce e um trabalhador CLT capixaba. Os <b>dados</b> decidem onde voce nasce, em que setor cai e de onde vem. Voce <b>sempre</b> comeca no cargo mais baixo da escada. O jogo e sobreviver ao mes e arrancar promocao.</p>
 
-<h4>As 5 rolagens</h4>
+<h4>As 5 rolagens (d12 cada)</h4>
+<p class="small">Cinco dados de doze faces, lancados <b>um de cada vez</b>. Toda lista esta
+ordenada da pior para a melhor opcao, entao <b>dado alto = lugar melhor, setor melhor,
+firma melhor</b>. E dentro de cada numero ainda ha sorteio: a rolagem mira numa posicao
+da lista e escolhe entre os dois vizinhos, para 12 nunca cair sempre igual.</p>
 <ul>
-<li><code>d6</code> <b>Regiao</b> — uma das 6 regioes do Espirito Santo.</li>
-<li><code>d6</code> <b>Cidade</b> — 6 cidades por regiao (36 no total), cada uma com aluguel, passagem, clima e vantagens proprias.</li>
-<li><code>d6</code> <b>Setor</b> — entre os setores que aquela cidade realmente tem.</li>
-<li><code>d6</code> <b>Empresa</b> — onde voce vai bater ponto.</li>
-<li><code>2d6</code> <b>Origem</b> — sua bagagem: divida de familia, moto financiada, tio na firma, curso tecnico...</li>
+<li><code>d12</code> <b>Regiao</b> — 12 regioes do Espirito Santo, da mais dura (Extremo Norte) a melhor (Grande Vitoria).</li>
+<li><code>d12</code> <b>Cidade</b> — as <b>78 cidades reais do estado</b>, ordenadas dentro da regiao.</li>
+<li><code>d12</code> <b>Setor</b> — entre os setores que aquela cidade tem, do pior emprego (teleatendimento) ao melhor (bancario).</li>
+<li><code>d12</code> <b>Empresa</b> — 12 empregadores por setor, do mais precario ao melhor. A posicao vale de <b>-6% a +12%</b> no salario base.</li>
+<li><code>d12</code> <b>Origem</b> — 12 bagagens, da divida herdada ao tio na firma.</li>
 </ul>
+<p class="small">A soma dos cinco dados (5 a 60) vira sua nota de sorte no fim da rolagem.
+Cidade pequena tambem promove mais devagar e cobra mais caro pelos cursos: no interior o
+curso quase sempre e em outra cidade.</p>
 
 <h4>O dia</h4>
 <ul>
@@ -2868,13 +3022,15 @@ document.addEventListener("click", (ev) => {
     case "pularSplash": fecharSplash(); break;
 
     case "rolar":
-      rolagemAtual = rolarPersonagem();
       G = { screen:"rolagem" };
       SOM.tocarMusica("menu");
-      telaRolagem(true); pintarLayer();
+      iniciarRolagem(); pintarLayer();
       break;
 
+    case "pularRolagem": pularRolagem(); break;
+
     case "aceitar":
+      limparRolagem();
       G = novoJogo(rolagemAtual);
       UI.aba = "trabalho";
       G.popup = { titulo:"Carteira assinada", em:"📗",
@@ -2890,6 +3046,7 @@ document.addEventListener("click", (ev) => {
       break; }
 
     case "menu":
+      limparRolagem();
       salvar(); cancelAnimationFrame(Cena.raf); Cena.raf = 0;
       G = { screen:"menu" }; render();
       break;

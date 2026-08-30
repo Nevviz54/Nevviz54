@@ -18,39 +18,56 @@ a Energia ou o locador acabem com você.
 
 ---
 
-## 2. As cinco rolagens
+## 2. As cinco rolagens (d12 cada)
+
+Cinco **dados de doze faces**, lançados **um de cada vez** — o dado gira, para,
+revela o resultado, e só então o próximo começa (dá para pular a animação).
+
+Toda lista está ordenada da pior para a melhor opção, então **dado alto = lugar
+melhor, setor melhor, firma melhor**. E dentro de cada número ainda há sorteio:
+a rolagem mira numa posição da lista e escolhe entre os dois vizinhos, para que
+tirar 12 duas vezes não caia sempre no mesmo lugar.
 
 | Dado | Define | Alcance |
 |---|---|---|
-| `d6` | **Região** | 6 regiões do ES |
-| `d6` | **Cidade** | 6 cidades por região — 36 no total |
-| `d6` | **Setor** | entre os setores que aquela cidade realmente tem |
-| `d6` | **Empresa** | 6 empregadores por setor |
-| `2d6` | **Origem** | sua bagagem de vida (11 resultados) |
+| `d12` | **Região** | 12 regiões do ES, da mais dura à melhor |
+| `d12` | **Cidade** | as **78 cidades reais do estado**, ordenadas dentro da região |
+| `d12` | **Setor** | entre os setores daquela cidade, do pior ao melhor emprego |
+| `d12` | **Empresa** | 12 empregadores por setor — a posição vale de **−6% a +12%** no salário base |
+| `d12` | **Origem** | 12 bagagens de vida, da dívida herdada ao tio na firma |
 
-### As 6 regiões e suas 36 cidades
+A soma dos cinco dados (5 a 60) vira sua **nota de sorte** no fim da rolagem:
+até 15 "Azar de doer", até 25 "Vida dura", até 35 "Na média capixaba",
+até 45 "Sorte boa", acima disso "Sorte grande".
 
-| Região | Cidades |
-|---|---|
-| **Grande Vitória** | Vitória, Vila Velha, Serra, Cariacica, Viana, Fundão |
-| **Sul Capixaba** | Cachoeiro de Itapemirim, Castelo, Alegre, Muniz Freire, Mimoso do Sul, Guaçuí |
-| **Litoral Sul** | Guarapari, Anchieta, Piúma, Marataízes, Itapemirim, Presidente Kennedy |
-| **Região Serrana** | Domingos Martins, Santa Teresa, Venda Nova do Imigrante, Afonso Cláudio, Santa Maria de Jetibá, Marechal Floriano |
-| **Noroeste e Rio Doce** | Colatina, Linhares, Baixo Guandu, Nova Venécia, Barra de São Francisco, São Gabriel da Palha |
-| **Litoral Norte** | Aracruz, São Mateus, Conceição da Barra, Jaguaré, Pedro Canário, Montanha |
+### As 12 regiões, da pior para a melhor
+
+| # | Região | Cidades |
+|---|---|---|
+| 1 | **Extremo Norte** | Mucurici, Ponto Belo, Montanha, Pinheiros, Boa Esperança, Pedro Canário |
+| 2 | **Noroeste do Granito** | Água Doce do Norte, Alto Rio Novo, Mantenópolis, Vila Pavão, Ecoporanga, Barra de São Francisco |
+| 3 | **Interior do Rio Doce** | São Domingos do Norte, Águia Branca, Governador Lindenberg, Marilândia, Pancas, Baixo Guandu |
+| 4 | **Caparaó** | Divino de São Lourenço, Dores do Rio Preto, Ibitirama, Irupi, Muniz Freire, Ibatiba, Iúna |
+| 5 | **Sul Rural** | São José do Calçado, Apiacá, Bom Jesus do Norte, Muqui, Mimoso do Sul, Jerônimo Monteiro, Atílio Vivácqua |
+| 6 | **Cafeeira do Norte** | Vila Valério, Rio Bananal, Sooretama, Jaguaré, São Gabriel da Palha, Nova Venécia |
+| 7 | **Serrana Central** | Laranja da Terra, Itarana, São Roque do Canaã, Brejetuba, Conceição do Castelo, Itaguaçu, Afonso Cláudio |
+| 8 | **Montanhas Capixabas** | Santa Leopoldina, Marechal Floriano, Santa Maria de Jetibá, Santa Teresa, Domingos Martins, Venda Nova do Imigrante |
+| 9 | **Sul do Mármore** | Vargem Alta, Guaçuí, Alegre, Castelo, Cachoeiro de Itapemirim |
+| 10 | **Litoral Sul** | Rio Novo do Sul, Iconha, Itapemirim, Marataízes, Alfredo Chaves, Piúma, Anchieta, Guarapari, Presidente Kennedy |
+| 11 | **Doce e Litoral Norte** | Ibiraçu, Conceição da Barra, João Neiva, Fundão, São Mateus, Colatina, Linhares, Aracruz |
+| 12 | **Grande Vitória** | Viana, Cariacica, Serra, Vila Velha, Vitória |
 
 Cada cidade tem aluguel, preço de passagem, multiplicador local de salário,
-calor, cenário 2D próprio e uma vantagem ou desvantagem específica —
-Cariacica gasta passagem a mais, Colatina derruba Energia no sol,
-Domingos Martins segura a Fome no frio, Presidente Kennedy paga melhor
-por causa do royalty do petróleo.
+calor, cenário 2D próprio e vantagem ou desvantagem específica. O **porte da
+cidade** também é mecânico: cidade pequena promove mais devagar (não há vaga
+acima) e cobra mais caro pelos cursos, porque quase sempre são em outra cidade.
 
-### As 11 origens (2d6)
+### As 12 origens (d12), da pior para a melhor
 
-Dívida herdada, sofá do primo, pensão do interior, ex-estagiário sem reserva,
-recém-formado no técnico, o padrão "só a roupa do corpo", bike velha,
-celular bom, um dinheirinho guardado, moto financiada (com parcela!) e o
-clássico **tio na firma** — o QI capixaba: Quem Indica.
+Dívida herdada, saiu de casa brigado, ex-estagiário sem reserva, sofá do primo,
+pensão do interior, o padrão "só a roupa do corpo", bike velha, moto financiada
+(com parcela!), celular bom, recém-formado no técnico, um dinheirinho guardado
+e o clássico **tio na firma** — o QI capixaba: Quem Indica.
 
 ---
 
@@ -149,8 +166,9 @@ Requisitos por degrau:
 | 5 → 6 | 82 | 86 | 74 | 44 | 16 |
 
 Use **Pedir Feedback ao Supervisor** pra ver a lista exata do que ainda falta.
-(A tabela acima é da dificuldade **CLT**; no Estágio os números caem 15% e na
-Escala 12x36 sobem 12%.)
+(A tabela acima é da dificuldade **CLT** numa cidade de porte médio. No Estágio
+os números caem 15% e na Escala 12x36 sobem 12%; e o porte da cidade mexe mais
+±12%, para cima no interior e para baixo na Grande Vitória.)
 
 **Duas coisas importantes sobre promoção:**
 
@@ -284,11 +302,12 @@ mudando para o fácil no último dia.
 | Modo | O que muda | Vitórias de um jogador que erra 20% das escolhas |
 |---|---|---|
 | **Estágio** | +70% de dinheiro inicial, eventos ruins doem 30% menos, promoção cobra 15% menos, sono recupera 15% mais | 20 em 20 |
-| **CLT** | o jogo como foi balanceado | 10 em 20 |
-| **Escala 12x36** | metade do dinheiro inicial, eventos 20% mais frequentes e 35% mais pesados, sono recupera 15% menos, promoção cobra 12% mais | 3 em 20 |
+| **CLT** | o jogo como foi balanceado | 10 a 14 em 20 |
+| **Escala 12x36** | metade do dinheiro inicial, eventos 20% mais frequentes e 35% mais pesados, sono recupera 15% menos, promoção cobra 12% mais | 2 a 3 em 20 |
 
-(Números medidos com um bot simulando um jogador competente que erra uma escolha
-a cada cinco, 20 partidas por modo.)
+(Medido com um bot simulando um jogador competente que erra uma escolha a cada
+cinco, 20 partidas por modo. Com essa amostra a variação entre medições chega a
+±20%, daí a faixa em vez de um número exato.)
 
 ---
 
