@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador CLT ES — O Peso da Carteira</title>
+<style>
+/* ============================================================
+   SIMULADOR CLT ES — folha de estilo
+   Sem dependencias externas: nada de CDN, nada de fonte remota.
+   ============================================================ */
+:root{
+  --bg:#0a0a0c; --bg2:#111116; --panel:#16161c; --panel2:#1d1d25;
+  --line:#2a2a35; --line2:#3a3a48;
+  --txt:#f2f2f5; --dim:#9a9aa8; --dim2:#6a6a78;
+  --acc:#ffd23f; --ok:#3ddc84; --bad:#ff5d5d; --warn:#ff9f43;
+  --blue:#4dabf7; --purple:#b197fc; --pink:#ff6b9d;
+  --r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--txt); min-height:100vh;
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.5; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.15}
+p{margin:0 0 .6em}
+
+/* CRT / scanlines opcional */
+#crt{position:fixed;inset:0;pointer-events:none;z-index:9998;
+  background:linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,.16) 50%);
+  background-size:100% 3px; opacity:.6}
+body.no-crt #crt{display:none}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:16px}
+.center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.hide{display:none !important}
+.grid-main{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:1000px){ .grid-main{grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr)} }
+
+/* ---------- componentes ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.card-h{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;
+  justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--panel2)}
+.card-h h3{font-size:15px;letter-spacing:.02em;text-transform:uppercase;color:var(--dim)}
+.card-b{padding:16px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid var(--line2);background:var(--panel2);color:var(--txt);
+  padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;
+  transition:background .12s,border-color .12s,transform .06s;text-align:left}
+.btn:hover:not(:disabled){background:#282833;border-color:#4a4a5c}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn-p{background:var(--acc);color:#141400;border-color:#e0b400}
+.btn-p:hover:not(:disabled){background:#ffdf6b}
+.btn-ok{background:#12341f;border-color:#1f6b3c;color:#9df0bd}
+.btn-ok:hover:not(:disabled){background:#17422a}
+.btn-bad{background:#3a1414;border-color:#7a2626;color:#ffb3b3}
+.btn-bad:hover:not(:disabled){background:#4a1a1a}
+.btn-lg{padding:16px 22px;font-size:17px;border-radius:12px}
+.btn-block{width:100%}
+
+.tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line2);
+  border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.tag.ok{border-color:#1f6b3c;color:var(--ok)}
+.tag.bad{border-color:#7a2626;color:var(--bad)}
+.tag.acc{border-color:#7a6410;color:var(--acc)}
+.tag.blue{border-color:#1c4f7a;color:var(--blue)}
+
+.bar{height:8px;background:#26262f;border-radius:999px;overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;transition:width .35s ease}
+.stat{display:flex;flex-direction:column;gap:5px}
+.stat .lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+
+.row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.row:last-child{border-bottom:0}
+.row span:first-child{color:var(--dim)}
+.row b{font-variant-numeric:tabular-nums}
+
+.muted{color:var(--dim)} .small{font-size:12.5px} .tiny{font-size:11.5px}
+.mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace}
+.c-ok{color:var(--ok)} .c-bad{color:var(--bad)} .c-acc{color:var(--acc)} .c-warn{color:var(--warn)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ---------- HUD ---------- */
+.hud{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){ .hud{grid-template-columns:repeat(3,1fr)} }
+@media(min-width:1000px){ .hud{grid-template-columns:repeat(6,1fr)} }
+.hud .card-b{padding:11px 13px}
+.hud .big{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ---------- cena 2D ---------- */
+.scene-box{position:relative;background:#05050a;border-bottom:1px solid var(--line)}
+#scene{display:block;width:100%;height:auto;image-rendering:pixelated}
+.scene-tags{position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 20px)}
+.scene-tags .tag{background:rgba(6,6,12,.7);backdrop-filter:blur(2px)}
+.bubble{position:absolute;right:10px;top:10px;max-width:52%;background:rgba(6,6,12,.82);
+  border:1px solid var(--line2);border-radius:10px;padding:7px 11px;font-size:12px;color:#dcdce6;
+  opacity:0;transition:opacity .3s}
+.bubble.on{opacity:1}
+
+/* ---------- abas de acao ---------- */
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{border:1px solid var(--line2);background:transparent;color:var(--dim);
+  padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer}
+.tab:hover{color:var(--txt);background:var(--panel2)}
+.tab.on{background:var(--txt);color:#0a0a0c;border-color:var(--txt)}
+.acts{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:560px){ .acts{grid-template-columns:1fr 1fr} }
+@media(min-width:1240px){ .acts{grid-template-columns:1fr 1fr 1fr} }
+.act{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-height:92px;padding:11px 13px}
+.act .t{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px}
+.act .t .em{font-size:17px;line-height:1}
+.act .d{font-size:11.5px;color:var(--dim);line-height:1.4}
+.act .m{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto}
+.chip{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;
+  border:1px solid var(--line2);color:var(--dim2);white-space:nowrap}
+.chip.up{color:var(--ok);border-color:#1f5b36}
+.chip.dn{color:var(--bad);border-color:#6a2222}
+.chip.pa{color:var(--acc);border-color:#6a5810}
+
+/* ---------- log ---------- */
+.log{display:flex;flex-direction:column;gap:7px;max-height:330px;overflow-y:auto;padding-right:6px}
+.log::-webkit-scrollbar{width:6px}
+.log::-webkit-scrollbar-track{background:#101015}
+.log::-webkit-scrollbar-thumb{background:#33333f;border-radius:99px}
+.log .e{border:1px solid var(--line);background:#101015;border-radius:9px;padding:8px 10px;font-size:12.2px;color:#c5c5d0}
+.log .e b{color:var(--txt)}
+.log .e.up{border-left:3px solid var(--ok)}
+.log .e.dn{border-left:3px solid var(--bad)}
+.log .e.ev{border-left:3px solid var(--purple)}
+.log .e.mo{border-left:3px solid var(--acc)}
+
+/* ---------- modal / popup ---------- */
+.veil{position:fixed;inset:0;z-index:9000;background:rgba(4,4,8,.78);
+  display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.veil .card{width:100%;max-width:520px;animation:pop .18s ease-out}
+.veil.wide .card{max-width:760px}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:none}}
+body.reduce-motion .veil .card{animation:none}
+
+/* ---------- dados ---------- */
+.dice{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.die{width:48px;height:48px;border-radius:12px;border:2px solid var(--line2);background:var(--panel2);
+  display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;color:var(--acc)}
+.die.rolling{animation:shake .35s infinite}
+@keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-2px,-3px) rotate(-7deg)}
+  50%{transform:translate(2px,2px) rotate(6deg)}75%{transform:translate(-1px,2px) rotate(-3deg)}}
+body.reduce-motion .die.rolling{animation:none}
+.rollline{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;align-items:baseline;font-size:13.5px}
+.rollline .k{color:var(--dim);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:800}
+
+/* ---------- minigames ---------- */
+.mg-canvas{width:100%;background:#07070d;border:1px solid var(--line);border-radius:10px;display:block}
+.mg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mg-cell{aspect-ratio:1;border:1px solid var(--line2);border-radius:10px;background:#101018;
+  display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;user-select:none}
+.mg-cell.on{background:#2a2410;border-color:var(--acc)}
+.mg-cell.bad{background:#2a1010;border-color:var(--bad)}
+.mg-opts{display:flex;flex-direction:column;gap:8px}
+.mg-num{font-size:30px;font-weight:900;text-align:center;padding:14px 0;letter-spacing:.02em}
+
+/* ---------- listas / holerite ---------- */
+.pay{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pay .h{background:var(--panel2);padding:8px 12px;font-size:11.5px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.pay .l{display:flex;justify-content:space-between;padding:6px 12px;font-size:13px;border-top:1px solid var(--line)}
+.pay .l.tot{background:#101015;font-weight:800}
+
+.cities{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:720px){ .cities{grid-template-columns:repeat(3,1fr)} }
+.city{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px}
+.city .n{font-weight:700;font-size:13px}
+
+.help h4{margin:16px 0 6px;font-size:14px;color:var(--acc);text-transform:uppercase;letter-spacing:.05em}
+.help h4:first-child{margin-top:0}
+.help ul{margin:0 0 8px;padding-left:20px}
+.help li{margin-bottom:4px;font-size:13.5px;color:#c9c9d4}
+.help code{background:#101018;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="crt"></div>
+<div id="app"></div>
+<div id="layer"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   SIMULADOR CLT ES — "O Peso da Carteira"
+   Jogo 2D de sobrevivencia trabalhista capixaba, movido a dados (d6 / 2d6).
+   Tudo em um arquivo so: sem React, sem Babel, sem CDN, sem fonte remota.
+   ========================================================================== */
+
+/* ------------------------------ utilitarios ------------------------------ */
+const $  = (s, r = document) => r.querySelector(s);
+const el = (t, cls, html) => { const n = document.createElement(t);
+  if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v));
+const dN   = (f) => 1 + Math.floor(Math.random() * f);
+const d6   = () => dN(6);
+const d2x6 = () => d6() + d6();
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const chance = (p) => Math.random() < p;
+const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const money = (n) => "R$ " + (Math.round(n * 100) / 100)
+  .toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money0 = (n) => "R$ " + Math.round(n).toLocaleString("pt-BR");
+const esc = (s) => String(s).replace(/[&<>"]/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const DIAS_SEMANA = ["Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado", "Domingo"];
+const diaSemana   = (dia) => (dia - 1) % 7;            // dia 1 do mes = segunda
+const ehFimDeSemana = (dia) => diaSemana(dia) >= 5;
+const nomeDia     = (dia) => DIAS_SEMANA[diaSemana(dia)];
+
+/* =========================== 1. REGIOES E CIDADES ==========================
+   Rolagem 1 (d6): regiao do Espirito Santo.
+   Rolagem 2 (d6): cidade dentro da regiao.
+   dif = indice de dificuldade 0 (brutal) .. 4 (confortavel)
+   sal = multiplicador local de salario | fare = preco da passagem
+   scen = cenario 2D | heat = calor (0..3)
+   ========================================================================== */
+function C(nome, tag, dif, aluguel, sal, fare, scen, heat, setores, perk, debuff) {
+  return { nome, tag, dif, aluguel, sal, fare, scen, heat, setores, perk, debuff };
+}
+
+const REGIOES = [
+  { id: 1, nome: "Grande Vitoria", desc: "Concreto, transito e transcol lotado.", cidades: [
+    C("Vitoria", "Capital / Elite", 4, 1450, 1.10, 4.40, "metro", 2,
+      ["portuario","bancario","varejo","callcenter","saude","construcao","turismo","transporte"],
+      "Networking de elite: +25% de ganho de Rede.", null),
+    C("Vila Velha", "Praia e Fabrica", 3, 1180, 1.04, 4.40, "praia", 2,
+      ["varejo","construcao","turismo","portuario","confeccao","saude","callcenter"],
+      "Praia libera: descanso na areia recupera mais Sanidade.", null),
+    C("Serra", "Peao de Firma", 2, 1020, 1.02, 4.40, "ind", 2,
+      ["siderurgia","portuario","varejo","callcenter","moveleiro","transporte","construcao"],
+      null, "Rotina industrial da CIVIT: -1 Energia extra por turno."),
+    C("Cariacica", "Modo Sobrevivencia", 1, 880, 0.98, 4.40, "ind", 2,
+      ["portuario","transporte","varejo","construcao","callcenter","pesca"],
+      null, "Logistica hostil: cada turno gasta 1 passagem a mais."),
+    C("Viana", "Beira de Rodovia", 1, 800, 0.96, 4.40, "ind", 2,
+      ["portuario","transporte","moveleiro","varejo","construcao","agro"],
+      "Aluguel barato: sobra troco no fim do mes.", "Longe de tudo: -2 Energia por turno."),
+    C("Fundao", "Vizinho Silencioso", 2, 760, 0.95, 4.40, "campo", 1,
+      ["agro","celulose","varejo","construcao","turismo","transporte"],
+      "Cidade calma: +2 Sanidade ao dormir.", null),
+  ]},
+  { id: 2, nome: "Sul Capixaba", desc: "Granito, calor e cafe da montanha.", cidades: [
+    C("Cachoeiro de Itapemirim", "Calor e Granito", 2, 950, 0.99, 4.10, "ind", 3,
+      ["rochas","saude","varejo","transporte","construcao","confeccao","agro"],
+      null, "Calor infernal: Fome sobe mais rapido."),
+    C("Castelo", "Pedra e Cafe", 2, 700, 0.94, 3.80, "serra", 2,
+      ["rochas","agro","varejo","construcao","turismo"],
+      "Custo de vida baixo.", null),
+    C("Alegre", "Interior Universitario", 2, 680, 0.93, 3.80, "serra", 2,
+      ["agro","varejo","saude","construcao","turismo"],
+      "Cidade estudantil: cursos custam 20% menos.", null),
+    C("Muniz Freire", "Roca Pura", 1, 600, 0.91, 3.60, "campo", 2,
+      ["agro","varejo","construcao","transporte"],
+      "Aluguel de interior.", "Poucas vagas: promocao exige mais Rede."),
+    C("Mimoso do Sul", "Divisa com Minas", 1, 620, 0.91, 3.60, "campo", 2,
+      ["agro","varejo","transporte","construcao","pesca"],
+      null, "Chuva e enchente: eventos ruins mais frequentes."),
+    C("Guacui", "Cafe do Caparao", 2, 660, 0.93, 3.60, "serra", 1,
+      ["agro","varejo","turismo","construcao","saude"],
+      "Clima ameno: -1 Fome por dia.", null),
+  ]},
+  { id: 3, nome: "Litoral Sul", desc: "Praia, turismo, porto e petroleo.", cidades: [
+    C("Guarapari", "Verao Eterno", 3, 1050, 1.00, 4.20, "praia", 3,
+      ["turismo","varejo","saude","construcao","pesca","transporte"],
+      "Alta temporada: gorjeta e bicos rendem mais.", "Fora de temporada o comercio seca."),
+    C("Anchieta", "Polo Industrial", 3, 900, 1.08, 4.00, "porto", 2,
+      ["petroleo","portuario","siderurgia","construcao","pesca","turismo"],
+      "Polo industrial: salarios locais mais altos.", null),
+    C("Piuma", "Vila de Pescador", 2, 720, 0.94, 3.80, "praia", 2,
+      ["pesca","turismo","varejo","construcao"],
+      "Praia libera: +Sanidade no descanso.", "Cidade pequena: escada de carreira curta."),
+    C("Marataizes", "Praia e Peixe", 1, 700, 0.92, 3.80, "praia", 3,
+      ["pesca","turismo","varejo","construcao","agro"],
+      null, "Sazonalidade dura: eventos de renda instavel."),
+    C("Itapemirim", "Porto e Cana", 1, 660, 0.93, 3.80, "porto", 3,
+      ["portuario","agro","pesca","construcao","transporte"],
+      null, "Calor e poeira: -1 Energia por turno."),
+    C("Presidente Kennedy", "Terra do Royalty", 4, 900, 1.12, 3.80, "campo", 2,
+      ["petroleo","agro","construcao","portuario","varejo"],
+      "Royalties do petroleo: bicos e servicos pagam melhor.", null),
+  ]},
+  { id: 4, nome: "Regiao Serrana", desc: "Montanha, cafe, colonia e frio de verdade.", cidades: [
+    C("Domingos Martins", "Montanha Alema", 3, 780, 0.96, 4.00, "serra", 0,
+      ["agro","turismo","varejo","moveleiro","construcao"],
+      "Clima frio: Fome sobe devagar e Sanidade se recupera melhor.", null),
+    C("Santa Teresa", "Colonia Italiana", 3, 760, 0.96, 4.00, "serra", 0,
+      ["agro","turismo","varejo","saude","construcao"],
+      "Vida tranquila: +3 Sanidade ao dormir.", null),
+    C("Venda Nova do Imigrante", "Agroturismo", 3, 800, 0.98, 4.00, "serra", 0,
+      ["agro","turismo","varejo","moveleiro","construcao"],
+      "Agroturismo: bicos de fim de semana rendem bem.", null),
+    C("Afonso Claudio", "Cafe e Ladeira", 2, 640, 0.92, 3.80, "serra", 1,
+      ["agro","varejo","construcao","transporte","moveleiro"],
+      "Aluguel baixo.", null),
+    C("Santa Maria de Jetiba", "Capital do Ovo", 2, 700, 0.95, 3.80, "campo", 1,
+      ["agro","varejo","transporte","construcao","moveleiro"],
+      "Agro forte: emprego estavel, menos risco de demissao.", null),
+    C("Marechal Floriano", "Serra Perto", 2, 720, 0.95, 4.00, "serra", 0,
+      ["agro","turismo","varejo","construcao"],
+      "Perto da Grande Vitoria: passagem mais barata.", null),
+  ]},
+  { id: 5, nome: "Noroeste e Rio Doce", desc: "Cafe, granito, moveis e o sol que nao perdoa.", cidades: [
+    C("Colatina", "Princesa do Norte", 2, 860, 0.97, 4.00, "campo", 3,
+      ["confeccao","agro","varejo","saude","transporte","construcao","moveleiro"],
+      "Polo de confeccao: roupa nova barata, +Rede.", "Sol assassino: Energia cai mais rapido."),
+    C("Linhares", "Lago e Movelaria", 3, 900, 1.00, 4.00, "campo", 3,
+      ["moveleiro","celulose","agro","varejo","saude","construcao","transporte"],
+      "Polo moveleiro: mais vagas, promocao um pouco mais facil.", null),
+    C("Baixo Guandu", "Divisa do Rio Doce", 1, 620, 0.91, 3.60, "campo", 3,
+      ["agro","construcao","varejo","transporte","rochas"],
+      null, "Cidade pequena: pouca oferta de curso."),
+    C("Nova Venecia", "Granito do Norte", 2, 700, 0.95, 3.80, "campo", 3,
+      ["rochas","agro","varejo","construcao","transporte"],
+      "Polo de rochas: hora extra abundante.", "Po de pedra: Energia sofre."),
+    C("Barra de Sao Francisco", "Mar de Granito", 1, 660, 0.94, 3.60, "campo", 3,
+      ["rochas","agro","varejo","transporte","construcao"],
+      null, "Trabalho bruto: risco de advertencia por acidente."),
+    C("Sao Gabriel da Palha", "Cafe Conilon", 2, 640, 0.92, 3.60, "campo", 3,
+      ["agro","varejo","construcao","transporte","confeccao"],
+      "Safra de cafe: bicos rurais frequentes.", null),
+  ]},
+  { id: 6, nome: "Litoral Norte", desc: "Celulose, petroleo, praia deserta e estrada longa.", cidades: [
+    C("Aracruz", "Cidade da Celulose", 3, 880, 1.05, 4.00, "ind", 2,
+      ["celulose","portuario","construcao","varejo","transporte","pesca"],
+      "Industria de celulose: salario acima da media.", null),
+    C("Sao Mateus", "Norte Grande", 2, 780, 0.97, 3.90, "campo", 3,
+      ["petroleo","agro","celulose","varejo","saude","construcao","transporte"],
+      null, "Calor do norte: hidratacao custa caro."),
+    C("Conceicao da Barra", "Dunas e Itaunas", 1, 640, 0.92, 3.80, "praia", 3,
+      ["pesca","turismo","agro","varejo","construcao"],
+      "Praia deserta: descanso muito eficiente.", "Emprego escasso fora da temporada."),
+    C("Jaguare", "Cafe e Mamao", 2, 620, 0.93, 3.60, "campo", 3,
+      ["agro","celulose","varejo","transporte","construcao"],
+      "Fazendas contratam sempre.", null),
+    C("Pedro Canario", "Beira da BR", 1, 580, 0.90, 3.60, "campo", 3,
+      ["agro","transporte","varejo","construcao","celulose"],
+      "Aluguel mais barato do estado.", "Servico pesado: Energia despenca."),
+    C("Montanha", "Extremo Norte", 1, 560, 0.90, 3.60, "campo", 3,
+      ["agro","varejo","construcao","transporte"],
+      "Custo de vida minimo.", "Poucas empresas: promocao demora mais."),
+  ]},
+];
+
+/* estado inicial conforme a dificuldade da cidade */
+const START_DIF = [
+  { dinheiro:  60, passagens:  2, energia: 66, sanidade: 62, fome: 36 },
+  { dinheiro: 120, passagens:  4, energia: 70, sanidade: 68, fome: 32 },
+  { dinheiro: 200, passagens:  6, energia: 74, sanidade: 73, fome: 28 },
+  { dinheiro: 300, passagens:  8, energia: 77, sanidade: 78, fome: 24 },
+  { dinheiro: 420, passagens: 10, energia: 80, sanidade: 82, fome: 20 },
+];
+
+/* ====================== 2. SETORES E ESCADA DE CARGOS ======================
+   Rolagem 3 (d6 ate cair num setor valido da cidade): area de atuacao.
+   Voce SEMPRE comeca no degrau 0 (o cargo mais baixo). Subir e o jogo.
+   base = salario base nacional de referencia (multiplicado pelo fator da cidade)
+   ========================================================================== */
+const SETORES = {
+  siderurgia: { nome:"Siderurgia e Metalurgia", em:"⚙️", cor:"#c96f2f", mg:"meta",
+    insal:0.20, peric:false, noturno:true, jornada:220,
+    cargos:[
+      { n:"Ajudante de Producao",       base:1560 },
+      { n:"Operador de Ponte Rolante",  base:2050 },
+      { n:"Operador de Laminacao",      base:2650 },
+      { n:"Tecnico em Metalurgia",      base:3500 },
+      { n:"Lider de Turno",             base:4600 },
+      { n:"Supervisor de Producao",     base:6200 },
+    ]},
+  portuario: { nome:"Logistica e Porto", em:"🚢", cor:"#3d7ea6", mg:"conferencia",
+    insal:0, peric:true, noturno:true, jornada:220,
+    cargos:[
+      { n:"Ajudante de Carga e Descarga", base:1550 },
+      { n:"Conferente de Carga",          base:2000 },
+      { n:"Operador de Empilhadeira",     base:2500 },
+      { n:"Assistente de Operacoes",      base:3200 },
+      { n:"Supervisor de Patio",          base:4300 },
+      { n:"Coordenador de Operacoes",     base:5900 },
+    ]},
+  varejo: { nome:"Comercio e Varejo", em:"🛒", cor:"#c94f7c", mg:"cliente",
+    insal:0, peric:false, noturno:false, jornada:220, comissao:true,
+    cargos:[
+      { n:"Empacotador",            base:1518 },
+      { n:"Operador de Caixa",      base:1750 },
+      { n:"Repositor de Mercadoria",base:1900 },
+      { n:"Vendedor",               base:2200 },
+      { n:"Subgerente de Loja",     base:3000 },
+      { n:"Gerente de Loja",        base:4400 },
+    ]},
+  callcenter: { nome:"Teleatendimento", em:"🎧", cor:"#8a63d2", mg:"cliente",
+    insal:0, peric:false, noturno:true, jornada:180,
+    cargos:[
+      { n:"Atendente de Telemarketing", base:1518 },
+      { n:"Operador de Suporte N1",     base:1800 },
+      { n:"Analista de Suporte N2",     base:2400 },
+      { n:"Monitor de Qualidade",       base:3000 },
+      { n:"Supervisor de Operacoes",    base:4000 },
+      { n:"Coordenador de Celula",      base:5400 },
+    ]},
+  construcao: { nome:"Construcao Civil", em:"🧱", cor:"#b8862f", mg:"meta",
+    insal:0.20, peric:true, noturno:false, jornada:220,
+    cargos:[
+      { n:"Servente de Obra",       base:1518 },
+      { n:"Ajudante de Pedreiro",   base:1800 },
+      { n:"Pedreiro",               base:2400 },
+      { n:"Encarregado de Obra",    base:3400 },
+      { n:"Mestre de Obras",        base:4700 },
+      { n:"Tecnico em Edificacoes", base:6000 },
+    ]},
+  petroleo: { nome:"Petroleo e Gas", em:"🛢️", cor:"#4c5b6b", mg:"conferencia",
+    insal:0, peric:true, noturno:true, jornada:220,
+    cargos:[
+      { n:"Auxiliar de Manutencao",     base:1900 },
+      { n:"Soldador",                   base:2800 },
+      { n:"Caldeireiro Montador",       base:3600 },
+      { n:"Tecnico de Operacao",        base:5000 },
+      { n:"Tecnico de Seguranca",       base:6200 },
+      { n:"Supervisor de Turno",        base:8200 },
+    ]},
+  rochas: { nome:"Marmore e Granito", em:"🪨", cor:"#8b8378", mg:"meta",
+    insal:0.20, peric:false, noturno:true, jornada:220,
+    cargos:[
+      { n:"Ajudante de Serraria",     base:1520 },
+      { n:"Operador de Tear",         base:2100 },
+      { n:"Politriz e Acabamento",    base:2500 },
+      { n:"Classificador de Chapas",  base:3000 },
+      { n:"Encarregado de Producao",  base:4100 },
+      { n:"Gerente de Planta",        base:5800 },
+    ]},
+  agro: { nome:"Agronegocio e Cafe", em:"🌱", cor:"#4f8a3d", mg:"meta",
+    insal:0.20, peric:false, noturno:false, jornada:220,
+    cargos:[
+      { n:"Trabalhador Rural",         base:1518 },
+      { n:"Auxiliar de Beneficiamento",base:1750 },
+      { n:"Operador de Secador",       base:2200 },
+      { n:"Classificador de Cafe",     base:2900 },
+      { n:"Encarregado de Lavoura",    base:3600 },
+      { n:"Tecnico Agricola",          base:4800 },
+    ]},
+  celulose: { nome:"Celulose e Florestal", em:"🌲", cor:"#2f7a5a", mg:"conferencia",
+    insal:0.20, peric:false, noturno:true, jornada:220,
+    cargos:[
+      { n:"Auxiliar Florestal",           base:1700 },
+      { n:"Operador de Colheita",         base:2400 },
+      { n:"Operador de Processo",         base:3100 },
+      { n:"Tecnico em Papel e Celulose",  base:4300 },
+      { n:"Lider de Area",                base:5500 },
+      { n:"Supervisor de Turno",          base:7000 },
+    ]},
+  turismo: { nome:"Turismo e Hotelaria", em:"🏨", cor:"#d98a3a", mg:"cliente",
+    insal:0, peric:false, noturno:true, jornada:220, gorjeta:true,
+    cargos:[
+      { n:"Auxiliar de Cozinha",  base:1518 },
+      { n:"Camareiro(a)",         base:1650 },
+      { n:"Garcom / Garconete",   base:1900 },
+      { n:"Recepcionista",        base:2300 },
+      { n:"Chefe de Recepcao",    base:3100 },
+      { n:"Gerente de Hotel",     base:4600 },
+    ]},
+  saude: { nome:"Saude", em:"🩺", cor:"#3aa6a6", mg:"cliente",
+    insal:0.20, peric:false, noturno:true, jornada:180,
+    cargos:[
+      { n:"Maqueiro",                    base:1518 },
+      { n:"Auxiliar de Enfermagem",      base:1900 },
+      { n:"Tecnico em Enfermagem",       base:2600 },
+      { n:"Tecnico de UTI (plantao)",    base:3300 },
+      { n:"Supervisor de Escala",        base:4200 },
+      { n:"Coordenador de Enfermagem",   base:5600 },
+    ]},
+  bancario: { nome:"Bancario e Financeiro", em:"🏦", cor:"#c9a227", mg:"conferencia",
+    insal:0, peric:false, noturno:false, jornada:180,
+    cargos:[
+      { n:"Jovem Aprendiz Bancario",  base:1200 },
+      { n:"Escriturario",             base:2600 },
+      { n:"Caixa",                    base:3100 },
+      { n:"Assistente Comercial",     base:3900 },
+      { n:"Gerente de Relacionamento",base:5400 },
+      { n:"Gerente de Agencia",       base:8000 },
+    ]},
+  moveleiro: { nome:"Moveis e Madeira", em:"🪚", cor:"#a06b3a", mg:"meta",
+    insal:0.20, peric:false, noturno:false, jornada:220,
+    cargos:[
+      { n:"Auxiliar de Marcenaria",  base:1520 },
+      { n:"Operador de Maquinas",    base:2000 },
+      { n:"Operador de CNC",         base:2600 },
+      { n:"Montador Lider",          base:3200 },
+      { n:"Encarregado de Producao", base:4100 },
+      { n:"Supervisor Industrial",   base:5500 },
+    ]},
+  confeccao: { nome:"Confeccao e Textil", em:"🧵", cor:"#c95f9b", mg:"meta",
+    insal:0, peric:false, noturno:false, jornada:220, comissao:true,
+    cargos:[
+      { n:"Auxiliar de Costura",      base:1518 },
+      { n:"Costureira(o)",            base:1800 },
+      { n:"Cortador(a)",              base:2200 },
+      { n:"Modelista",                base:2900 },
+      { n:"Encarregado(a) de Producao", base:3700 },
+      { n:"Gerente de Producao",      base:5000 },
+    ]},
+  pesca: { nome:"Pesca e Frigorifico", em:"🐟", cor:"#4a86b8", mg:"conferencia",
+    insal:0.20, peric:false, noturno:true, jornada:220,
+    cargos:[
+      { n:"Auxiliar de Frigorifico",  base:1520 },
+      { n:"Filetador",                base:1900 },
+      { n:"Operador de Camara Fria",  base:2300 },
+      { n:"Conferente de Pescado",    base:2900 },
+      { n:"Encarregado de Beneficiamento", base:3700 },
+      { n:"Gerente de Unidade",       base:5000 },
+    ]},
+  transporte: { nome:"Transporte e Mobilidade", em:"🚌", cor:"#5b8f4e", mg:"onibus",
+    insal:0, peric:true, noturno:true, jornada:220,
+    cargos:[
+      { n:"Auxiliar de Patio",          base:1518 },
+      { n:"Auxiliar de Bordo",          base:1800 },
+      { n:"Motorista Categoria D",      base:2700 },
+      { n:"Motorista de Onibus Urbano", base:3200 },
+      { n:"Motorista Carreteiro",       base:4200 },
+      { n:"Encarregado de Trafego",     base:5200 },
+    ]},
+};
+
+/* Rolagem 4 (d6): a empresa. Nomes genericos por setor, sabor capixaba. */
+const EMPRESAS = {
+  siderurgia:["Siderurgica de Tubarao","Metalurgica Capixaba","Usina de Pelotizacao","Aciaria do Litoral","Laminacao Atlantico","Fundicao Sao Torquato"],
+  portuario:["Terminal Portuario Capixaba","Armazem Geral Atlantico","Operadora Portuaria Vitoria","Patio de Conteineres Sul","Complexo Logistico Norte","Transportadora Litoral"],
+  varejo:["Supermercado Extra Bom Preco","Rede Mais Capixaba","Loja de Departamentos Praia","Atacarejo do Bairro","Magazine Centro","Padaria e Mercearia Boa Vista"],
+  callcenter:["Central de Atendimento Capixaba","Contact Center Litoral","Telesservicos ES","Suporte 24h Vitoria","Operadora Movel Regional","Cobranca e Credito Sul"],
+  construcao:["Construtora Praia Grande","Empreiteira Morro do Moreno","Obras e Reformas Capixaba","Incorporadora Litoral","Engenharia Rio Doce","Predial Serra Norte"],
+  petroleo:["Base de Operacoes Onshore","Manutencao Industrial Offshore","Terminal de Gas Natural","Servicos de Sonda Capixaba","Unidade de Tratamento de Gas","Caldeiraria Industrial Sul"],
+  rochas:["Marmoraria Sul Capixaba","Serraria de Granito","Beneficiadora de Rochas","Pedreira Pedra Azul","Polidora de Chapas","Exportadora de Marmore"],
+  agro:["Fazenda Cafe da Montanha","Cooperativa Agricola Capixaba","Beneficiadora de Cafe Conilon","Granja Santa Clara","Armazem de Graos","Sitio Frutas do Vale"],
+  celulose:["Unidade de Celulose Litoral","Viveiro Florestal Capixaba","Colheita Florestal Norte","Fabrica de Papel Rio Doce","Terminal de Madeira","Manejo Florestal Sul"],
+  turismo:["Hotel Beira-Mar","Pousada do Morro","Restaurante da Orla","Resort Praia Grande","Quiosque do Cais","Churrascaria Capixaba"],
+  saude:["Hospital Municipal","Clinica Santa Rita","Pronto Atendimento 24h","UPA Regional","Laboratorio Vida","Home Care Capixaba"],
+  bancario:["Banco Regional Capixaba","Cooperativa de Credito","Financeira Litoral","Agencia Centro","Correspondente Bancario","Banco Digital Sul"],
+  moveleiro:["Fabrica de Moveis Linhares","Marcenaria Rio Doce","Industria de Estofados","Moveis Planejados Norte","Serraria e Madeireira","Montagem Industrial Movel"],
+  confeccao:["Confeccao Princesa do Norte","Faccao de Jeans","Malharia Capixaba","Industria de Uniformes","Atelie de Moda Colatina","Costura Express"],
+  pesca:["Frigorifico de Pescado","Entreposto de Peixe","Camara Fria do Litoral","Beneficiadora de Camarao","Pesqueira Barra do Sul","Peixaria Industrial"],
+  transporte:["Viacao Urbana Capixaba","Transportadora de Cargas","Garagem Municipal","Fretamento Litoral","Logistica Rodoviaria ES","Van Escolar Regional"],
+};
+
+/* Rolagem 5 (2d6): de onde voce veio. Modificador de inicio. */
+const ORIGENS = {
+  2:  { n:"Herdou a divida da familia", d:"O nome sujo veio de heranca.",
+        ap:(g)=>{ g.divida=1400; g.dividaParc=140; g.sanidade-=6; } },
+  3:  { n:"Dormindo no sofa do primo", d:"Sem aluguel por enquanto, sem privacidade nunca.",
+        ap:(g)=>{ g.mesesSemAluguel=2; g.sanidade-=4; } },
+  4:  { n:"Veio do interior de mala e cuia", d:"Pensao barata, cama de mola.",
+        ap:(g)=>{ g.aluguel=Math.round(g.aluguel*0.8); g.dinheiro+=60; } },
+  5:  { n:"Ex-estagiario sem reserva", d:"Contrato acabou, a conta continuou.",
+        ap:(g)=>{ g.dinheiro=Math.max(20,g.dinheiro-60); g.qualificacao+=6; } },
+  6:  { n:"Recem-formado no curso tecnico", d:"Diploma quente na mao.",
+        ap:(g)=>{ g.qualificacao+=18; } },
+  7:  { n:"Padrao CLT: so a roupa do corpo", d:"Nem bonus, nem desgraca.", ap:()=>{} },
+  8:  { n:"Tem uma bike velha", d:"Da pra fugir da catraca umas vezes.",
+        ap:(g)=>{ g.bike=true; } },
+  9:  { n:"Celular bom e internet decente", d:"Da pra fingir profissionalismo online.",
+        ap:(g)=>{ g.rede+=14; g.qualificacao+=4; } },
+  10: { n:"Guardou um dinheirinho", d:"Colchao financeiro fininho, mas existe.",
+        ap:(g)=>{ g.dinheiro+=650; } },
+  11: { n:"Moto financiada na garagem", d:"Liberdade em 36 parcelas.",
+        ap:(g)=>{ g.moto=true; g.divida=5400; g.dividaParc=430; } },
+  12: { n:"Tem um tio na firma", d:"O famoso QI: Quem Indica.",
+        ap:(g)=>{ g.rede+=30; g.desempenho+=8; } },
+};
+
+/* ============================ 3. FOLHA DE PAGAMENTO ========================
+   Tabelas didaticas com referencia de 2025. Nao servem de consultoria fiscal,
+   servem pra voce sentir na pele o abismo entre bruto e liquido.
+   ========================================================================== */
+const SAL_MIN = 1518.00;
+
+function calcINSS(bruto){
+  const faixas = [[1518.00,0.075],[2793.88,0.09],[4190.83,0.12],[8157.41,0.14]];
+  let ant = 0, total = 0;
+  for (const [lim, aliq] of faixas){
+    if (bruto > ant) total += (Math.min(bruto, lim) - ant) * aliq;
+    ant = lim;
+  }
+  return Math.min(total, 951.63);
+}
+function calcIRRF(baseCalc){
+  const b = Math.max(0, baseCalc - 607.20); // desconto simplificado
+  const t = [[2428.80,0,0],[2826.65,0.075,182.16],[3751.05,0.15,394.16],
+             [4664.68,0.225,675.49],[Infinity,0.275,908.73]];
+  for (const [lim, aliq, ded] of t) if (b <= lim) return Math.max(0, b * aliq - ded);
+  return 0;
+}
+
+/* Monta o holerite do mes a partir do estado do jogo. */
+function holerite(g){
+  const st  = SETORES[g.setor];
+  const cid = cidadeAtual(g);
+  const base = g.salarioBase;
+  const valorHora = base / st.jornada;
+
+  const insal  = st.insal ? SAL_MIN * st.insal : 0;
+  const peric  = st.peric ? base * 0.30 : 0;
+  const extras = g.horasExtras * valorHora * 1.5;
+  const noturno= g.horasNoturnas * valorHora * 0.20;
+  const comiss = st.comissao ? Math.round(g.desempenho * (2 + g.nivel)) : 0;
+  const gorjeta= st.gorjeta  ? Math.round(g.desempenho * 1.4 * (cid.heat >= 3 ? 1.3 : 1)) : 0;
+
+  const diaria      = base / 30;
+  const descFaltas  = g.faltas * diaria * 2;      // falta injustificada derruba o DSR junto
+  const proventos   = base + insal + peric + extras + noturno + comiss + gorjeta;
+  const brutoTrib   = Math.max(0, proventos - descFaltas);
+
+  const inss = calcINSS(brutoTrib);
+  const irrf = calcIRRF(brutoTrib - inss);
+  const vt   = g.valeTransporte ? Math.min(base * 0.06, cid.fare * 2 * 22) : 0;
+  const plano= g.planoSaude ? 129 : 0;
+  const adiant = g.adiantamento;
+  const parcela = Math.min(g.dividaParc, g.divida);
+
+  const descontos = inss + irrf + vt + plano + adiant + parcela + descFaltas;
+  const liquido   = proventos - descontos;
+  const fgts      = brutoTrib * 0.08;
+
+  return { base, insal, peric, extras, noturno, comiss, gorjeta, descFaltas,
+           proventos, inss, irrf, vt, plano, adiant, parcela, descontos,
+           liquido, fgts, brutoTrib, parcelaPaga: parcela };
+}
+
+/* ============================= 4. EVENTOS ALEATORIOS =======================
+   Cada evento pode exigir uma condicao (cidade, cenario, setor, dia da semana).
+   Rolados na virada do dia. Bons, ruins e capixabas.
+   ========================================================================== */
+const EVENTOS = [
+  { t:"Onibus quebrou na ponte", x:"Uma hora parado vendo a baia e repensando escolhas.",
+    e:{ energia:-8, sanidade:-7 }, quando:(g)=>!ehFimDeSemana(g.dia) },
+  { t:"Transcol lotado", x:"Voce viajou em pe, colado em tres desconhecidos.",
+    e:{ energia:-6, sanidade:-4 }, quando:(g)=>cidadeAtual(g).scen==="metro"||cidadeAtual(g).scen==="ind" },
+  { t:"Pix inesperado da vo", x:"O amor da familia chegou em forma de R$ 80.",
+    e:{ dinheiro:80, sanidade:6 } },
+  { t:"Ar-condicionado quebrou", x:"O calor capixaba entrou em modo chefao.",
+    e:{ sanidade:-8, energia:-6, fome:5 }, quando:(g)=>cidadeAtual(g).heat>=2 },
+  { t:"Chefe mandou audio de 4 minutos", x:"Era so pra pedir uma planilha. Em tom passivo-agressivo.",
+    e:{ sanidade:-8 } },
+  { t:"Elogio na reuniao", x:"Seu nome foi citado. Por um motivo bom, dessa vez.",
+    e:{ desempenho:7, sanidade:5, rede:4 } },
+  { t:"Colega pediu demissao", x:"O trabalho dele caiu no seu colo sem aumento nenhum.",
+    e:{ desempenho:4, energia:-8, sanidade:-6 } },
+  { t:"Auditoria surpresa", x:"Checaram EPI, ponto e cracha. Voce suou frio.",
+    e:{ sanidade:-6, advertencias:4 } },
+  { t:"Feira barata no bairro", x:"Achou rango em conta e se sentiu invencivel por 12 minutos.",
+    e:{ dinheiro:-25, fome:-24, sanidade:4 }, quando:(g)=>g.dinheiro>=25 },
+  { t:"Dor nas costas", x:"O corpo enviou uma notificacao que voce nao pode silenciar.",
+    e:{ energia:-10, sanidade:-4 } },
+  { t:"Cartao de ponto com erro", x:"O RH 'esqueceu' de lancar duas horas extras.",
+    e:{ sanidade:-7 }, quando:(g)=>g.horasExtras>0, extra:(g)=>{ g.horasExtras=Math.max(0,g.horasExtras-2); } },
+  { t:"Rifa da firma", x:"Voce nao quis comprar, mas comprou.",
+    e:{ dinheiro:-20, rede:6 }, quando:(g)=>g.dinheiro>=20 },
+  { t:"Aniversariantes do mes", x:"Bolo de supermercado e meia hora de folga social.",
+    e:{ sanidade:7, rede:7, fome:-8 } },
+  { t:"Temporal capixaba", x:"A agua subiu mais rapido que sua esperanca.",
+    e:{ energia:-8, sanidade:-6, dinheiro:-30 }, quando:(g)=>cidadeAtual(g).scen==="praia"||cidadeAtual(g).scen==="metro" },
+  { t:"Sol assassino", x:"Voce derreteu igual queijo em chapa quente.",
+    e:{ energia:-9, fome:8, sanidade:-3 }, quando:(g)=>cidadeAtual(g).heat>=3 },
+  { t:"Friagem na serra", x:"O frio bateu e o cobertor venceu a produtividade.",
+    e:{ energia:6, sanidade:5, fome:6 }, quando:(g)=>cidadeAtual(g).heat===0 },
+  { t:"Greve dos onibus", x:"Ninguem chegou. O desconto veio igual.",
+    e:{ sanidade:-9, desempenho:-5 }, quando:(g)=>!ehFimDeSemana(g.dia) },
+  { t:"Indicacao de vaga", x:"Um conhecido lembrou de voce numa conversa de corredor.",
+    e:{ rede:12, sanidade:5 } },
+  { t:"Acidente de trabalho leve", x:"Um corte, um susto e um formulario da CIPA.",
+    e:{ energia:-14, sanidade:-8, advertencias:6 },
+    quando:(g)=>["siderurgia","construcao","rochas","portuario","celulose","moveleiro"].includes(g.setor) },
+  { t:"Meta batida pela equipe", x:"O bonus coletivo caiu e todo mundo fingiu surpresa.",
+    e:{ dinheiro:180, desempenho:6, sanidade:6 }, quando:(g)=>g.desempenho>=55 },
+  { t:"Conta de luz veio alta", x:"O chuveiro eletrico cobrou a fatura.",
+    e:{ dinheiro:-95, sanidade:-5 } },
+  { t:"Cliente elogiou seu atendimento", x:"Registro positivo no sistema. Raro como chuva no deserto.",
+    e:{ desempenho:9, sanidade:6 }, quando:(g)=>["varejo","callcenter","saude","turismo","bancario"].includes(g.setor) },
+  { t:"Perdeu o cartao de transporte", x:"Sumiu do nada, como toda esperanca de carreira.",
+    e:{ sanidade:-8 }, extra:(g)=>{ g.passagens=Math.max(0,g.passagens-6); } },
+  { t:"Sindicato negociou reajuste", x:"Data-base chegou e o salario subiu 3%.",
+    e:{ sanidade:8 }, extra:(g)=>{ g.reajuste=(g.reajuste||0)+0.03; g.salarioBase=Math.round(g.salarioBase*1.03); } },
+  { t:"Boato de demissao em massa", x:"O corredor virou um jornal de fofoca corporativa.",
+    e:{ sanidade:-10, desempenho:3 } },
+  { t:"Achou nota de 50 no bolso", x:"O casaco velho guardou um presente do seu eu do passado.",
+    e:{ dinheiro:50, sanidade:5 } },
+  { t:"Dentista de emergencia", x:"O siso escolheu justamente esse mes.",
+    e:{ dinheiro:-260, energia:-8, sanidade:-6 }, quando:(g)=>g.dinheiro>=260 },
+  { t:"Pelada de domingo", x:"Voce correu, perdeu o gol e ganhou amigos.",
+    e:{ energia:-8, sanidade:12, rede:6 }, quando:(g)=>ehFimDeSemana(g.dia) },
+  { t:"Praia cheia no domingo", x:"Agua salgada resolve o que terapia cobraria caro.",
+    e:{ sanidade:14, energia:-4, fome:7 },
+    quando:(g)=>ehFimDeSemana(g.dia)&&cidadeAtual(g).scen==="praia" },
+  { t:"Chamaram voce pra hora extra no sabado", x:"Voce podia dizer nao. Voce nao disse.",
+    e:{ energia:-14, sanidade:-8, desempenho:6 }, quando:(g)=>ehFimDeSemana(g.dia),
+    extra:(g)=>{ g.horasExtras+=4; } },
+  { t:"Marmita estragou na mochila", x:"O calor venceu o arroz.",
+    e:{ fome:14, sanidade:-6 }, quando:(g)=>cidadeAtual(g).heat>=2 },
+  { t:"Curso gratuito no sindicato", x:"Duas horas de sala e um certificado em PDF.",
+    e:{ qualificacao:8, sanidade:-2 } },
+  { t:"Assedio moral do supervisor", x:"Gritaram com voce na frente de todo mundo.",
+    e:{ sanidade:-14, desempenho:-4 } },
+  { t:"Denuncia anonima funcionou", x:"O supervisor toxico foi transferido de setor.",
+    e:{ sanidade:12, rede:5 }, quando:(g)=>g.sanidade<45 },
+  { t:"Safra boa na regiao", x:"A cidade inteira ficou de bom humor e o comercio aqueceu.",
+    e:{ dinheiro:120, sanidade:6 }, quando:(g)=>["agro","celulose"].includes(g.setor) },
+  { t:"Alta temporada explodiu", x:"Turista chegando de tudo quanto e canto.",
+    e:{ dinheiro:150, energia:-10, desempenho:7 },
+    quando:(g)=>g.setor==="turismo"||cidadeAtual(g).scen==="praia" },
+  { t:"Fiscalizacao do MTE", x:"A empresa correu pra regularizar tudo. Sobrou seguranca pra voce.",
+    e:{ sanidade:6, advertencias:-8 } },
+  { t:"Cesta basica surpresa", x:"A firma resolveu ser gente por um dia.",
+    e:{ fome:-30, sanidade:8 } },
+];
+
+/* =============================== 5. CURSOS ================================ */
+const CURSOS = [
+  { id:"ead",   n:"Curso EAD noturno",       custo:115, qual:9,  pa:1, en:-9,  san:-4 },
+  { id:"senai", n:"Aula no SENAI/SENAC",     custo:225, qual:17, pa:2, en:-13, san:-5 },
+  { id:"nr",    n:"Treinamento de NR (seguranca)", custo:165, qual:12, pa:1, en:-8, san:-2, adv:-12 },
+  { id:"tec",   n:"Modulo do curso tecnico", custo:390, qual:26, pa:2, en:-15, san:-7 },
+];
+
+/* ============================ 6. ESTADO DO JOGO =========================== */
+let G = null;                 // estado corrente
+let UI = { aba:"trabalho" };  // estado de interface
+const SAVE_KEY = "simulador_clt_es_v2";
+
+const cidadeAtual = (g) => REGIOES[g.regiao].cidades[g.cidade];
+const setorAtual  = (g) => SETORES[g.setor];
+const cargoAtual  = (g) => setorAtual(g).cargos[g.nivel];
+const ehTopo      = (g) => g.nivel >= setorAtual(g).cargos.length - 1;
+
+/* Requisitos de promocao por degrau (0->1, 1->2, ... 4->5) */
+const REQ_PROMO = [
+  { des:55, qual:26, rede:18, advMax:45, dias:26 },
+  { des:62, qual:42, rede:30, advMax:38, dias:30 },
+  { des:68, qual:57, rede:44, advMax:30, dias:34 },
+  { des:75, qual:72, rede:58, advMax:23, dias:38 },
+  { des:82, qual:86, rede:74, advMax:16, dias:44 },
+];
+
+function salarioDoCargo(regiao, cidade, setor, nivel){
+  const cid = REGIOES[regiao].cidades[cidade];
+  return Math.round(SETORES[setor].cargos[nivel].base * cid.sal / 10) * 10;
+}
+
+/* --------------------- criacao de personagem (os dados) ------------------- */
+function rolarPersonagem(){
+  const r1 = d6();                                  // regiao
+  const r2 = d6();                                  // cidade
+  const regiao = r1 - 1, cidade = r2 - 1;
+  const cid = REGIOES[regiao].cidades[cidade];
+  // rolagem 3: setor. d6 dentro da lista de setores da cidade (com re-roll ate caber)
+  const r3 = d6();
+  const setor = cid.setores[(r3 - 1) % cid.setores.length];
+  const r4 = d6();                                  // empresa
+  const empresa = EMPRESAS[setor][(r4 - 1) % EMPRESAS[setor].length];
+  const r5 = d2x6();                                // origem
+  return { r1, r2, r3, r4, r5, regiao, cidade, setor, empresa, origem: ORIGENS[r5] };
+}
+
+function novoJogo(rolagem){
+  const cid = REGIOES[rolagem.regiao].cidades[rolagem.cidade];
+  const st  = START_DIF[cid.dif];
+  const g = {
+    screen:"jogo", mes:1, dia:1, pa:4, paMax:4,
+    energia:st.energia, sanidade:st.sanidade, fome:st.fome,
+    dinheiro:st.dinheiro, passagens:st.passagens,
+    desempenho:40, qualificacao:6, rede:8, advertencias:0, diasNoCargo:0,
+    fgts:0, horasExtras:0, horasNoturnas:0, faltas:0, adiantamento:0,
+    divida:0, dividaParc:0, mesesSemAluguel:0, bike:false, moto:false,
+    regiao:rolagem.regiao, cidade:rolagem.cidade, setor:rolagem.setor,
+    nivel:0, empresa:rolagem.empresa, origemNome:rolagem.origem.n,
+    aluguel:cid.aluguel, valeTransporte:true, planoSaude:false,
+    trabalhouHoje:false, pediuAumento:false, usouVale:false, faltouOntem:false,
+    diasComFome:0, avaliacoesRuins:0, vendasFeitas:0, reajuste:0,
+    log:[], popup:null, fim:null,
+    st:{ diasTrabalhados:0, horasExtrasTotal:0, promocoes:0, advertenciasTotais:0,
+         ganhoTotal:0, gastoTotal:0, minigamesVencidos:0, recolocacoes:0, cursosFeitos:0 },
+    conquistas:[],
+  };
+  g.salarioBase = salarioDoCargo(g.regiao, g.cidade, g.setor, 0);
+  rolagem.origem.ap(g);                       // aplica o modificador de origem
+  g.energia = clamp(g.energia); g.sanidade = clamp(g.sanidade); g.fome = clamp(g.fome);
+  g.qualificacao = clamp(g.qualificacao); g.rede = clamp(g.rede);
+  addLog(g, `Voce caiu em <b>${cid.nome}</b> (${cid.tag}), regiao ${REGIOES[g.regiao].nome}.`, "mo");
+  addLog(g, `Cargo inicial: <b>${cargoAtual(g).n}</b> na ${g.empresa}.`, "mo");
+  addLog(g, `Origem: ${rolagem.origem.n}. ${rolagem.origem.d}`, "ev");
+  if (cid.perk)   addLog(g, `Vantagem local: ${cid.perk}`, "up");
+  if (cid.debuff) addLog(g, `Desvantagem local: ${cid.debuff}`, "dn");
+  return g;
+}
+
+/* ---------------------------- mutacoes basicas ---------------------------- */
+function addLog(g, txt, tipo){
+  g.log.unshift({ txt, tipo: tipo || "", dia: g.dia, mes: g.mes });
+  if (g.log.length > 60) g.log.length = 60;
+}
+
+const CAMPOS_0_100 = ["energia","sanidade","fome","desempenho","qualificacao","rede","advertencias"];
+
+function aplicar(g, e){
+  if (!e) return;
+  for (const k of CAMPOS_0_100) if (e[k]) g[k] = clamp(g[k] + e[k]);
+  if (e.dinheiro){
+    g.dinheiro = Math.max(0, g.dinheiro + e.dinheiro);
+    if (e.dinheiro > 0) g.st.ganhoTotal += e.dinheiro; else g.st.gastoTotal += -e.dinheiro;
+  }
+  if (e.passagens) g.passagens = Math.max(0, g.passagens + e.passagens);
+  if (e.horasExtras){ g.horasExtras += e.horasExtras; g.st.horasExtrasTotal += e.horasExtras; }
+  if (e.horasNoturnas) g.horasNoturnas += e.horasNoturnas;
+  if (e.advertencias > 0) g.st.advertenciasTotais += e.advertencias;
+  if (e.fgts) g.fgts += e.fgts;
+}
+
+/* resumo textual de um delta, pra mostrar no log */
+const NOMES_DELTA = { energia:"Energia", sanidade:"Sanidade", fome:"Fome", dinheiro:"R$",
+  passagens:"Passagens", desempenho:"Desempenho", qualificacao:"Qualificacao",
+  rede:"Rede", advertencias:"Advertencias", horasExtras:"Horas extras" };
+function resumoDelta(e){
+  if (!e) return "";
+  const p = [];
+  for (const k in NOMES_DELTA){
+    if (!e[k]) continue;
+    const v = e[k], sinal = v > 0 ? "+" : "";
+    p.push(`<span class="${v>0?'c-ok':'c-bad'}">${sinal}${k==="dinheiro"?money0(v).replace("R$ ","R$"):v} ${NOMES_DELTA[k]}</span>`);
+  }
+  return p.join(" · ");
+}
+
+/* --------------------------- condicoes de fim ----------------------------- */
+function checarFim(g){
+  if (g.fim) return true;
+  if (g.energia <= 0)      return fim(g, false, "EXAUSTAO TOTAL",
+    "Seu corpo pediu arrego no meio da rotina. Voce apagou e nao levantou pro proximo turno.");
+  if (g.sanidade <= 0)     return fim(g, false, "BURNOUT",
+    "A mente entregou os pontos. Afastamento pelo INSS, CID F48, e um silencio muito grande.");
+  if (g.advertencias >= 100) return fim(g, false, "DEMISSAO POR JUSTA CAUSA",
+    "As advertencias empilharam ate virar processo interno. Sem aviso, sem multa, sem FGTS.");
+  if (g.diasComFome >= 4)  return fim(g, false, "COLAPSO POR FOME",
+    "Quatro dias de barriga vazia. O corpo cobrou a conta que o salario nao pagou.");
+  return false;
+}
+function fim(g, venceu, titulo, texto){
+  g.fim = { venceu, titulo, texto };
+  g.screen = venceu ? "vitoria" : "derrota";
+  return true;
+}
+
+/* =============================== 7. ACOES =================================
+   Cada dia tem 4 Pontos de Acao (PA). Acoes de trabalho so aparecem em dia
+   util; algumas dependem de dinheiro, cidade, setor ou nivel de carreira.
+   ========================================================================== */
+function custoTurno(g){
+  const cid = cidadeAtual(g);
+  let en = 16, san = 5 + Math.round(g.nivel * 0.8), pass = 2;
+  if (cid.debuff && /Energia/.test(cid.debuff)) en += 2;
+  if (cid.debuff && /passagem a mais/.test(cid.debuff)) pass += 1;
+  if (g.bike) pass = 0;
+  if (g.moto) pass = 0;
+  en += g.nivel;                       // cargo mais alto, mais desgaste mental
+  if (setorAtual(g).insal) en += 2;
+  return { en, san, pass };
+}
+
+const ACOES = [
+/* ------------------------------- TRABALHO -------------------------------- */
+{ id:"ponto", cat:"trabalho", em:"⏱️", n:"Bater o Ponto", pa:2,
+  d:"O turno inteiro. Minigame do setor define seu Desempenho do dia.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && !g.trabalhouHoje,
+  pode:(g)=>{ const c=custoTurno(g);
+    if (c.pass>0 && g.passagens<c.pass) return "Sem passagem suficiente (da pra ir a pe pelo menu Cidade).";
+    if (g.moto && g.dinheiro<15) return "Sem gasolina pra moto.";
+    return true; },
+  mg:(g)=>setorAtual(g).mg,
+  resolve:(g,score)=>{
+    const c = custoTurno(g), st = setorAtual(g);
+    const e = { energia:-c.en, sanidade:-c.san, fome:14, passagens:-c.pass,
+                desempenho: Math.round(3 + 14*score) };
+    if (g.moto) e.dinheiro = -15;
+    if (st.noturno && chance(0.35)) e.horasNoturnas = 3;
+    g.trabalhouHoje = true; g.st.diasTrabalhados++;
+    if (score >= 0.8) g.st.minigamesVencidos++;
+    const txt = score >= 0.8 ? "Turno impecavel. Ate o supervisor notou."
+              : score >= 0.5 ? "Turno cumprido. Nada de heroico, nada de vergonhoso."
+              : "Turno arrastado. A producao sentiu.";
+    if (score < 0.35){ e.advertencias = 6; }
+    return { e, txt, tipo: score>=0.5?"up":"dn" };
+  }},
+{ id:"extra", cat:"trabalho", em:"🌙", n:"Fazer Hora Extra", pa:1,
+  d:"+3h com adicional de 50% na folha. O corpo cobra juros.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && g.trabalhouHoje,
+  run:(g)=>({ e:{ energia:-14, sanidade:-8, fome:8, horasExtras:3, desempenho:4 },
+              txt:"Voce ficou depois do horario. A folha agradece, a coluna nao." }) },
+{ id:"meta", cat:"trabalho", em:"📈", n:"Pocar a Meta", pa:1,
+  d:"Minigame de produtividade. Muito Desempenho, muito desgaste.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && g.trabalhouHoje,
+  mg:()=>"meta",
+  resolve:(g,score)=>({ e:{ energia:-13, sanidade:-9, fome:6,
+      desempenho: Math.round(6 + 16*score), dinheiro: Math.round(40*score) },
+      txt: score>=0.7 ? "Voce pocou a meta e virou assunto no grupo da equipe."
+                      : "Voce tentou, suou e garantiu principalmente estresse.",
+      tipo: score>=0.7?"up":"dn" }) },
+{ id:"colega", cat:"trabalho", em:"🤝", n:"Ajudar um Colega", pa:1,
+  d:"Trabalho invisivel que constroi Rede de verdade.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && g.trabalhouHoje,
+  run:(g)=>({ e:{ rede:9, energia:-7, sanidade:2, desempenho:2 },
+              txt:"Voce salvou o turno de alguem. Isso circula." , tipo:"up"}) },
+{ id:"epi", cat:"trabalho", em:"🦺", n:"Cuidar do EPI / CIPA", pa:1,
+  d:"Reduz Advertencias e evita acidente.",
+  quando:(g)=>!ehFimDeSemana(g.dia),
+  run:(g)=>({ e:{ advertencias:-12, desempenho:3, energia:-4 },
+              txt:"Checou equipamento, assinou a ficha, virou o chato responsavel." }) },
+{ id:"feedback", cat:"trabalho", em:"🗣️", n:"Pedir Feedback ao Supervisor", pa:1,
+  d:"Mostra exatamente o que falta pra sua promocao.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && !ehTopo(g),
+  run:(g)=>{ const req = REQ_PROMO[g.nivel]; const falta = faltaParaPromocao(g);
+    return { e:{ desempenho:2, sanidade:-3 },
+      txt:"Feedback recebido.",
+      popup:{ titulo:"Feedback do supervisor", em:"🗣️",
+        html:`<p class="small muted">Para virar <b>${esc(setorAtual(g).cargos[g.nivel+1].n)}</b> voce precisa de:</p>
+          <div class="pay"><div class="h">Requisitos da proxima avaliacao</div>
+          ${linhaReq("Desempenho", g.desempenho, req.des)}
+          ${linhaReq("Qualificacao", g.qualificacao, req.qual)}
+          ${linhaReq("Rede de contatos", g.rede, req.rede)}
+          ${linhaReq("Dias no cargo", g.diasNoCargo, req.dias)}
+          ${linhaReq("Advertencias (max)", g.advertencias, req.advMax, true)}
+          </div>
+          <p class="small muted" style="margin-top:10px">${falta.length? "Ainda falta: <b>"+falta.join(", ")+"</b>." : "<b class='c-ok'>Voce ja cumpre tudo.</b> A avaliacao acontece no fim do mes."}</p>` } };
+  }},
+{ id:"aumento", cat:"trabalho", em:"💬", n:"Pedir Aumento", pa:1,
+  d:"So com Desempenho alto. Pode dar certo ou virar marcacao.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && !g.pediuAumento,
+  pode:(g)=> g.desempenho>=70 ? true : "Precisa de Desempenho 70+ pra ter coragem.",
+  run:(g)=>{ g.pediuAumento = true;
+    const p = 0.25 + g.rede/250 + (g.desempenho-70)/200;
+    if (chance(p)){ const inc = Math.round(g.salarioBase*0.07/10)*10; g.salarioBase += inc;
+      return { e:{ sanidade:8 }, txt:`Aumento aprovado: <b>+${money0(inc)}</b> no salario base.`, tipo:"up" }; }
+    return { e:{ sanidade:-10, advertencias:8 },
+             txt:"Pedido negado com um discurso sobre 'momento da empresa'.", tipo:"dn" };
+  }},
+{ id:"banheiro", cat:"trabalho", em:"🚽", n:"Sumir no Banheiro", pa:1,
+  d:"Alivio espiritual com risco corporativo.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && g.trabalhouHoje,
+  run:(g)=> chance(0.25)
+    ? { e:{ sanidade:9, advertencias:11 }, txt:"O supervisor cronometrou. Anotou.", tipo:"dn" }
+    : { e:{ sanidade:11 }, txt:"Quinze minutos de paz absoluta e scroll infinito.", tipo:"up" } },
+{ id:"posto", cat:"trabalho", em:"🏥", n:"Ir ao Posto de Saude", pa:2,
+  d:"Atestado: falta justificada, sem advertencia.",
+  quando:(g)=>!ehFimDeSemana(g.dia) && !g.trabalhouHoje,
+  pode:(g)=> g.energia<40 || g.sanidade<40 ? true : "So com Energia ou Sanidade abaixo de 40.",
+  run:(g)=>{ g.trabalhouHoje = true; g.atestado = true;
+    return { e:{ energia:14, sanidade:8, fome:5 },
+             txt:"Fila, senha, dez minutos de consulta e um atestado de um dia.", tipo:"up" }; }},
+
+/* --------------------------------- CASA ---------------------------------- */
+{ id:"cochilo", cat:"casa", em:"😴", n:"Cochilar", pa:1, d:"Vinte minutos que valem por duas horas.",
+  run:(g)=>({ e:{ energia:17, fome:5, sanidade:2 }, txt:"Cochilo restaurador no sofa." }) },
+{ id:"marmita", cat:"casa", em:"🍱", n:"Cozinhar Marmita", pa:1, d:"Comida barata e honesta.",
+  pode:(g)=> g.dinheiro>=14 ? true : "Sem dinheiro nem pra arroz.",
+  run:(g)=>({ e:{ dinheiro:-14, fome:-32, sanidade:4, energia:-3 },
+              txt:"Arroz, feijao e uma proteina discutivel. Funciona." }) },
+{ id:"streaming", cat:"casa", em:"📺", n:"Maratonar Serie", pa:1, d:"Desligar o cerebro por algumas horas.",
+  run:(g)=>({ e:{ sanidade:13, energia:-2, fome:5 }, txt:"Tres episodios e uma insonia leve." }) },
+{ id:"banho", cat:"casa", em:"🚿", n:"Banho Demorado", pa:1, d:"Terapia de agua quente.",
+  run:(g)=>({ e:{ sanidade:8, energia:5, dinheiro:-6 }, txt:"A conta de agua chora, voce respira." }) },
+{ id:"faxina", cat:"casa", em:"🧹", n:"Faxina da Quitinete", pa:1, d:"Casa limpa, cabeca menos suja.",
+  run:(g)=>({ e:{ sanidade:7, energia:-9 }, txt:"Casa arrumada. Por umas 36 horas." }) },
+
+/* -------------------------------- CIDADE --------------------------------- */
+{ id:"recarga", cat:"cidade", em:"💳", n:"Recarregar o Cartao", pa:1,
+  d:"Dez passagens do transporte local.",
+  pode:(g)=>{ const c = Math.round(cidadeAtual(g).fare*10);
+    return g.dinheiro>=c ? true : `Precisa de ${money0(c)}.`; },
+  run:(g)=>({ e:{ dinheiro:-Math.round(cidadeAtual(g).fare*10), passagens:10, sanidade:-1 },
+              txt:"Cartao recarregado. A liberdade tem tarifa." }) },
+{ id:"ape", cat:"cidade", em:"🚶", n:"Ir a Pe / Pegar Carona", pa:1,
+  d:"Carona do vizinho: ganha 2 passagens e paga com o corpo.",
+  run:(g)=>({ e:{ passagens:2, energia:-12, sanidade:-4, fome:6 },
+              txt:"Voce andou o que o onibus faria em 12 minutos." }) },
+{ id:"mercado", cat:"cidade", em:"🛒", n:"Compra do Mes", pa:2, d:"Enche a despensa de uma vez.",
+  pode:(g)=> g.dinheiro>=220 ? true : "Precisa de R$220.",
+  run:(g)=>({ e:{ dinheiro:-220, fome:-60, sanidade:6 },
+              txt:"Carrinho cheio, cartao chorando, geladeira feliz.", tipo:"up" }) },
+{ id:"podrao", cat:"cidade", em:"🌭", n:"Comprar Podrao", pa:1, d:"Barato, gostoso, destruidor.",
+  pode:(g)=> g.dinheiro>=20 ? true : "Nem pro podrao da.",
+  run:(g)=> chance(0.14)
+    ? { e:{ dinheiro:-20, fome:-14, sanidade:-10, energia:-12 }, txt:"Passou mal a noite inteira.", tipo:"dn" }
+    : { e:{ dinheiro:-20, fome:-30, sanidade:7, energia:-2 }, txt:"Melhor coisa do dia, sem discussao." } },
+{ id:"happy", cat:"cidade", em:"🍺", n:"Happy Hour com a Firma", pa:1,
+  d:"Rede sobe, carteira desce.",
+  pode:(g)=> g.dinheiro>=55 ? true : "Precisa de R$55.",
+  run:(g)=>({ e:{ dinheiro:-55, sanidade:15, rede:11, energia:-9, fome:-12 },
+              txt:"Voce riu do chefe pelas costas. Terapeutico e estrategico.", tipo:"up" }) },
+{ id:"praia", cat:"cidade", em:"🏖️", n:"Ir a Praia", pa:1, d:"Sal, sol e resete mental.",
+  quando:(g)=> cidadeAtual(g).scen==="praia" || cidadeAtual(g).scen==="porto",
+  run:(g)=>({ e:{ sanidade:18, energia:-4, fome:8 },
+              txt:"O mar nao resolve nada, mas ajuda muito.", tipo:"up" }) },
+{ id:"trilha", cat:"cidade", em:"⛰️", n:"Subir a Montanha", pa:1, d:"Ar frio e silencio.",
+  quando:(g)=> cidadeAtual(g).scen==="serra",
+  run:(g)=>({ e:{ sanidade:16, energia:-10, fome:7 }, txt:"Vista limpa, cabeca mais limpa ainda.", tipo:"up" }) },
+{ id:"bola", cat:"cidade", em:"⚽", n:"Pelada no Campinho", pa:1, d:"Suor, rede social analogica.",
+  run:(g)=>({ e:{ sanidade:11, energia:-11, rede:7, fome:8 }, txt:"Perdeu de virada, ganhou dois contatos." }) },
+{ id:"culto", cat:"cidade", em:"🙏", n:"Ir ao Culto / Missa", pa:1, d:"Fe e comunidade.",
+  run:(g)=>({ e:{ sanidade:12, rede:5 }, txt:"Uma hora sem pensar em meta." }) },
+
+/* -------------------------------- CARREIRA ------------------------------- */
+...CURSOS.map(c => ({
+  id:"curso_"+c.id, cat:"carreira", em:"📚", n:c.n, pa:c.pa,
+  d:`Qualificacao +${c.qual}. Custa ${money0(c.custo)}.`,
+  pode:(g)=>{ const custo = custoCurso(g,c); return g.dinheiro>=custo ? true : `Precisa de ${money0(custo)}.`; },
+  run:(g)=>{ const custo = custoCurso(g,c); g.st.cursosFeitos++;
+    return { e:{ dinheiro:-custo, qualificacao:c.qual, energia:c.en, sanidade:c.san,
+                 advertencias:c.adv||0 },
+             txt:`Certificado na mao: ${c.n}.`, tipo:"up" }; }
+})),
+{ id:"linkedin", cat:"carreira", em:"💼", n:"Atualizar Curriculo / LinkedIn", pa:1,
+  d:"Poste gratidao, colete contatos.",
+  run:(g)=>({ e:{ rede:9, qualificacao:2, sanidade:-3 },
+              txt:"Voce escreveu 'humildemente' e apagou tres vezes." }) },
+{ id:"networking", cat:"carreira", em:"📇", n:"Puxar Conversa na Firma", pa:1,
+  d:"Cafezinho estrategico com quem decide.",
+  run:(g)=> chance(0.6)
+    ? { e:{ rede:12, sanidade:-2 }, txt:"O coordenador riu da sua piada. Isso vale ponto.", tipo:"up" }
+    : { e:{ rede:4, sanidade:-6 }, txt:"Conversa morreu no 'entao ne'. Constrangedor." } },
+{ id:"sindicato", cat:"carreira", em:"✊", n:"Ir ao Sindicato", pa:1,
+  d:"Direito trabalhista e limpeza de advertencia injusta.",
+  run:(g)=>({ e:{ advertencias:-14, rede:6, sanidade:5 },
+              txt:"Voce descobriu que metade daquelas advertencias era irregular.", tipo:"up" }) },
+{ id:"entrevista", cat:"carreira", em:"🎯", n:"Entrevista em Outra Firma", pa:2,
+  d:"Chance de trocar de empresa com salario melhor.",
+  pode:(g)=> g.qualificacao>=35 ? true : "Precisa de Qualificacao 35+.",
+  run:(g)=>{ const p = 0.2 + g.qualificacao/220 + g.rede/300;
+    if (chance(p)){
+      const cid = cidadeAtual(g);
+      const novoSetor = pick(cid.setores);
+      const novaEmp = pick(EMPRESAS[novoSetor]);
+      const inc = Math.round(g.salarioBase*0.12/10)*10;
+      g.empresa = novaEmp; g.salarioBase += inc; g.advertencias = 0; g.diasNoCargo = 0;
+      return { e:{ sanidade:12, rede:6 },
+        txt:`Proposta aceita! Voce agora e ${cargoAtual(g).n} na <b>${esc(novaEmp)}</b> (+${money0(inc)}).`,
+        tipo:"up" };
+    }
+    return { e:{ sanidade:-9, energia:-6 }, txt:"'Vamos manter seu curriculo no banco de dados.'", tipo:"dn" };
+  }},
+
+/* --------------------------------- GRANA --------------------------------- */
+{ id:"vale", cat:"grana", em:"🏧", n:"Pedir Vale (Adiantamento)", pa:1,
+  d:"40% do salario agora, descontado no dia 5.",
+  pode:(g)=> !g.usouVale ? true : "Voce ja pediu vale este mes.",
+  run:(g)=>{ const v = Math.round(g.salarioBase*0.4); g.usouVale = true; g.adiantamento += v;
+    return { e:{ dinheiro:v, sanidade:-5 },
+             txt:`Adiantamento de ${money0(v)} liberado. O futuro que se vire.` }; }},
+{ id:"consignado", cat:"grana", em:"🏦", n:"Emprestimo Consignado", pa:1,
+  d:"R$2.500 agora, 12 parcelas de R$260 na folha.",
+  pode:(g)=> g.divida<=0 ? true : "Voce ja tem divida ativa.",
+  run:(g)=>{ g.divida = 3120; g.dividaParc = 260;
+    return { e:{ dinheiro:2500, sanidade:-8 },
+             txt:"Dinheiro na conta e uma corrente invisivel no tornozelo.", tipo:"dn" }; }},
+{ id:"boletos", cat:"grana", em:"🧾", n:"Antecipar Parcela da Divida", pa:1,
+  d:"Quita uma parcela extra e reduz o total.",
+  quando:(g)=> g.divida>0,
+  pode:(g)=> g.dinheiro>=g.dividaParc ? true : `Precisa de ${money0(g.dividaParc)}.`,
+  run:(g)=>{ const p = Math.min(g.dividaParc, g.divida); g.divida -= p;
+    if (g.divida<=0){ g.divida=0; g.dividaParc=0; }
+    return { e:{ dinheiro:-p, sanidade:6 }, txt:`Parcela antecipada. Falta ${money0(g.divida)}.`, tipo:"up" }; }},
+{ id:"bico", cat:"grana", em:"🔧", n:"Fazer um Bico", pa:2, d:"Freela de fim de semana ou de noite.",
+  run:(g)=>{ const cid = cidadeAtual(g);
+    let v = rint(90,170);
+    if (/bicos/.test(cid.perk||"")) v = Math.round(v*1.35);
+    return { e:{ dinheiro:v, energia:-24, sanidade:-7, fome:12 },
+             txt:`Bico fechado: ${money0(v)} no bolso, o domingo no prejuizo.` }; }},
+{ id:"vender", cat:"grana", em:"📦", n:"Vender Coisas Usadas", pa:1, d:"O armario vira dinheiro.",
+  pode:(g)=> g.vendasFeitas<3 ? true : "Nao sobrou nada pra vender.",
+  run:(g)=>{ g.vendasFeitas++; const v = rint(60,150);
+    return { e:{ dinheiro:v, sanidade:-6 }, txt:`Vendeu por ${money0(v)}. Deu um aperto no peito.` }; }},
+{ id:"loteria", cat:"grana", em:"🎰", n:"Jogar na Loteria", pa:1, d:"Sonhar e de graca. O bilhete nao.",
+  pode:(g)=> g.dinheiro>=12 ? true : "Nem o bilhete cabe no orcamento.",
+  run:(g)=>{ const r = Math.random();
+    if (r < 0.008) return { e:{ dinheiro:12000, sanidade:30 }, txt:"VOCE ACERTOU A QUINA. A vida mudou de assunto.", tipo:"up" };
+    if (r < 0.10)  return { e:{ dinheiro:80, sanidade:6 },  txt:"Terno premiado. Deu pro lanche do mes." };
+    return { e:{ dinheiro:-12, sanidade:-3 }, txt:"Nenhum numero. Como sempre." }; }},
+];
+
+function custoCurso(g, c){
+  const cid = cidadeAtual(g);
+  return /cursos custam/.test(cid.perk||"") ? Math.round(c.custo*0.8) : c.custo;
+}
+function linhaReq(nome, atual, alvo, inverso){
+  const ok = inverso ? atual < alvo : atual >= alvo;
+  return `<div class="l"><span>${nome}</span><b class="${ok?'c-ok':'c-bad'}">${Math.round(atual)} / ${alvo}${ok?" ✓":""}</b></div>`;
+}
+function faltaParaPromocao(g){
+  if (ehTopo(g)) return [];
+  const r = REQ_PROMO[g.nivel], f = [];
+  if (g.desempenho   < r.des)    f.push("Desempenho");
+  if (g.qualificacao < r.qual)   f.push("Qualificacao");
+  if (g.rede         < r.rede)   f.push("Rede");
+  if (g.diasNoCargo  < r.dias)   f.push("tempo no cargo");
+  if (g.advertencias >= r.advMax) f.push("reduzir Advertencias");
+  return f;
+}
+function acoesDisponiveis(g){
+  return ACOES.filter(a => !a.quando || a.quando(g));
+}
+
+/* ========================= 8. EXECUCAO DE UMA ACAO ========================= */
+function executarAcao(id){
+  if (!G || G.screen !== "jogo" || G.popup) return;
+  const a = ACOES.find(x => x.id === id);
+  if (!a) return;
+  if (a.quando && !a.quando(G)) return;
+  if (G.pa < a.pa) { flashAviso("Sem Pontos de Acao. Encerre o dia."); return; }
+  const ok = a.pode ? a.pode(G) : true;
+  if (ok !== true){ flashAviso(typeof ok === "string" ? ok : "Acao indisponivel."); return; }
+
+  if (a.mg){                                   // acao com minigame
+    const tipo = typeof a.mg === "function" ? a.mg(G) : a.mg;
+    abrirMinigame(tipo, (score) => {
+      G.pa -= a.pa;
+      finalizarAcao(a, a.resolve(G, score));
+    });
+    return;
+  }
+  G.pa -= a.pa;
+  finalizarAcao(a, a.run(G));
+}
+
+function finalizarAcao(a, res){
+  aplicar(G, res.e);
+  const det = resumoDelta(res.e);
+  addLog(G, `<b>${esc(a.n)}</b> — ${res.txt}${det ? `<br><span class="tiny">${det}</span>` : ""}`, res.tipo || "");
+  cenaAcao(a);
+  if (res.popup) G.popup = res.popup;
+  if (!checarFim(G)) checarConquistas(G);
+  salvar(); render();
+}
+
+/* =========================== 9. VIRADA DE DIA ============================= */
+function encerrarDia(){
+  if (!G || G.screen !== "jogo" || G.popup) return;
+  const g = G, cid = cidadeAtual(g);
+
+  /* falta injustificada */
+  if (!ehFimDeSemana(g.dia) && !g.trabalhouHoje){
+    g.faltas++;
+    aplicar(g, { advertencias:17, desempenho:-10, sanidade:-6 });
+    addLog(g, "<b>Falta injustificada.</b> Advertencia registrada e desconto de DSR na folha.", "dn");
+  }
+
+  /* horas noturnas do setor */
+  if (g.trabalhouHoje && setorAtual(g).noturno && chance(0.25)) g.horasNoturnas += 2;
+
+  /* sono */
+  let en = 23, san = 4;
+  if (g.fome >= 80){ en -= 8; san -= 8; addLog(g, "Dormiu com fome. Acordou pior do que deitou.", "dn"); }
+  if (g.sanidade < 25){ en -= 6; addLog(g, "Insonia de ansiedade. O teto ficou muito interessante.", "dn"); }
+  if (/Sanidade ao dormir/.test(cid.perk||"")) san += 3;
+  if (g.energia > 65) en -= 6;
+  aplicar(g, { energia:en, sanidade:san, fome:16 });
+
+  /* fome cronica */
+  if (g.fome >= 90) g.diasComFome++; else g.diasComFome = 0;
+  if (g.diasComFome === 2) addLog(g, "Dois dias praticamente sem comer. O corpo esta avisando.", "dn");
+
+  /* sem passagem em dia util seguinte */
+  if (g.passagens <= 0 && !g.bike && !g.moto && !ehFimDeSemana(g.dia + 1))
+    addLog(g, "Cartao de transporte zerado. Amanha vai ter que ir a pe.", "dn");
+
+  g.diasNoCargo++;
+  aplicar(g, { desempenho:-1 });          // a regua da firma nunca para de correr
+  if (checarFim(g)) { salvar(); render(); return; }
+
+  /* evento aleatorio */
+  if (chance(0.58)){
+    const disp = EVENTOS.filter(ev => !ev.quando || ev.quando(g));
+    if (disp.length){
+      const ev = pick(disp);
+      aplicar(g, ev.e); if (ev.extra) ev.extra(g);
+      addLog(g, `<b>${esc(ev.t)}</b> — ${esc(ev.x)}<br><span class="tiny">${resumoDelta(ev.e)}</span>`, "ev");
+      g.popup = { titulo: ev.t, em:"🎲", html:`<p>${esc(ev.x)}</p><p class="small">${resumoDelta(ev.e)}</p>` };
+    }
+  }
+  if (checarFim(g)) { salvar(); render(); return; }
+
+  /* avanca */
+  if (g.dia >= 30) fecharMes(g); else { g.dia++; iniciarDia(g); }
+  checarConquistas(g);
+  salvar(); render();
+}
+
+function iniciarDia(g){
+  g.pa = g.paMax; g.trabalhouHoje = false; g.pediuAumento = false; g.atestado = false;
+  const cid = cidadeAtual(g);
+
+  if (g.dia === 5)  pagamento(g);
+  if (g.dia === 8)  cobrarAluguel(g, cid);
+  if (g.dia === 12) cobrarContas(g);
+  if (ehFimDeSemana(g.dia)) addLog(g, `<b>${nomeDia(g.dia)}</b> — folga. Sem ponto, sem desconto.`, "");
+}
+
+function pagamento(g){
+  const h = holerite(g);
+  g.dinheiro = Math.max(0, g.dinheiro + h.liquido);
+  g.st.ganhoTotal += Math.max(0, h.liquido);
+  g.fgts += h.fgts;
+  g.divida = Math.max(0, g.divida - h.parcelaPaga);
+  if (g.divida <= 0){ g.divida = 0; g.dividaParc = 0; }
+  g.horasExtras = 0; g.horasNoturnas = 0; g.faltas = 0; g.adiantamento = 0; g.usouVale = false;
+  addLog(g, `<b>Salario caiu.</b> Bruto ${money0(h.proventos)} · Descontos ${money0(h.descontos)} · <b class="c-ok">Liquido ${money0(h.liquido)}</b>`, "mo");
+  g.popup = { titulo:"Dia 5 — Holerite", em:"🧾", html: htmlHolerite(g, h) };
+}
+
+function cobrarAluguel(g, cid){
+  if (g.mesesSemAluguel > 0){
+    g.mesesSemAluguel--;
+    addLog(g, "Voce ainda esta de favor. Sem aluguel este mes.", "up");
+    return;
+  }
+  if (g.dinheiro >= g.aluguel){
+    aplicar(g, { dinheiro:-g.aluguel, sanidade:2 });
+    addLog(g, `Aluguel pago: ${money0(g.aluguel)}. Sobrou ${money0(g.dinheiro)}.`, "mo");
+  } else {
+    g.aluguelAtrasado = (g.aluguelAtrasado || 0) + 1;
+    aplicar(g, { sanidade:-14 });
+    addLog(g, `<b>Aluguel atrasado</b> (${g.aluguelAtrasado}x). O locador mandou audio.`, "dn");
+    if (g.aluguelAtrasado >= 2)
+      fim(g, false, "DESPEJO", `Dois meses sem pagar ${money0(g.aluguel)}. Suas coisas foram pra calcada e a carteira assinada nao segurou o teto.`);
+    else
+      g.popup = { titulo:"Aluguel atrasado", em:"⚠️",
+        html:`<p>Voce nao tinha ${money0(g.aluguel)}. O locador deu um mes de prazo.</p><p class="small c-bad">Atrasar duas vezes seguidas = despejo.</p>` };
+  }
+}
+
+function cobrarContas(g){
+  const cid = cidadeAtual(g);
+  let contas = Math.round(155 + cid.aluguel * 0.10 + (cid.heat >= 3 ? 50 : 0));
+  if (g.dinheiro >= contas){
+    aplicar(g, { dinheiro:-contas });
+    addLog(g, `Contas do mes (luz, agua, internet): ${money0(contas)}.`, "mo");
+  } else {
+    aplicar(g, { sanidade:-10 });
+    addLog(g, `Sem dinheiro pras contas (${money0(contas)}). Cortaram alguma coisa.`, "dn");
+  }
+}
+
+/* ====================== 10. FECHAMENTO DE MES E CARREIRA ================== */
+function fecharMes(g){
+  const avaliacao = avaliar(g);
+  g.mes++; g.dia = 1;
+  iniciarDia(g);
+
+  if (g.mes > 24 && !g.fim)
+    return fim(g, true, "DOIS ANOS DE CASA",
+      `Voce aguentou 24 meses como ${cargoAtual(g).n} em ${cidadeAtual(g).nome}. Tem FGTS de ${money0(g.fgts)} e uma historia pra contar.`);
+  if (g.dinheiro >= 50000 && !g.fim)
+    return fim(g, true, "LIBERDADE FINANCEIRA",
+      `Voce juntou ${money0(g.dinheiro)}. Da pra pedir as contas e dormir tranquilo pela primeira vez.`);
+  g.popup = avaliacao;
+}
+
+function avaliar(g){
+  g.desempenho = clamp(g.desempenho);
+  const cid = cidadeAtual(g);
+
+  /* topo da carreira */
+  if (ehTopo(g)){
+    if (g.desempenho >= 70){
+      fim(g, true, "TOPO DA CARREIRA",
+        `Voce chegou a ${cargoAtual(g).n} na ${g.empresa}, em ${cid.nome}, e segurou a posicao. Salario de ${money0(g.salarioBase)}, ${g.st.promocoes} promocoes e ${g.st.diasTrabalhados} dias de ponto batido.`);
+      return null;
+    }
+    return { titulo:"Avaliacao de Desempenho", em:"📋",
+      html:`<p>Voce ja esta no topo da escada de <b>${esc(setorAtual(g).nome)}</b>. Segure Desempenho em 70+ no fim de um mes pra fechar a carreira com chave de ouro.</p>
+            <p class="small">Desempenho atual: <b class="${g.desempenho>=70?'c-ok':'c-bad'}">${Math.round(g.desempenho)}</b></p>` };
+  }
+
+  const r = REQ_PROMO[g.nivel];
+  const falta = faltaParaPromocao(g);
+
+  if (falta.length === 0){
+    g.nivel++; g.st.promocoes++;
+    const antes = g.salarioBase;
+    g.salarioBase = Math.round(salarioDoCargo(g.regiao, g.cidade, g.setor, g.nivel) * (1 + g.reajuste));
+    g.diasNoCargo = 0;
+    g.desempenho = 45; g.avaliacoesRuins = 0;
+    const aluguelAntes = g.aluguel;
+    g.aluguel = Math.round(g.aluguel * 1.12 / 10) * 10;   // subiu de cargo, subiu de endereco
+    aplicar(g, { sanidade:12, rede:5 });
+    addLog(g, `<b>PROMOVIDO!</b> Agora voce e ${esc(cargoAtual(g).n)}. Salario ${money0(antes)} → <b class="c-ok">${money0(g.salarioBase)}</b>.`, "up");
+    addLog(g, `Voce mudou pra um lugar melhor: aluguel ${money0(aluguelAntes)} → <b class="c-bad">${money0(g.aluguel)}</b>.`, "dn");
+    return { titulo:"PROMOCAO!", em:"🎉",
+      html:`<p>Seu nome foi aprovado no comite. Voce agora e <b>${esc(cargoAtual(g).n)}</b>.</p>
+        <div class="pay"><div class="h">O que muda</div>
+          <div class="l"><span>Salario base</span><b class="c-ok">${money0(antes)} → ${money0(g.salarioBase)}</b></div>
+          <div class="l"><span>Desempenho</span><b>reiniciado em 45 (a regua subiu)</b></div>
+          <div class="l"><span>Aluguel</span><b class="c-bad">${money0(aluguelAntes)} → ${money0(g.aluguel)}</b></div>
+          <div class="l"><span>Proximo cargo</span><b>${ehTopo(g)?"voce chegou ao topo":esc(setorAtual(g).cargos[g.nivel+1].n)}</b></div>
+        </div>
+        <p class="small muted" style="margin-top:10px">Cargo mais alto = turno mais desgastante. Bem-vindo.</p>` };
+  }
+
+  /* reprovado */
+  if (g.desempenho < 32 || g.advertencias >= 80) g.avaliacoesRuins++;
+  else g.avaliacoesRuins = 0;
+
+  if (g.avaliacoesRuins >= 2) return demitir(g);
+
+  aplicar(g, { sanidade:-6 });
+  addLog(g, `Avaliacao do mes ${g.mes}: sem promocao. Falta ${falta.join(", ")}.`, "dn");
+  return { titulo:"Avaliacao de Desempenho", em:"📋",
+    html:`<p>O comite avaliou seu mes. <b>Promocao negada.</b></p>
+      <div class="pay"><div class="h">Requisitos para ${esc(setorAtual(g).cargos[g.nivel+1].n)}</div>
+      ${linhaReq("Desempenho", g.desempenho, r.des)}
+      ${linhaReq("Qualificacao", g.qualificacao, r.qual)}
+      ${linhaReq("Rede de contatos", g.rede, r.rede)}
+      ${linhaReq("Dias no cargo", g.diasNoCargo, r.dias)}
+      ${linhaReq("Advertencias (max)", g.advertencias, r.advMax, true)}
+      </div>
+      <p class="small muted" style="margin-top:10px">Falta: <b>${falta.join(", ")}</b>. Tem mais um mes.</p>` };
+}
+
+/* demissao sem justa causa: nao e game over, e recomeco */
+function demitir(g){
+  const rescisao = Math.round(g.fgts * 1.4 + g.salarioBase);   // FGTS + multa 40% + aviso previo
+  g.dinheiro += rescisao; g.st.ganhoTotal += rescisao; g.fgts = 0;
+  g.st.recolocacoes++;
+  const antigo = `${cargoAtual(g).n} na ${g.empresa}`;
+
+  /* re-rola setor e empresa na mesma cidade (novos dados) */
+  const cid = cidadeAtual(g);
+  const r3 = d6(), r4 = d6();
+  g.setor = cid.setores[(r3 - 1) % cid.setores.length];
+  g.empresa = EMPRESAS[g.setor][(r4 - 1) % EMPRESAS[g.setor].length];
+  g.nivel = 0; g.diasNoCargo = 0; g.desempenho = 40; g.advertencias = 0;
+  g.avaliacoesRuins = 0; g.reajuste = 0;
+  g.salarioBase = salarioDoCargo(g.regiao, g.cidade, g.setor, 0);
+  g.rede = clamp(Math.round(g.rede * 0.75));
+  g.horasExtras = 0; g.horasNoturnas = 0; g.faltas = 0; g.adiantamento = 0;
+  aplicar(g, { sanidade:-18 });
+
+  addLog(g, `<b>DEMITIDO SEM JUSTA CAUSA</b> de ${esc(antigo)}. Rescisao: ${money0(rescisao)}.`, "dn");
+  addLog(g, `Recolocado: <b>${esc(cargoAtual(g).n)}</b> na ${esc(g.empresa)} (${esc(setorAtual(g).nome)}). Do zero de novo.`, "mo");
+  checarFim(g);
+  return { titulo:"DEMITIDO", em:"📉",
+    html:`<p>Duas avaliacoes ruins seguidas. O RH agradeceu seus servicos com um aperto de mao frio.</p>
+      <div class="pay"><div class="h">Rescisao</div>
+        <div class="l"><span>FGTS + multa de 40% + aviso previo</span><b class="c-ok">${money0(rescisao)}</b></div>
+        <div class="l"><span>Nova vaga (novos dados)</span><b>${esc(cargoAtual(g).n)}</b></div>
+        <div class="l"><span>Nova empresa</span><b>${esc(g.empresa)}</b></div>
+        <div class="l"><span>Setor</span><b>${esc(setorAtual(g).nome)}</b></div>
+      </div>
+      <p class="small muted" style="margin-top:10px">Sua Qualificacao continua com voce. A Rede perdeu 25%. O cargo voltou pro degrau 1.</p>` };
+}
+
+/* ============================= 11. CONQUISTAS ============================= */
+const CONQUISTAS = [
+  { id:"primeiro", n:"Primeiro Ponto", d:"Bateu o ponto pela primeira vez.", ok:(g)=>g.st.diasTrabalhados>=1 },
+  { id:"promo1",   n:"Subiu um Degrau", d:"Conseguiu a primeira promocao.",  ok:(g)=>g.st.promocoes>=1 },
+  { id:"promo3",   n:"Carreirista",     d:"Tres promocoes na mesma run.",    ok:(g)=>g.st.promocoes>=3 },
+  { id:"extra40",  n:"Escravo do Banco de Horas", d:"40 horas extras acumuladas.", ok:(g)=>g.st.horasExtrasTotal>=40 },
+  { id:"rico",     n:"Colchao Financeiro", d:"Chegou a R$10.000 guardados.", ok:(g)=>g.dinheiro>=10000 },
+  { id:"limpo",    n:"Ficha Limpa",     d:"Fechou um mes com 0 advertencias.", ok:(g)=>g.mes>=2&&g.advertencias===0 },
+  { id:"curso5",   n:"Eterno Estudante", d:"Cinco cursos concluidos.",       ok:(g)=>g.st.cursosFeitos>=5 },
+  { id:"fenix",    n:"Fenix Capixaba",  d:"Foi demitido e voltou a subir.",  ok:(g)=>g.st.recolocacoes>=1&&g.st.promocoes>=1 },
+];
+function checarConquistas(g){
+  for (const c of CONQUISTAS){
+    if (!g.conquistas.includes(c.id) && c.ok(g)){
+      g.conquistas.push(c.id);
+      addLog(g, `🏆 <b>Conquista: ${c.n}</b> — ${c.d}`, "up");
+    }
+  }
+}
+
+/* ============================= 12. RENDER / UI ============================ */
+const app = () => document.getElementById("app");
+const layer = () => document.getElementById("layer");
+
+function barra(valor, cor){
+  return `<div class="bar"><i style="width:${clamp(valor)}%;background:${cor}"></i></div>`;
+}
+function statBox(rot, valor, cor, invertido){
+  const v = clamp(valor);
+  const c = invertido ? (v > 70 ? "var(--bad)" : v > 45 ? "var(--warn)" : cor)
+                      : (v < 25 ? "var(--bad)" : v < 45 ? "var(--warn)" : cor);
+  return `<div class="card"><div class="card-b stat">
+    <div class="lbl"><span>${rot}</span><span class="mono">${Math.round(v)}%</span></div>
+    ${barra(v, c)}</div></div>`;
+}
+
+function htmlHolerite(g, h){
+  const st = setorAtual(g);
+  const L = (k, v, cls) => `<div class="l"><span>${k}</span><b class="${cls||''}">${money(v)}</b></div>`;
+  return `<p class="small muted">${esc(g.empresa)} · ${esc(cargoAtual(g).n)} · competencia ${String(g.mes).padStart(2,"0")}</p>
+  <div class="pay"><div class="h">Proventos</div>
+    ${L("Salario base", h.base)}
+    ${h.insal   ? L("Adicional de insalubridade (20% do minimo)", h.insal) : ""}
+    ${h.peric   ? L("Adicional de periculosidade (30%)", h.peric) : ""}
+    ${h.extras  ? L(`Horas extras (${g.horasExtras}h a 50%)`, h.extras) : ""}
+    ${h.noturno ? L(`Adicional noturno (${g.horasNoturnas}h a 20%)`, h.noturno) : ""}
+    ${h.comiss  ? L("Comissao sobre vendas", h.comiss) : ""}
+    ${h.gorjeta ? L("Gorjetas / taxa de servico", h.gorjeta) : ""}
+    <div class="l tot"><span>Total de proventos</span><b class="c-ok">${money(h.proventos)}</b></div>
+  </div>
+  <div class="pay" style="margin-top:10px"><div class="h">Descontos</div>
+    ${L("INSS", h.inss, "c-bad")}
+    ${h.irrf ? L("IRRF", h.irrf, "c-bad") : `<div class="l"><span>IRRF</span><b class="c-ok">isento</b></div>`}
+    ${h.vt      ? L("Vale-transporte (6%)", h.vt, "c-bad") : ""}
+    ${h.plano   ? L("Plano de saude", h.plano, "c-bad") : ""}
+    ${h.adiant  ? L("Adiantamento (vale)", h.adiant, "c-bad") : ""}
+    ${h.parcela ? L("Consignado", h.parcela, "c-bad") : ""}
+    ${h.descFaltas ? L(`Faltas + DSR (${g.faltas})`, h.descFaltas, "c-bad") : ""}
+    <div class="l tot"><span>Total de descontos</span><b class="c-bad">${money(h.descontos)}</b></div>
+  </div>
+  <div class="pay" style="margin-top:10px">
+    <div class="l tot"><span>LIQUIDO A RECEBER</span><b class="c-ok">${money(h.liquido)}</b></div>
+    <div class="l"><span>FGTS depositado (8%, nao desconta de voce)</span><b>${money(h.fgts)}</b></div>
+  </div>
+  <p class="tiny muted" style="margin-top:10px">Tabelas de INSS e IRRF com referencia de 2025, arredondadas para fins de jogo. Setor: ${esc(st.nome)} (jornada ${st.jornada}h/mes).</p>`;
+}
+
+/* ------------------------------- tela: menu ------------------------------- */
+function telaMenu(){
+  const temSave = !!localStorage.getItem(SAVE_KEY);
+  app().innerHTML = `
+  <div class="center"><div class="stack" style="width:100%;max-width:940px">
+    <div style="text-align:center">
+      <h1 style="font-size:clamp(30px,7vw,54px);font-weight:900;letter-spacing:-.03em">SIMULADOR CLT ES</h1>
+      <p class="muted" style="margin-top:6px">O Peso da Carteira — edicao capixaba · jogo de dados, rotina e promocao</p>
+    </div>
+
+    <div class="card"><div class="card-b stack">
+      <p class="small muted" style="margin:0">Os dados decidem onde voce nasce e o que voce faz. O cargo <b>sempre</b> comeca no degrau mais baixo. O resto e com voce: bater ponto, aguentar o turno, estudar, fazer rede e arrancar a promocao antes que a Sanidade acabe.</p>
+      <div class="flex">
+        <button class="btn btn-p btn-lg" data-go="rolar">🎲 NOVA JORNADA</button>
+        ${temSave ? `<button class="btn btn-lg" data-go="continuar">💾 CONTINUAR</button>` : ""}
+        <button class="btn btn-lg" data-go="ajuda">📖 COMO JOGAR</button>
+      </div>
+    </div></div>
+
+    <div class="card"><div class="card-h"><h3>6 regioes · 36 cidades · 16 setores · 96 cargos</h3></div>
+      <div class="card-b">
+        <div class="cities">
+          ${REGIOES.map(r => `<div class="city">
+            <div class="n">${esc(r.nome)}</div>
+            <div class="tiny muted">${esc(r.desc)}</div>
+            <div class="tiny" style="margin-top:5px;color:var(--dim2)">${r.cidades.map(c=>esc(c.nome)).join(" · ")}</div>
+          </div>`).join("")}
+        </div>
+      </div>
+    </div>
+
+    <div class="card"><div class="card-h"><h3>Setores disponiveis</h3></div>
+      <div class="card-b"><div class="flex">
+        ${Object.values(SETORES).map(s=>`<span class="tag">${s.em} ${esc(s.nome)}</span>`).join("")}
+      </div></div>
+    </div>
+
+    <div class="flex" style="justify-content:center">
+      <button class="btn small" data-go="crt">Alternar efeito CRT</button>
+      <button class="btn small" data-go="motion">Alternar animacoes</button>
+    </div>
+  </div></div>`;
+}
+
+/* ----------------------------- tela: rolagem ----------------------------- */
+let rolagemAtual = null;
+function telaRolagem(anim){
+  const r = rolagemAtual;
+  const cid = REGIOES[r.regiao].cidades[r.cidade];
+  const st  = SETORES[r.setor];
+  const sal = salarioDoCargo(r.regiao, r.cidade, r.setor, 0);
+  const rolar = anim ? " rolling" : "";
+  app().innerHTML = `
+  <div class="center"><div class="stack" style="width:100%;max-width:660px">
+    <div style="text-align:center">
+      <h2 style="font-size:26px;font-weight:900">A SORTE ESTA LANCADA</h2>
+      <p class="small muted">Cinco rolagens definem sua vida. Voce nao escolhe nada disso.</p>
+    </div>
+    <div class="dice">
+      <div class="die${rolar}">${r.r1}</div><div class="die${rolar}">${r.r2}</div>
+      <div class="die${rolar}">${r.r3}</div><div class="die${rolar}">${r.r4}</div>
+      <div class="die${rolar}" style="width:auto;padding:0 14px">${r.r5}</div>
+    </div>
+    <div class="card"><div class="card-b">
+      <div class="rollline">
+        <div class="k">d6 · Regiao</div><div><b>${esc(REGIOES[r.regiao].nome)}</b> <span class="tiny muted">— ${esc(REGIOES[r.regiao].desc)}</span></div>
+        <div class="k">d6 · Cidade</div><div><b>${esc(cid.nome)}</b> <span class="tag">${esc(cid.tag)}</span></div>
+        <div class="k">d6 · Setor</div><div>${st.em} <b>${esc(st.nome)}</b></div>
+        <div class="k">d6 · Empresa</div><div><b>${esc(r.empresa)}</b></div>
+        <div class="k">2d6 · Origem</div><div><b>${esc(r.origem.n)}</b> <span class="tiny muted">— ${esc(r.origem.d)}</span></div>
+      </div>
+      <div style="height:1px;background:var(--line);margin:14px 0"></div>
+      <div class="pay">
+        <div class="h">Seu contrato inicial (sempre o degrau mais baixo)</div>
+        <div class="l"><span>Cargo</span><b>${esc(st.cargos[0].n)}</b></div>
+        <div class="l"><span>Salario base</span><b class="c-ok">${money0(sal)}</b></div>
+        <div class="l"><span>Aluguel</span><b class="c-bad">${money0(cid.aluguel)}</b></div>
+        <div class="l"><span>Passagem</span><b>${money(cid.fare)}</b></div>
+        <div class="l"><span>Escada de carreira</span><b>${st.cargos.length} cargos ate ${esc(st.cargos[st.cargos.length-1].n)}</b></div>
+      </div>
+      ${cid.perk   ? `<p class="small c-ok" style="margin-top:10px">▲ ${esc(cid.perk)}</p>` : ""}
+      ${cid.debuff ? `<p class="small c-bad" style="margin:4px 0 0">▼ ${esc(cid.debuff)}</p>` : ""}
+    </div></div>
+    <div class="flex" style="justify-content:center">
+      <button class="btn btn-p btn-lg" data-go="aceitar">ASSINAR A CARTEIRA</button>
+      <button class="btn btn-lg" data-go="rolar">🎲 ROLAR DE NOVO</button>
+      <button class="btn btn-lg" data-go="menu">VOLTAR</button>
+    </div>
+  </div></div>`;
+  if (anim) setTimeout(()=>telaRolagem(false), 420);
+}
+
+/* ------------------------------- tela: jogo ------------------------------ */
+function telaJogo(){
+  const g = G, cid = cidadeAtual(g), st = setorAtual(g);
+  const acoes = acoesDisponiveis(g).filter(a => a.cat === UI.aba);
+  const cats = [["trabalho","Trabalho"],["casa","Casa"],["cidade","Cidade"],["carreira","Carreira"],["grana","Grana"]];
+  const req = ehTopo(g) ? null : REQ_PROMO[g.nivel];
+  const falta = faltaParaPromocao(g);
+
+  app().innerHTML = `
+  <div class="wrap stack">
+    <div class="hud">
+      ${statBox("Energia", g.energia, "var(--acc)")}
+      ${statBox("Sanidade", g.sanidade, "var(--purple)")}
+      ${statBox("Fome", g.fome, "var(--ok)", true)}
+      <div class="card"><div class="card-b">
+        <div class="lbl tiny" style="color:var(--dim);font-weight:800;text-transform:uppercase">Dinheiro</div>
+        <div class="big c-ok">${money0(g.dinheiro)}</div></div></div>
+      <div class="card"><div class="card-b">
+        <div class="lbl tiny" style="color:var(--dim);font-weight:800;text-transform:uppercase">Passagens</div>
+        <div class="big">${g.bike?"🚲 ∞":g.moto?"🏍️ ∞":g.passagens}</div></div></div>
+      <div class="card"><div class="card-b">
+        <div class="lbl tiny" style="color:var(--dim);font-weight:800;text-transform:uppercase">Acoes (PA)</div>
+        <div class="big ${g.pa?'':'c-bad'}">${g.pa} / ${g.paMax}</div></div></div>
+    </div>
+
+    <div class="grid-main">
+      <div class="stack">
+        <div class="card">
+          <div class="scene-box">
+            <canvas id="scene" width="960" height="300"></canvas>
+            <div class="scene-tags">
+              <span class="tag acc">Mes ${g.mes} · Dia ${g.dia}/30</span>
+              <span class="tag">${nomeDia(g.dia)}${ehFimDeSemana(g.dia)?" · folga":""}</span>
+              <span class="tag blue">${esc(cid.nome)}</span>
+              <span class="tag">${st.em} ${esc(g.empresa)}</span>
+            </div>
+            <div class="bubble" id="bubble"></div>
+          </div>
+          <div class="card-h">
+            <div>
+              <h3 style="color:var(--txt);font-size:17px;text-transform:none">${esc(cargoAtual(g).n)}</h3>
+              <div class="tiny muted">${esc(st.nome)} · degrau ${g.nivel+1} de ${st.cargos.length}</div>
+            </div>
+            <div class="flex">
+              <span class="tag ok">Salario ${money0(g.salarioBase)}</span>
+              <span class="tag bad">Aluguel ${money0(g.aluguel)}</span>
+              ${g.divida>0?`<span class="tag bad">Divida ${money0(g.divida)}</span>`:""}
+            </div>
+          </div>
+          <div class="card-b stack">
+            <div class="tabs">
+              ${cats.map(([k,n])=>`<button class="tab ${UI.aba===k?'on':''}" data-aba="${k}">${n}</button>`).join("")}
+            </div>
+            <div class="acts">
+              ${acoes.length ? acoes.map(a=>botaoAcao(g,a)).join("")
+                : `<p class="small muted">Nada nessa aba hoje. ${ehFimDeSemana(g.dia)?"E fim de semana: aproveite ou faca um bico.":""}</p>`}
+            </div>
+            <div class="flex" style="border-top:1px solid var(--line);padding-top:12px">
+              <button class="btn btn-p" data-go="dormir">🌙 Dormir / Encerrar o Dia</button>
+              <button class="btn" data-go="ajuda">📖 Como jogar</button>
+              <button class="btn" data-go="ficha">📋 Ficha completa</button>
+              <button class="btn" data-go="menu">⏏️ Sair (salva)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <div class="card-h"><h3>Carreira</h3>
+            ${ehTopo(g)?`<span class="tag ok">Topo</span>`:`<span class="tag">${falta.length?falta.length+" pendencia(s)":"pronto p/ promocao"}</span>`}
+          </div>
+          <div class="card-b stack" style="gap:9px">
+            <div class="stat"><div class="lbl"><span>Desempenho</span><span class="mono">${Math.round(g.desempenho)}${req?" / "+req.des:""}</span></div>${barra(g.desempenho,"var(--blue)")}</div>
+            <div class="stat"><div class="lbl"><span>Qualificacao</span><span class="mono">${Math.round(g.qualificacao)}${req?" / "+req.qual:""}</span></div>${barra(g.qualificacao,"var(--ok)")}</div>
+            <div class="stat"><div class="lbl"><span>Rede de contatos</span><span class="mono">${Math.round(g.rede)}${req?" / "+req.rede:""}</span></div>${barra(g.rede,"var(--pink)")}</div>
+            <div class="stat"><div class="lbl"><span>Advertencias</span><span class="mono">${Math.round(g.advertencias)}${req?" / máx "+req.advMax:""}</span></div>${barra(g.advertencias,"var(--bad)")}</div>
+            <div class="row"><span>Dias no cargo</span><b>${g.diasNoCargo}${req?" / "+req.dias:""}</b></div>
+            <div class="row"><span>Proximo cargo</span><b>${ehTopo(g)?"—":esc(st.cargos[g.nivel+1].n)}</b></div>
+            <div class="row"><span>Horas extras do mes</span><b>${g.horasExtras}h</b></div>
+            <div class="row"><span>Saldo do FGTS</span><b>${money0(g.fgts)}</b></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h3>Diario</h3><span class="tag">${g.log.length}</span></div>
+          <div class="card-b"><div class="log">
+            ${g.log.map(e=>`<div class="e ${e.tipo}"><span class="tiny muted">M${e.mes}·D${e.dia} </span>${e.txt}</div>`).join("")}
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  iniciarCena();
+}
+
+function botaoAcao(g, a){
+  const ok = a.pode ? a.pode(g) : true;
+  const semPA = g.pa < a.pa;
+  const bloq = ok !== true || semPA;
+  const motivo = semPA ? "Sem PA suficiente" : (typeof ok === "string" ? ok : "");
+  return `<button class="btn act" data-act="${a.id}" ${bloq?"disabled":""} title="${esc(motivo)}">
+    <span class="t"><span class="em">${a.em}</span>${esc(a.n)}</span>
+    <span class="d">${esc(a.d)}${motivo?` <span class="c-bad">— ${esc(motivo)}</span>`:""}</span>
+    <span class="m"><span class="chip pa">${a.pa} PA</span>${a.mg?`<span class="chip">minigame</span>`:""}</span>
+  </button>`;
+}
+
+/* -------------------------------- tela: fim ------------------------------- */
+function telaFim(){
+  const g = G, venceu = g.fim.venceu, cid = cidadeAtual(g);
+  const conq = CONQUISTAS.filter(c => g.conquistas.includes(c.id));
+  app().innerHTML = `
+  <div class="center"><div class="stack" style="width:100%;max-width:640px">
+    <div class="card"><div class="card-b stack" style="text-align:center">
+      <div style="font-size:52px">${venceu?"🏆":"💀"}</div>
+      <h2 style="font-size:30px;font-weight:900;color:${venceu?"var(--ok)":"var(--bad)"}">${esc(g.fim.titulo)}</h2>
+      <p class="muted">${esc(g.fim.texto)}</p>
+    </div>
+    <div class="card-b" style="padding-top:0">
+      <div class="pay"><div class="h">Resumo da jornada</div>
+        <div class="l"><span>Cidade</span><b>${esc(cid.nome)} · ${esc(REGIOES[g.regiao].nome)}</b></div>
+        <div class="l"><span>Ultimo cargo</span><b>${esc(cargoAtual(g).n)}</b></div>
+        <div class="l"><span>Empresa</span><b>${esc(g.empresa)}</b></div>
+        <div class="l"><span>Meses sobrevividos</span><b>${g.mes}</b></div>
+        <div class="l"><span>Dias de ponto batido</span><b>${g.st.diasTrabalhados}</b></div>
+        <div class="l"><span>Promocoes</span><b class="c-ok">${g.st.promocoes}</b></div>
+        <div class="l"><span>Demissoes / recolocacoes</span><b class="c-bad">${g.st.recolocacoes}</b></div>
+        <div class="l"><span>Horas extras totais</span><b>${g.st.horasExtrasTotal}h</b></div>
+        <div class="l"><span>Cursos concluidos</span><b>${g.st.cursosFeitos}</b></div>
+        <div class="l tot"><span>Dinheiro final</span><b class="c-ok">${money0(g.dinheiro)}</b></div>
+        <div class="l"><span>FGTS acumulado</span><b>${money0(g.fgts)}</b></div>
+      </div>
+      ${conq.length?`<p class="small muted" style="margin-top:12px">Conquistas: ${conq.map(c=>`<span class="tag acc">🏆 ${esc(c.n)}</span>`).join(" ")}</p>`:""}
+      <div class="flex" style="margin-top:14px">
+        <button class="btn btn-p btn-block btn-lg" data-go="rolar">🎲 JOGAR DE NOVO</button>
+        <button class="btn btn-block" data-go="menu">MENU</button>
+      </div>
+    </div></div>
+  </div></div>`;
+}
+
+/* --------------------------------- popups -------------------------------- */
+function render(){
+  if (!G || G.screen === "menu") { telaMenu(); pintarLayer(); return; }
+  if (G.screen === "rolagem")    { telaRolagem(true); pintarLayer(); return; }
+  if (G.screen === "vitoria" || G.screen === "derrota"){ telaFim(); pintarLayer(); return; }
+  telaJogo(); pintarLayer();
+}
+
+function pintarLayer(){
+  const L = layer();
+  if (G && G.popup){
+    const p = G.popup;
+    L.innerHTML = `<div class="veil"><div class="card">
+      <div class="card-h"><h3 style="color:var(--txt);font-size:16px;text-transform:none">${p.em||"📌"} ${esc(p.titulo)}</h3></div>
+      <div class="card-b stack">${p.html || `<p>${esc(p.texto||"")}</p>`}
+      <button class="btn btn-p btn-block" data-go="fecharPopup">ENTENDIDO</button></div>
+    </div></div>`;
+  } else if (!L.dataset.mg) {
+    L.innerHTML = "";
+  }
+}
+
+function flashAviso(msg){
+  const n = el("div", "veil");
+  n.innerHTML = `<div class="card" style="max-width:380px"><div class="card-b stack" style="text-align:center">
+    <p style="margin:0">⚠️ ${esc(msg)}</p>
+    <button class="btn btn-block" data-fechar="1">OK</button></div></div>`;
+  n.addEventListener("click", (e)=>{ if (e.target.dataset.fechar || e.target === n) n.remove(); });
+  document.body.appendChild(n);
+  setTimeout(()=>n.remove(), 3200);
+}
+
+function modalAjuda(){
+  const L = layer(); L.dataset.mg = "1";
+  L.innerHTML = `<div class="veil wide"><div class="card">
+    <div class="card-h"><h3 style="color:var(--txt);text-transform:none;font-size:16px">📖 Como jogar</h3>
+      <button class="btn small" data-go="fecharAjuda">Fechar</button></div>
+    <div class="card-b help" style="max-height:70vh;overflow-y:auto">${TEXTO_AJUDA}</div>
+  </div></div>`;
+}
+function modalFicha(){
+  const g = G, L = layer(); L.dataset.mg = "1";
+  const h = holerite(g);
+  L.innerHTML = `<div class="veil wide"><div class="card">
+    <div class="card-h"><h3 style="color:var(--txt);text-transform:none;font-size:16px">📋 Ficha do trabalhador</h3>
+      <button class="btn small" data-go="fecharAjuda">Fechar</button></div>
+    <div class="card-b stack" style="max-height:74vh;overflow-y:auto">
+      <div class="pay"><div class="h">Contrato</div>
+        <div class="l"><span>Origem</span><b>${esc(g.origemNome)}</b></div>
+        <div class="l"><span>Regiao / cidade</span><b>${esc(REGIOES[g.regiao].nome)} · ${esc(cidadeAtual(g).nome)}</b></div>
+        <div class="l"><span>Setor</span><b>${setorAtual(g).em} ${esc(setorAtual(g).nome)}</b></div>
+        <div class="l"><span>Empresa</span><b>${esc(g.empresa)}</b></div>
+        <div class="l"><span>Cargo</span><b>${esc(cargoAtual(g).n)}</b></div>
+      </div>
+      <div class="pay"><div class="h">Escada de carreira</div>
+        ${setorAtual(g).cargos.map((c,i)=>`<div class="l"><span>${i+1}. ${esc(c.n)}${i===g.nivel?" <span class='tag acc'>voce</span>":""}</span><b>${money0(Math.round(c.base*cidadeAtual(g).sal/10)*10)}</b></div>`).join("")}
+      </div>
+      <div class="pay"><div class="h">Previa do holerite (se o mes fechasse agora)</div>
+        <div class="l"><span>Proventos</span><b class="c-ok">${money(h.proventos)}</b></div>
+        <div class="l"><span>Descontos</span><b class="c-bad">${money(h.descontos)}</b></div>
+        <div class="l tot"><span>Liquido</span><b class="c-ok">${money(h.liquido)}</b></div>
+      </div>
+      <div class="pay"><div class="h">Conquistas (${g.conquistas.length}/${CONQUISTAS.length})</div>
+        ${CONQUISTAS.map(c=>`<div class="l"><span>${g.conquistas.includes(c.id)?"🏆":"🔒"} ${esc(c.n)}</span><b class="tiny muted">${esc(c.d)}</b></div>`).join("")}
+      </div>
+    </div>
+  </div></div>`;
+}
+function fecharModal(){ const L = layer(); delete L.dataset.mg; L.innerHTML = ""; pintarLayer(); }
+
+/* ============================ 13. CENA 2D (CANVAS) ========================
+   Pixel art desenhada por codigo: ceu por periodo do dia, skyline conforme o
+   cenario da cidade, chuva/calor, onibus passando e o boneco reagindo.
+   ========================================================================== */
+const Cena = { raf:0, t:0, modo:"casa", bolha:"", bolhaAte:0, passo:0, onibus:-260, chuva:[] };
+const CEUS = {
+  manha:      ["#7fb6d9","#cfe8f5","#ffe9c4"],
+  tarde:      ["#4a7fb5","#f0b26b","#ffd9a0"],
+  noite:      ["#1b2140","#3a3a6b","#6b4a72"],
+  madrugada:  ["#080a18","#141a35","#232a4d"],
+};
+const FASES = ["manha","tarde","noite","madrugada"];
+
+function faseDoDia(g){ return FASES[clamp(g.paMax - g.pa, 0, 3)]; }
+
+function iniciarCena(){
+  cancelAnimationFrame(Cena.raf);
+  const cv = document.getElementById("scene");
+  if (!cv) return;
+  const loop = () => {
+    const c = document.getElementById("scene");
+    if (!c || !G || G.screen !== "jogo"){ Cena.raf = 0; return; }
+    Cena.t += 1;
+    desenharCena(c);
+    Cena.raf = requestAnimationFrame(loop);
+  };
+  Cena.raf = requestAnimationFrame(loop);
+}
+
+function cenaAcao(a){
+  Cena.modo = a.cat === "trabalho" ? "trabalho"
+            : a.cat === "casa" ? "casa"
+            : a.cat === "carreira" ? "estudo" : "rua";
+  Cena.passo = 60;
+  Cena.bolha = a.em + " " + a.n;
+  Cena.bolhaAte = Date.now() + 2600;
+  const b = document.getElementById("bubble");
+  if (b){ b.textContent = Cena.bolha; b.classList.add("on"); }
+}
+
+function desenharCena(cv){
+  const g = G, cid = cidadeAtual(g), st = setorAtual(g);
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height, chao = H - 54;
+  const fase = faseDoDia(g);
+  const [c1, c2, c3] = CEUS[fase];
+
+  /* ceu */
+  const grad = ctx.createLinearGradient(0, 0, 0, chao);
+  grad.addColorStop(0, c1); grad.addColorStop(0.6, c2); grad.addColorStop(1, c3);
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, chao);
+
+  /* sol / lua */
+  const noturno = fase === "noite" || fase === "madrugada";
+  ctx.fillStyle = noturno ? "#e8e8f0" : "#fff3b0";
+  ctx.beginPath(); ctx.arc(W - 150, 62, noturno ? 22 : 30, 0, Math.PI * 2); ctx.fill();
+  if (noturno){
+    ctx.fillStyle = c1; ctx.beginPath(); ctx.arc(W - 160, 54, 20, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.75)";
+    for (let i = 0; i < 40; i++){
+      const x = (i * 137.5) % W, y = (i * 61.8) % (chao * 0.6);
+      ctx.fillRect(x, y, 2, 2);
+    }
+  }
+
+  /* nuvens */
+  ctx.fillStyle = "rgba(255,255,255,.5)";
+  for (let i = 0; i < 3; i++){
+    const x = ((Cena.t * 0.25 + i * 340) % (W + 240)) - 120;
+    const y = 40 + i * 26;
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, 7); ctx.arc(x + 22, y + 4, 15, 0, 7); ctx.arc(x - 20, y + 6, 13, 0, 7);
+    ctx.fill();
+  }
+
+  desenharSkyline(ctx, W, chao, cid.scen, noturno, Cena.t);
+
+  /* chao */
+  ctx.fillStyle = noturno ? "#191922" : "#2c2c33";
+  ctx.fillRect(0, chao, W, H - chao);
+  ctx.fillStyle = noturno ? "#23232e" : "#3a3a44";
+  ctx.fillRect(0, chao, W, 5);
+  ctx.fillStyle = "#5a5a66";                                   // faixa da rua
+  for (let x = (Cena.t * 1.2) % 60; x < W; x += 60) ctx.fillRect(x, chao + 26, 30, 3);
+
+  /* onibus passando */
+  Cena.onibus += 2.4;
+  if (Cena.onibus > W + 300) Cena.onibus = -320 - Math.random() * 900;
+  if (Cena.onibus > -260) desenharOnibus(ctx, Cena.onibus, chao - 6, noturno);
+
+  /* calor e chuva */
+  if (cid.heat >= 3 && !noturno){
+    ctx.strokeStyle = "rgba(255,200,120,.28)"; ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++){
+      const y = chao - 30 - i * 12;
+      ctx.beginPath();
+      for (let x = 0; x < W; x += 12)
+        ctx.lineTo(x, y + Math.sin((x + Cena.t * 2 + i * 40) / 22) * 3);
+      ctx.stroke();
+    }
+  }
+
+  desenharBoneco(ctx, W, chao, st, g, noturno);
+
+  /* vinheta */
+  const vg = ctx.createRadialGradient(W/2, chao*0.7, H*0.3, W/2, chao*0.7, W*0.7);
+  vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.45)");
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+  /* bolha some sozinha */
+  if (Cena.bolhaAte && Date.now() > Cena.bolhaAte){
+    const b = document.getElementById("bubble");
+    if (b) b.classList.remove("on");
+    Cena.bolhaAte = 0;
+  }
+}
+
+function desenharSkyline(ctx, W, chao, scen, noturno, t){
+  const escuro = noturno ? "#12121c" : "#3a4152";
+  const medio  = noturno ? "#1a1a28" : "#4c5468";
+  ctx.fillStyle = escuro;
+
+  if (scen === "metro" || scen === "ind" || scen === "porto"){
+    for (let i = 0; i < 16; i++){
+      const x = i * 62, h = 60 + ((i * 53) % 90);
+      ctx.fillStyle = i % 2 ? escuro : medio;
+      ctx.fillRect(x, chao - h, 52, h);
+      if (noturno){
+        ctx.fillStyle = "rgba(255,214,102,.72)";
+        for (let a = 0; a < 4; a++) for (let b = 0; b < Math.floor(h/22); b++)
+          if ((i * 7 + a * 3 + b * 5) % 4 !== 0) ctx.fillRect(x + 8 + a * 11, chao - h + 10 + b * 20, 6, 8);
+      }
+    }
+    if (scen === "ind"){                                    /* chamines com fumaca */
+      ctx.fillStyle = escuro;
+      for (const cx of [140, 470, 760]){
+        ctx.fillRect(cx, chao - 170, 26, 170);
+        ctx.fillStyle = "rgba(200,200,210,.20)";
+        for (let s = 0; s < 5; s++){
+          const y = chao - 178 - s * 22 - (t * 0.4 % 22);
+          ctx.beginPath(); ctx.arc(cx + 13 + Math.sin((y + t) / 30) * 10, y, 10 + s * 3, 0, 7); ctx.fill();
+        }
+        ctx.fillStyle = escuro;
+      }
+    }
+    if (scen === "porto"){                                   /* guindastes */
+      ctx.strokeStyle = "#7a4a2a"; ctx.lineWidth = 6;
+      for (const cx of [220, 600]){
+        ctx.beginPath(); ctx.moveTo(cx, chao); ctx.lineTo(cx, chao - 150);
+        ctx.lineTo(cx + 110, chao - 150); ctx.moveTo(cx + 70, chao - 150);
+        ctx.lineTo(cx + 70, chao - 90); ctx.stroke();
+      }
+      ctx.fillStyle = "#b8543a";
+      for (let i = 0; i < 7; i++) ctx.fillRect(60 + i * 90, chao - 26, 74, 26);
+    }
+  } else if (scen === "praia"){
+    const mar = ctx.createLinearGradient(0, chao - 120, 0, chao);
+    mar.addColorStop(0, noturno ? "#12294a" : "#2e7fb8");
+    mar.addColorStop(1, noturno ? "#0a1830" : "#1d5c8f");
+    ctx.fillStyle = mar; ctx.fillRect(0, chao - 120, W, 120);
+    ctx.fillStyle = "rgba(255,255,255,.35)";
+    for (let i = 0; i < 12; i++){
+      const y = chao - 110 + i * 9;
+      ctx.fillRect(((i * 90 + t * (0.6 + i * 0.06)) % (W + 120)) - 60, y, 40, 2);
+    }
+    ctx.fillStyle = noturno ? "#c9b98a" : "#e8d9a8";
+    ctx.fillRect(0, chao - 16, W, 16);
+    ctx.fillStyle = escuro;                                  /* coqueiros */
+    for (const cx of [90, 300, 840]){
+      ctx.fillRect(cx, chao - 96, 8, 96);
+      for (let a = -2; a <= 2; a++){
+        ctx.beginPath(); ctx.moveTo(cx + 4, chao - 96);
+        ctx.quadraticCurveTo(cx + 4 + a * 26, chao - 122, cx + 4 + a * 46, chao - 96 + Math.abs(a) * 8);
+        ctx.lineWidth = 7; ctx.strokeStyle = escuro; ctx.stroke();
+      }
+    }
+  } else if (scen === "serra"){
+    for (let i = 0; i < 5; i++){
+      const cx = i * 230 - 60, h = 150 + (i % 3) * 45;
+      ctx.fillStyle = i % 2 ? escuro : medio;
+      ctx.beginPath(); ctx.moveTo(cx, chao); ctx.lineTo(cx + 130, chao - h);
+      ctx.lineTo(cx + 270, chao); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = noturno ? "#0e1a12" : "#2c4a2e";        /* mata */
+    for (let i = 0; i < 30; i++){
+      const x = i * 34, h = 26 + (i * 13) % 22;
+      ctx.beginPath(); ctx.moveTo(x, chao); ctx.lineTo(x + 14, chao - h); ctx.lineTo(x + 28, chao); ctx.fill();
+    }
+  } else {                                                   /* campo */
+    ctx.fillStyle = noturno ? "#14261a" : "#3d6b3d";
+    ctx.beginPath(); ctx.moveTo(0, chao);
+    for (let x = 0; x <= W; x += 40) ctx.lineTo(x, chao - 60 - Math.sin(x / 130) * 28);
+    ctx.lineTo(W, chao); ctx.fill();
+    ctx.fillStyle = noturno ? "#1b3320" : "#4d8a4a";        /* pes de cafe */
+    for (let i = 0; i < 24; i++){
+      const x = 20 + i * 40, y = chao - 20 - (i % 3) * 8;
+      ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.fill();
+      ctx.fillRect(x - 2, y, 4, 20);
+    }
+  }
+}
+
+function desenharOnibus(ctx, x, y, noturno){
+  ctx.fillStyle = "#1f4f8f"; ctx.fillRect(x, y - 62, 190, 56);
+  ctx.fillStyle = "#e8e8ee"; ctx.fillRect(x, y - 30, 190, 10);
+  ctx.fillStyle = noturno ? "#f0d78a" : "#a8d8f0";
+  for (let i = 0; i < 5; i++) ctx.fillRect(x + 12 + i * 35, y - 54, 26, 18);
+  ctx.fillStyle = "#111"; 
+  ctx.beginPath(); ctx.arc(x + 40, y - 4, 11, 0, 7); ctx.arc(x + 152, y - 4, 11, 0, 7); ctx.fill();
+  if (noturno){ ctx.fillStyle = "rgba(255,240,180,.55)";
+    ctx.beginPath(); ctx.moveTo(x + 190, y - 26); ctx.lineTo(x + 250, y - 40); ctx.lineTo(x + 250, y); ctx.closePath(); ctx.fill(); }
+}
+
+function desenharBoneco(ctx, W, chao, st, g, noturno){
+  const base = { casa: W * 0.22, trabalho: W * 0.62, rua: W * 0.44, estudo: W * 0.30 }[Cena.modo] || W * 0.4;
+  const andando = Cena.passo > 0;
+  if (andando) Cena.passo--;
+  const S = 2.1;                                              // escala do pixel art
+  const x = Math.round(base + (andando ? Math.sin(Cena.t / 6) * 10 : 0));
+  const y = Math.round(chao - 2 + Math.sin(Cena.t / 12) * 2);
+  const humor = g.sanidade < 30 ? "#9a9aa2" : g.sanidade < 55 ? "#c9b28a" : "#e8b98f";
+  const capacete = ["siderurgia","construcao","rochas","portuario","petroleo","celulose"].includes(g.setor);
+
+  ctx.save(); ctx.translate(x, y); ctx.scale(S, S);
+  const p = (dx, dy, w, h, cor) => { ctx.fillStyle = cor; ctx.fillRect(dx, -dy, w, h); };
+
+  p(-8, 1, 16, 3, "rgba(0,0,0,.42)");                         // sombra no chao
+  p(-6, 16, 5, 15, "#242833"); p(1, 16, 5, 15, "#242833");    // pernas
+  p(-7, 3, 6, 3, "#15151c");  p(1, 3, 6, 3, "#15151c");       // sapatos
+  p(-8, 30, 16, 15, st.cor);                                  // uniforme
+  p(-8, 30, 16, 2, "rgba(255,255,255,.22)");                  // gola
+  p(-11, 29, 3, 13, st.cor); p(8, 29, 3, 13, st.cor);         // bracos
+  p(-10, 17, 3, 3, humor);   p(8, 17, 3, 3, humor);           // maos
+  p(-2, 32, 4, 9, "rgba(0,0,0,.25)");                         // sombra do tronco
+  p(-6, 44, 12, 13, humor);                                   // cabeca
+  if (capacete){ p(-8, 47, 16, 4, "#ffd23f"); p(-6, 50, 12, 3, "#ffd23f"); }
+  else          { p(-6, 45, 12, 4, "#2a2118"); }              // cabelo
+  ctx.fillStyle = "#15151c";                                  // olhos
+  ctx.fillRect(-4, -39, 2, 2); ctx.fillRect(2, -39, 2, 2);
+  ctx.fillStyle = g.sanidade < 35 ? "#7a2020" : "#8a4a30";    // boca
+  ctx.fillRect(-2, -35, 4, g.sanidade < 35 ? 1 : 2);
+  if (g.energia < 30){                                        // gota de suor
+    ctx.fillStyle = "rgba(150,205,255,.9)";
+    ctx.fillRect(6, -44 + (Cena.t % 26) * 0.5, 2, 4);
+  }
+  if (g.sanidade < 30){                                       // nuvenzinha de desanimo
+    ctx.fillStyle = "rgba(160,160,190,.45)";
+    for (let i = 0; i < 3; i++)
+      ctx.fillRect(-10 + i * 4, -58 - ((Cena.t / 8 + i * 5) % 8), 3, 3);
+  }
+  ctx.restore();
+}
+
+/* ============================== 14. MINIGAMES ============================= */
+let mgTimers = [];
+function limparMinigame(){ mgTimers.forEach(t => { clearInterval(t); clearTimeout(t); cancelAnimationFrame(t); }); mgTimers = []; }
+
+function abrirMinigame(tipo, cb){
+  limparMinigame();
+  const L = layer(); L.dataset.mg = "1"; L._tecla = null;
+  const encerrar = (score) => { limparMinigame(); fecharModal(); cb(clamp(score, 0, 1)); };
+  ({ onibus: mgOnibus, meta: mgMeta, cliente: mgCliente, conferencia: mgConferencia }[tipo] || mgMeta)(L, encerrar);
+}
+
+function caixaMg(L, titulo, sub, corpo){
+  L.innerHTML = `<div class="veil"><div class="card">
+    <div class="card-h"><h3 style="color:var(--txt);text-transform:none;font-size:16px">${titulo}</h3>
+      <span class="tag acc">minigame</span></div>
+    <div class="card-b stack"><p class="small muted" style="margin:0">${sub}</p>${corpo}</div>
+  </div></div>`;
+  return L.querySelector(".card-b");
+}
+
+/* --- ONIBUS: pare o marcador na faixa verde 3 vezes --- */
+function mgOnibus(L, fim){
+  let rodada = 0, acertos = 0, pos = 0, dir = 1;
+  const vel = 1.6 + (G ? (100 - G.energia) / 90 : 0.5);
+  const larg = 26 - (G ? Math.floor(G.nivel * 1.5) : 0);
+  const alvo = () => 12 + Math.random() * (100 - larg - 20);
+  let zona = alvo();
+
+  const b = caixaMg(L, "🏃 Correndo atras do onibus", "Pare o marcador dentro da faixa verde. Tres tentativas.",
+    `<div style="position:relative;height:34px;border:1px solid var(--line2);border-radius:8px;background:#0d0d14;overflow:hidden">
+      <div id="mgZona" style="position:absolute;top:0;bottom:0;background:rgba(61,220,132,.35);border-left:2px solid var(--ok);border-right:2px solid var(--ok)"></div>
+      <div id="mgMark" style="position:absolute;top:0;bottom:0;width:4px;background:var(--acc)"></div>
+    </div>
+    <div class="flex" style="justify-content:space-between"><span class="small muted">Tentativa <b id="mgR">1</b>/3</span><span class="small">Acertos: <b id="mgA">0</b></span></div>
+    <button class="btn btn-p btn-block btn-lg" id="mgGo">PARAR! (espaco)</button>
+    <button class="btn btn-block" id="mgQuit">Desistir</button>`);
+
+  const zEl = b.querySelector("#mgZona"), mEl = b.querySelector("#mgMark");
+  const upZona = () => { zEl.style.left = zona + "%"; zEl.style.width = larg + "%"; };
+  upZona();
+  const loop = () => {
+    pos += dir * vel; if (pos > 100){ pos = 100; dir = -1; } if (pos < 0){ pos = 0; dir = 1; }
+    mEl.style.left = pos + "%";
+    mgTimers.push(requestAnimationFrame(loop));
+  };
+  mgTimers.push(requestAnimationFrame(loop));
+
+  const tentar = () => {
+    if (pos >= zona && pos <= zona + larg) acertos++;
+    rodada++;
+    if (rodada >= 3){ fim(acertos / 3); return; }
+    zona = alvo(); upZona();
+    b.querySelector("#mgR").textContent = rodada + 1;
+    b.querySelector("#mgA").textContent = acertos;
+  };
+  b.querySelector("#mgGo").onclick = tentar;
+  b.querySelector("#mgQuit").onclick = () => fim(acertos / 3 * 0.5);
+  L._tecla = (e) => { if (e.code === "Space"){ e.preventDefault(); tentar(); } };
+}
+
+/* --- META: acerte as caixas antes do tempo acabar --- */
+function mgMeta(L, fim){
+  const alvoTotal = 10 + (G ? G.nivel * 2 : 0);
+  let acertos = 0, tempo = 14, atual = -1;
+  const b = caixaMg(L, "📦 Batendo a meta", `Clique nas caixas que acenderem. Meta: <b>${alvoTotal}</b> em 14 segundos.`,
+    `<div class="flex" style="justify-content:space-between">
+       <span class="small">Producao: <b id="mgP">0</b>/${alvoTotal}</span>
+       <span class="small">Tempo: <b id="mgT">14</b>s</span></div>
+     <div class="bar"><i id="mgBar" style="width:0%;background:var(--ok)"></i></div>
+     <div class="mg-grid" id="mgGrid">${Array.from({length:9},(_,i)=>`<div class="mg-cell" data-i="${i}"></div>`).join("")}</div>
+     <button class="btn btn-block" id="mgQuit">Parar agora</button>`);
+
+  const cels = [...b.querySelectorAll(".mg-cell")];
+  const acender = () => {
+    cels.forEach(c => { c.className = "mg-cell"; c.textContent = ""; });
+    atual = Math.floor(Math.random() * 9);
+    cels[atual].className = "mg-cell on"; cels[atual].textContent = "📦";
+  };
+  acender();
+  mgTimers.push(setInterval(acender, 850));
+  b.querySelector("#mgGrid").onclick = (e) => {
+    const c = e.target.closest(".mg-cell"); if (!c) return;
+    if (atual < 0) return;                       // caixa ja conferida: espera a proxima acender
+    if (+c.dataset.i === atual){
+      acertos++; atual = -1;
+      c.className = "mg-cell"; c.textContent = "✅";
+      b.querySelector("#mgP").textContent = acertos;
+      b.querySelector("#mgBar").style.width = Math.min(100, acertos / alvoTotal * 100) + "%";
+      if (acertos >= alvoTotal) fim(1);
+    } else { c.className = "mg-cell bad"; acertos = Math.max(0, acertos - 1);
+      b.querySelector("#mgP").textContent = acertos; }
+  };
+  mgTimers.push(setInterval(() => {
+    tempo--; const t = b.querySelector("#mgT"); if (t) t.textContent = tempo;
+    if (tempo <= 0) fim(acertos / alvoTotal);
+  }, 1000));
+  b.querySelector("#mgQuit").onclick = () => fim(acertos / alvoTotal);
+}
+
+/* --- CLIENTE: escolha a resposta que segura a paciencia --- */
+const DIALOGOS = [
+  { fala:"“Faz 40 minutos que eu espero! Voces nao respeitam ninguem!”",
+    ops:[["Entendo sua frustracao. Vou resolver agora mesmo.",1],
+         ["Senhor, o sistema esta lento, nao e culpa minha.",-1],
+         ["Todo mundo espera, o senhor nao e especial.",-2]] },
+  { fala:"“Quero falar com o seu supervisor. AGORA.”",
+    ops:[["Posso chamar sim. Antes disso, me deixa tentar resolver?",1],
+         ["Ele esta ocupado.",-1],
+         ["Pode falar, mas ele vai dizer a mesma coisa.",-2]] },
+  { fala:"“Voce esta rindo da minha cara?”",
+    ops:[["De jeito nenhum. Estou aqui pra te ajudar.",1],
+         ["Nao, e que a situacao e engracada.",-2],
+         ["...", -1]] },
+  { fala:"“Se nao resolver eu vou no Procon!”",
+    ops:[["E um direito seu. Enquanto isso, vamos tentar resolver aqui.",1],
+         ["Pode ir, nao vai adiantar.",-2],
+         ["Nao precisa disso.",-1]] },
+  { fala:"“Voce ta me enrolando desde ontem!”",
+    ops:[["Vou te dar um prazo real agora e cumprir.",1],
+         ["Nao fui eu que atendi ontem.",-1],
+         ["Voce que nao entendeu direito.",-2]] },
+];
+function mgCliente(L, fim){
+  const rodadas = [...DIALOGOS].sort(() => Math.random() - 0.5).slice(0, 3);
+  let i = 0, paciencia = 60;
+  const desenhar = () => {
+    if (i >= rodadas.length || paciencia <= 0){ fim(clamp(paciencia, 0, 100) / 100); return; }
+    const r = rodadas[i];
+    const ops = [...r.ops].sort(() => Math.random() - 0.5);
+    const b = caixaMg(L, "😤 Cliente dificil", `Rodada ${i+1}/3. Segure a paciencia dele acima de zero.`,
+      `<div class="stat"><div class="lbl"><span>Paciencia do cliente</span><span class="mono">${paciencia}</span></div>
+        <div class="bar"><i style="width:${clamp(paciencia)}%;background:${paciencia<35?'var(--bad)':'var(--warn)'}"></i></div></div>
+       <p style="margin:10px 0 0;font-size:14.5px">${esc(r.fala)}</p>
+       <div class="mg-opts">${ops.map((o,k)=>`<button class="btn" data-k="${k}">${esc(o[0])}</button>`).join("")}</div>`);
+    b.querySelectorAll("[data-k]").forEach(btn => btn.onclick = () => {
+      const v = ops[+btn.dataset.k][1];
+      paciencia = clamp(paciencia + (v > 0 ? 16 : v === -1 ? -18 : -32), 0, 100);
+      i++; desenhar();
+    });
+  };
+  desenhar();
+}
+
+/* --- CONFERENCIA: contas rapidas de carga / caixa --- */
+function mgConferencia(L, fim){
+  const total = 5; let i = 0, acertos = 0, resp = 0, prazo = null;
+  const proxima = () => {
+    if (i >= total){ fim(acertos / total); return; }
+    const a = rint(6, 40), b2 = rint(3, 25), op = chance(0.5) ? "+" : "×";
+    resp = op === "+" ? a + b2 : a * (b2 % 9 + 2);
+    const mostra = op === "+" ? `${a} + ${b2}` : `${a} × ${(b2 % 9) + 2}`;
+    const opcoes = [resp, resp + rint(1, 9), resp - rint(1, 9), resp + rint(10, 30)]
+      .sort(() => Math.random() - 0.5);
+    const box = caixaMg(L, "🧮 Conferencia de carga", `Item ${i+1}/${total}. Voce tem 6 segundos.`,
+      `<div class="mg-num mono">${mostra}</div>
+       <div class="bar"><i id="mgP2" style="width:100%;background:var(--acc);transition:width 6s linear"></i></div>
+       <div class="mg-opts" style="margin-top:10px">${opcoes.map(o=>`<button class="btn" data-v="${o}">${o}</button>`).join("")}</div>`);
+    requestAnimationFrame(()=>{ const p = box.querySelector("#mgP2"); if (p) p.style.width = "0%"; });
+    box.querySelectorAll("[data-v]").forEach(btn => btn.onclick = () => {
+      if (+btn.dataset.v === resp) acertos++;
+      clearTimeout(prazo); i++; proxima();
+    });
+    prazo = setTimeout(() => { i++; proxima(); }, 6100);
+    mgTimers.push(prazo);
+  };
+  proxima();
+}
+
+/* ============================== 15. TUTORIAL ============================== */
+const TEXTO_AJUDA = `
+<h4>A ideia</h4>
+<p class="small">Voce e um trabalhador CLT capixaba. Os <b>dados</b> decidem onde voce nasce, em que setor cai e de onde vem. Voce <b>sempre</b> comeca no cargo mais baixo da escada. O jogo e sobreviver ao mes e arrancar promocao.</p>
+
+<h4>As 5 rolagens</h4>
+<ul>
+<li><code>d6</code> <b>Regiao</b> — uma das 6 regioes do Espirito Santo.</li>
+<li><code>d6</code> <b>Cidade</b> — 6 cidades por regiao (36 no total), cada uma com aluguel, passagem, clima e vantagens proprias.</li>
+<li><code>d6</code> <b>Setor</b> — entre os setores que aquela cidade realmente tem.</li>
+<li><code>d6</code> <b>Empresa</b> — onde voce vai bater ponto.</li>
+<li><code>2d6</code> <b>Origem</b> — sua bagagem: divida de familia, moto financiada, tio na firma, curso tecnico...</li>
+</ul>
+
+<h4>O dia</h4>
+<ul>
+<li>Cada dia tem <b>4 Pontos de Acao (PA)</b>. Acoes custam 1 ou 2 PA.</li>
+<li>O mes tem <b>30 dias</b>. Dia 1 e segunda; sabado e domingo sao folga (sem ponto, sem desconto).</li>
+<li>Em dia util, <b>Bater o Ponto</b> (2 PA) e o eixo do jogo — abre o minigame do seu setor.</li>
+<li>Nao bateu ponto em dia util? <b>Falta injustificada</b>: +17 Advertencia, -10 Desempenho e desconto de dia + DSR no holerite.</li>
+<li><b>Dormir</b> encerra o dia, recupera Energia e Sanidade, aumenta Fome e sorteia um evento.</li>
+</ul>
+
+<h4>Barras que te matam</h4>
+<ul>
+<li><b>Energia</b> chegou a 0 → exaustao (fim de jogo).</li>
+<li><b>Sanidade</b> chegou a 0 → burnout (fim de jogo).</li>
+<li><b>Fome</b> em 90+ por 4 dias → colapso (fim de jogo).</li>
+<li><b>Advertencias</b> em 100 → demissao por justa causa (fim de jogo, sem FGTS).</li>
+<li><b>Aluguel</b> atrasado 2 meses seguidos → despejo (fim de jogo).</li>
+</ul>
+
+<h4>Como subir de cargo</h4>
+<p class="small">A avaliacao acontece no <b>fim de cada mes (dia 30)</b>. Para ser promovido voce precisa bater, ao mesmo tempo:</p>
+<ul>
+<li><b>Desempenho</b> — sobe batendo ponto bem, pocando meta, fazendo hora extra.</li>
+<li><b>Qualificacao</b> — sobe com cursos (EAD, SENAI/SENAC, NR, tecnico).</li>
+<li><b>Rede</b> — sobe ajudando colegas, happy hour, LinkedIn, sindicato.</li>
+<li><b>Dias no cargo</b> — tempo de casa, ninguem promove em uma semana.</li>
+<li><b>Advertencias abaixo do teto</b> — ficha suja trava promocao.</li>
+</ul>
+<p class="small">Use <b>Pedir Feedback ao Supervisor</b> pra ver a lista exata do que falta. Cada degrau tem regua mais alta e turno mais desgastante.</p>
+
+<h4>Dinheiro e CLT de verdade</h4>
+<ul>
+<li><b>Dia 5</b>: salario. O holerite mostra proventos (base, insalubridade, periculosidade, hora extra 50%, adicional noturno 20%, comissao, gorjeta) e descontos (INSS progressivo, IRRF, vale-transporte 6%, plano, vale, consignado, faltas).</li>
+<li><b>Dia 8</b>: aluguel. <b>Dia 12</b>: luz, agua e internet.</li>
+<li><b>FGTS</b> (8% do bruto) e depositado pela empresa e so aparece se voce for demitido sem justa causa.</li>
+<li><b>Vale</b> adianta 40% do salario e desconta no dia 5. <b>Consignado</b> entrega R$2.500 e cobra 12x R$260.</li>
+</ul>
+
+<h4>Demissao nao e game over</h4>
+<p class="small">Duas avaliacoes ruins seguidas = <b>demissao sem justa causa</b>. Voce recebe FGTS + multa de 40% + aviso previo, os dados rolam de novo pro setor e pra empresa, e voce recomeca no degrau 1 na mesma cidade. Qualificacao continua com voce; a Rede perde 25%. Justa causa (Advertencia 100) e que acaba a run de vez.</p>
+
+<h4>Minigames</h4>
+<ul>
+<li><b>Correr atras do onibus</b> — pare o marcador na faixa verde. Fica mais dificil com pouca Energia.</li>
+<li><b>Bater a meta</b> — clique nas caixas que acendem antes do tempo. A meta sobe conforme seu cargo.</li>
+<li><b>Cliente dificil</b> — escolha respostas que seguram a paciencia do cliente.</li>
+<li><b>Conferencia</b> — contas rapidas de carga e caixa, 6 segundos cada.</li>
+</ul>
+
+<h4>Como vencer</h4>
+<ul>
+<li><b>Topo da carreira</b>: chegue ao ultimo cargo do setor e feche um mes com Desempenho 70+.</li>
+<li><b>Liberdade financeira</b>: junte R$50.000.</li>
+<li><b>Dois anos de casa</b>: sobreviva 24 meses.</li>
+</ul>
+
+<h4>Dicas de sobrevivencia</h4>
+<ul>
+<li>Nunca deixe Energia e Sanidade abaixo de 25 ao mesmo tempo: um evento ruim fecha a conta.</li>
+<li>Recarregue o cartao <b>antes</b> de zerar. Sem passagem, o turno cobra o dobro no corpo.</li>
+<li>Curso caro no comeco quebra voce. Comece pelo EAD e escale.</li>
+<li>Hora extra e uma armadilha doce: paga bem, mas queima o mes seguinte.</li>
+<li>Advertencia alta trava promocao mesmo com Desempenho 100. Use EPI/CIPA e sindicato.</li>
+</ul>`;
+
+/* =========================== 16. SAVE / LOAD ============================== */
+function salvar(){
+  try {
+    if (!G || G.screen !== "jogo") return;
+    const copia = { ...G, popup: null };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(copia));
+  } catch (e) { /* localStorage bloqueado: o jogo segue sem save */ }
+}
+function carregar(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s || typeof s.regiao !== "number" || !SETORES[s.setor]) return null;
+    if (!REGIOES[s.regiao] || !REGIOES[s.regiao].cidades[s.cidade]) return null;
+    s.popup = null; s.screen = "jogo";
+    s.log = Array.isArray(s.log) ? s.log : [];
+    s.conquistas = Array.isArray(s.conquistas) ? s.conquistas : [];
+    return s;
+  } catch (e) { return null; }
+}
+function apagarSave(){ try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* =========================== 17. EVENTOS DE UI ============================ */
+document.addEventListener("click", (ev) => {
+  const alvoAba = ev.target.closest("[data-aba]");
+  if (alvoAba){ UI.aba = alvoAba.dataset.aba; render(); return; }
+
+  const alvoAct = ev.target.closest("[data-act]");
+  if (alvoAct && !alvoAct.disabled){ executarAcao(alvoAct.dataset.act); return; }
+
+  const alvoGo = ev.target.closest("[data-go]");
+  if (!alvoGo) return;
+  const go = alvoGo.dataset.go;
+
+  switch (go){
+    case "rolar":
+      rolagemAtual = rolarPersonagem();
+      G = { screen:"rolagem" };
+      telaRolagem(true); pintarLayer();
+      break;
+    case "aceitar":
+      G = novoJogo(rolagemAtual);
+      UI.aba = "trabalho";
+      G.popup = { titulo:"Carteira assinada", em:"📗",
+        html:`<p>Bem-vindo a <b>${esc(cidadeAtual(G).nome)}</b>. Aluguel de <b>${money0(G.aluguel)}</b> vence dia 8, o salario cai dia 5.</p>
+              <p class="small muted">Voce tem 4 Pontos de Acao por dia. Comece batendo o ponto — e o unico jeito de subir Desempenho.</p>` };
+      apagarSave(); salvar(); render();
+      break;
+    case "continuar": {
+      const s = carregar();
+      if (!s){ flashAviso("Nao ha jogo salvo."); return; }
+      G = s; UI.aba = "trabalho"; render();
+      break; }
+    case "menu":
+      salvar(); cancelAnimationFrame(Cena.raf); Cena.raf = 0;
+      G = { screen:"menu" }; render();
+      break;
+    case "dormir":   encerrarDia(); break;
+    case "ajuda":    modalAjuda(); break;
+    case "ficha":    if (G && G.screen === "jogo") modalFicha(); break;
+    case "fecharAjuda": fecharModal(); break;
+    case "fecharPopup":
+      if (G) G.popup = null;
+      pintarLayer();
+      if (G && (G.screen === "vitoria" || G.screen === "derrota")) render();
+      break;
+    case "crt":    document.body.classList.toggle("no-crt"); break;
+    case "motion": document.body.classList.toggle("reduce-motion"); break;
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  const L = layer();
+  if (L.dataset.mg && L._tecla){ L._tecla(e); return; }
+  if (G && G.popup && (e.key === "Enter" || e.key === "Escape")){
+    G.popup = null; pintarLayer();
+    if (G.screen === "vitoria" || G.screen === "derrota") render();
+    return;
+  }
+  if (!G || G.screen !== "jogo" || L.innerHTML) return;
+  if (e.key === " "){ e.preventDefault(); encerrarDia(); }
+  if (e.key >= "1" && e.key <= "5"){
+    const abas = ["trabalho","casa","cidade","carreira","grana"];
+    UI.aba = abas[+e.key - 1]; render();
+  }
+});
+
+if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.body.classList.add("reduce-motion");
+
+/* ================================ 18. BOOT =============================== */
+G = { screen:"menu" };
+render();
+</script>
+</body>
+</html>
