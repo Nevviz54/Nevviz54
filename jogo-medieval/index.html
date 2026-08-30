@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d0b12">
+    <title>Reino Sombrio — Sobrevivência Medieval</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <canvas id="tela"></canvas>
+    <div id="flash-dano"></div>
+
+    <!-- ===================== HUD ===================== -->
+    <div id="hud" class="escondido">
+        <div class="hud-topo">
+            <div class="hud-caixa"><span class="hud-rotulo">⏱</span><span id="tempo">00:00</span></div>
+            <div class="hud-caixa"><span class="hud-rotulo">💀</span><span id="abates">0</span></div>
+            <div class="hud-caixa"><span class="hud-rotulo">🪙</span><span id="ouro-hud">0</span></div>
+        </div>
+
+        <div class="hud-barras">
+            <div class="barra barra-xp">
+                <div id="xp-preenche" class="preenche"></div>
+                <div class="barra-texto">NÍVEL <span id="nivel-num">1</span></div>
+            </div>
+            <div class="barra barra-vida">
+                <div id="vida-preenche" class="preenche"></div>
+                <div class="barra-texto" id="vida-texto">100 / 100</div>
+            </div>
+        </div>
+
+        <div id="itens-hud"></div>
+    </div>
+
+    <div id="barra-chefe" class="escondido">
+        <div id="nome-chefe">Chefe</div>
+        <div class="barra barra-chefe-fundo"><div id="chefe-preenche" class="preenche"></div></div>
+    </div>
+
+    <div id="aviso" class="escondido"></div>
+
+    <!-- ===================== MENU ===================== -->
+    <div id="tela-menu" class="tela-ui">
+        <div class="painel painel-menu">
+            <h1 class="titulo">REINO SOMBRIO</h1>
+            <p class="subtitulo">Sobrevivência medieval · mate, evolua, resista 15 minutos</p>
+
+            <div class="recordes">
+                <div><span>Melhor tempo</span><b id="recorde-tempo">00:00</b></div>
+                <div><span>Mais abates</span><b id="recorde-abates">0</b></div>
+                <div><span>Vitórias</span><b id="recorde-vitorias">0</b></div>
+            </div>
+
+            <div class="ouro-linha">Ouro guardado: <b id="ouro-menu">0</b> 🪙</div>
+
+            <div class="botoes-menu">
+                <button id="btn-jogar" class="btn btn-grande">⚔️ Jogar</button>
+                <button id="btn-loja" class="btn">🏰 Ferraria</button>
+                <button id="btn-ajuda" class="btn">📜 Como jogar</button>
+            </div>
+
+            <div class="opcoes-audio">
+                <button id="btn-som" class="btn btn-pequeno">🔊 Efeitos</button>
+                <button id="btn-musica" class="btn btn-pequeno">🎵 Música</button>
+            </div>
+
+            <p class="creditos">D.F.B.G PRODUCTIONS</p>
+        </div>
+    </div>
+
+    <!-- ===================== SELEÇÃO ===================== -->
+    <div id="tela-selecao" class="tela-ui escondido">
+        <div class="painel painel-largo">
+            <h2 class="titulo-secao">ESCOLHA SEU HERÓI</h2>
+            <div class="ouro-linha pequeno">Ouro: <b id="ouro-selecao">0</b> 🪙</div>
+
+            <div id="lista-herois" class="grade-herois"></div>
+
+            <div class="dificuldades">
+                <span class="rotulo-dif">Dificuldade:</span>
+                <button class="btn-dificuldade" data-dif="facil">Escudeiro</button>
+                <button class="btn-dificuldade ativo" data-dif="normal">Cavaleiro</button>
+                <button class="btn-dificuldade" data-dif="dificil">Lenda</button>
+            </div>
+
+            <button id="btn-voltar-selecao" class="btn btn-fantasma">← Voltar</button>
+        </div>
+    </div>
+
+    <!-- ===================== FERRARIA (loja) ===================== -->
+    <div id="tela-loja" class="tela-ui escondido">
+        <div class="painel painel-largo">
+            <h2 class="titulo-secao">🏰 FERRARIA</h2>
+            <p class="ajuda-texto">Melhorias permanentes: valem para todas as próximas partidas.</p>
+            <div class="ouro-linha pequeno">Ouro: <b id="ouro-loja">0</b> 🪙</div>
+
+            <div id="lista-loja" class="lista-loja"></div>
+
+            <div class="linha-botoes">
+                <button id="btn-voltar-loja" class="btn btn-fantasma">← Voltar</button>
+                <button id="btn-apagar" class="btn btn-perigo btn-pequeno">Apagar progresso</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== AJUDA ===================== -->
+    <div id="tela-ajuda" class="tela-ui escondido">
+        <div class="painel">
+            <h2 class="titulo-secao">📜 COMO JOGAR</h2>
+            <ul class="ajuda-lista">
+                <li><b>Mover:</b> W A S D ou as setas. No celular, arraste o dedo na tela.</li>
+                <li><b>Atacar:</b> automático! Suas armas disparam sozinhas — você só precisa desviar.</li>
+                <li><b>Gemas azuis</b> dão experiência. Ao subir de nível você escolhe uma melhoria.</li>
+                <li><b>Moedas 🪙</b> ficam guardadas e são gastas na Ferraria entre as partidas.</li>
+                <li><b>Baús</b> caem de inimigos de elite (os que brilham) e dos chefes.</li>
+                <li><b>Evoluções:</b> arma no nível MÁX + o item passivo certo no nível 5 = arma lendária.</li>
+                <li><b>Chefes</b> aparecem aos 5, 10 e 15 minutos. Derrote o Rei Vampiro para vencer.</li>
+                <li><b>Pausar:</b> tecla ESC ou P.</li>
+            </ul>
+            <button id="btn-voltar-ajuda" class="btn btn-fantasma">← Voltar</button>
+        </div>
+    </div>
+
+    <!-- ===================== SUBIU DE NÍVEL ===================== -->
+    <div id="tela-nivel" class="tela-ui escondido">
+        <div class="painel painel-nivel">
+            <h2 class="titulo-secao brilho" id="nivel-titulo">NÍVEL 2</h2>
+            <p class="ajuda-texto">Escolha uma recompensa</p>
+            <div id="lista-nivel" class="grade-nivel"></div>
+        </div>
+    </div>
+
+    <!-- ===================== PAUSA ===================== -->
+    <div id="tela-pausa" class="tela-ui escondido">
+        <div class="painel">
+            <h2 class="titulo-secao">PAUSADO</h2>
+            <div id="resumo-pausa" class="resumo"></div>
+            <div class="opcoes-audio">
+                <button id="btn-som2" class="btn btn-pequeno">🔊 Efeitos</button>
+                <button id="btn-musica2" class="btn btn-pequeno">🎵 Música</button>
+            </div>
+            <div class="botoes-menu">
+                <button id="btn-continuar" class="btn btn-grande">▶ Continuar</button>
+                <button id="btn-sair" class="btn btn-fantasma">Sair para o menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== DERROTA ===================== -->
+    <div id="tela-fim" class="tela-ui escondido">
+        <div class="painel">
+            <h2 class="titulo-secao vermelho">VOCÊ TOMBOU</h2>
+            <div class="resumo">
+                <div class="linha-resumo"><span>Tempo sobrevivido</span><b id="fim-tempo">00:00</b></div>
+                <div class="linha-resumo"><span>Nível alcançado</span><b id="fim-nivel">1</b></div>
+                <div class="linha-resumo"><span>Inimigos abatidos</span><b id="fim-abates">0</b></div>
+                <div class="linha-resumo"><span>Ouro guardado</span><b id="fim-ouro">0</b> 🪙</div>
+            </div>
+            <div class="botoes-menu">
+                <button id="btn-reiniciar" class="btn btn-grande">⚔️ Tentar de novo</button>
+                <button id="btn-menu-fim" class="btn btn-fantasma">Menu principal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== VITÓRIA ===================== -->
+    <div id="tela-vitoria" class="tela-ui escondido">
+        <div class="painel">
+            <h2 class="titulo-secao dourado brilho">O REINO ESTÁ SALVO!</h2>
+            <p class="ajuda-texto">Você derrotou o Rei Vampiro. +500 de ouro de recompensa.</p>
+            <div class="resumo">
+                <div class="linha-resumo"><span>Tempo</span><b id="vit-tempo">00:00</b></div>
+                <div class="linha-resumo"><span>Nível</span><b id="vit-nivel">1</b></div>
+                <div class="linha-resumo"><span>Inimigos abatidos</span><b id="vit-abates">0</b></div>
+                <div class="linha-resumo"><span>Ouro guardado</span><b id="vit-ouro">0</b> 🪙</div>
+            </div>
+            <div class="botoes-menu">
+                <button id="btn-reiniciar-vitoria" class="btn btn-grande">⚔️ Jogar de novo</button>
+                <button id="btn-menu-vitoria" class="btn btn-fantasma">Menu principal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/art.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/game.js"></script>
+</body>
+
+</html>
