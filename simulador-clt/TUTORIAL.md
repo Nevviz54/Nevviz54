@@ -149,6 +149,8 @@ Requisitos por degrau:
 | 5 → 6 | 82 | 86 | 74 | 44 | 16 |
 
 Use **Pedir Feedback ao Supervisor** pra ver a lista exata do que ainda falta.
+(A tabela acima é da dificuldade **CLT**; no Estágio os números caem 15% e na
+Escala 12x36 sobem 12%.)
 
 **Duas coisas importantes sobre promoção:**
 
@@ -240,7 +242,57 @@ mês com ficha limpa, cinco cursos e a Fênix Capixaba (ser demitido e voltar a 
 
 ---
 
-## 12. Rodando o jogo
+## 12. Som, opções e dificuldade
+
+O jogo abre com a vinheta da **D.F.B.G PRODUCTIONS** (~2,4 s, dá pra pular com um
+toque ou tecla). Ela pode ser desligada nas opções.
+
+### Som
+
+Não existe nenhum arquivo de áudio: **tudo é sintetizado na hora** com WebAudio,
+então o jogo continua sendo um HTML solto que roda offline.
+
+- **Trilha sonora**: duas faixas em loop — uma arrastada em Lá menor no menu e
+  uma mais marcada em Ré menor durante o jogo, com baixo, melodia, pad e uma
+  percussão que lembra linha de produção. Para nas telas de fim.
+- **Efeitos**: clique, troca de aba, rolagem de dados, ação executada, dinheiro
+  entrando, dinheiro saindo, ação bloqueada, advertência, dormir, acordar, acerto
+  e erro de minigame, promoção, promoção negada, vitória e derrota.
+
+O navegador só libera áudio depois de um gesto seu, então o som começa no
+primeiro toque ou tecla — isso é regra do navegador, não do jogo.
+
+### Menu de opções (⚙️ no menu inicial e dentro do jogo)
+
+| Grupo | O que dá pra mexer |
+|---|---|
+| **Som** | volume da música, volume dos efeitos, silenciar tudo |
+| **Imagem** | efeito CRT, animações normais/reduzidas, tamanho da letra (P/M/G) |
+| **Jogo** | dificuldade, mostrar ou pular a abertura, confirmar antes de dormir |
+| **Dados salvos** | apagar a partida salva, restaurar as opções padrão |
+| **Teclado** | lista dos atalhos |
+
+Tudo é salvo no `localStorage` e sobrevive a fechar o jogo — inclusive separado
+do save da partida, então começar uma run nova não reseta seu volume.
+
+### As três dificuldades
+
+A dificuldade é **gravada na partida no momento em que você assina a carteira**.
+Trocar nas opções vale só para a próxima run — não dá pra fugir de uma derrota
+mudando para o fácil no último dia.
+
+| Modo | O que muda | Vitórias de um jogador que erra 20% das escolhas |
+|---|---|---|
+| **Estágio** | +70% de dinheiro inicial, eventos ruins doem 30% menos, promoção cobra 15% menos, sono recupera 15% mais | 20 em 20 |
+| **CLT** | o jogo como foi balanceado | 10 em 20 |
+| **Escala 12x36** | metade do dinheiro inicial, eventos 20% mais frequentes e 35% mais pesados, sono recupera 15% menos, promoção cobra 12% mais | 3 em 20 |
+
+(Números medidos com um bot simulando um jogador competente que erra uma escolha
+a cada cinco, 20 partidas por modo.)
+
+---
+
+## 13. Rodando o jogo
 
 ### No computador
 

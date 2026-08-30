@@ -187,6 +187,64 @@ body.reduce-motion .die.rolling{animation:none}
 .help li{margin-bottom:4px;font-size:13.5px;color:#c9c9d4}
 .help code{background:#101018;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12px}
 
+/* ---------- escala de fonte (menu de opcoes) ---------- */
+body.fonte-p{font-size:13.5px}
+body.fonte-g{font-size:16.5px}
+
+/* ---------- abertura da D.F.B.G PRODUCTIONS ---------- */
+.splash{position:fixed;inset:0;z-index:9600;background:#050508;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-direction:column}
+.splash-in{display:flex;flex-direction:column;align-items:center;gap:20px;
+  animation:sp-abre .5s ease-out both, sp-fecha .5s ease-in 1.9s both}
+.splash-cima{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:#5a5a68;
+  animation:sp-sobe .7s ease-out both}
+.selo{display:flex;flex-direction:column;align-items:center;gap:9px;padding:26px 38px;
+  border:2px solid #2a2a35;border-radius:6px;position:relative;background:#0a0a0e}
+.selo::before,.selo::after{content:"";position:absolute;width:9px;height:9px;
+  border:2px solid var(--acc)}
+.selo::before{top:-2px;left:-2px;border-right:0;border-bottom:0}
+.selo::after{bottom:-2px;right:-2px;border-left:0;border-top:0}
+.selo-letras{font-size:clamp(30px,8vw,56px);font-weight:900;color:#f2f2f5;line-height:1;
+  animation:sp-letras 1s cubic-bezier(.2,.7,.3,1) both}
+.selo-linha{height:2px;width:100%;background:linear-gradient(90deg,transparent,var(--acc),transparent);
+  animation:sp-linha .8s ease-out .3s both}
+.selo-sub{font-size:clamp(10px,2.6vw,13px);font-weight:700;letter-spacing:.5em;
+  color:var(--acc);padding-left:.5em;animation:sp-sobe .8s ease-out .45s both}
+.splash-pular{position:fixed;bottom:26px;left:0;right:0;text-align:center;font-size:11px;
+  color:#3a3a48;letter-spacing:.14em;text-transform:uppercase;animation:sp-abre .6s 1.1s both}
+@keyframes sp-abre{from{opacity:0}to{opacity:1}}
+@keyframes sp-fecha{from{opacity:1}to{opacity:0}}
+@keyframes sp-sobe{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes sp-letras{from{opacity:0;letter-spacing:.6em}to{opacity:1;letter-spacing:.1em}}
+@keyframes sp-linha{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+body.reduce-motion .splash *{animation:none !important;opacity:1 !important;
+  transform:none !important;letter-spacing:.1em}
+
+/* ---------- menu de opcoes ---------- */
+.opc-grupo{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--acc);margin:18px 0 2px}
+.opc-grupo:first-child{margin-top:0}
+.opc-linha{display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--line)}
+.opc-linha:last-child{border-bottom:0}
+.opc-linha .txt{flex:1;min-width:0}
+.opc-linha .nome{font-weight:600;font-size:13.5px}
+.opc-linha .desc{font-size:11.5px;color:var(--dim2);margin-top:2px;line-height:1.4}
+.opc-ctrl{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.seg{display:flex;gap:3px;background:#101018;border:1px solid var(--line2);
+  border-radius:999px;padding:3px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--dim);font-size:12px;font-weight:700;
+  padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.seg button:hover{color:var(--txt)}
+.seg button.on{background:var(--txt);color:#0a0a0c}
+input[type=range]{width:120px;accent-color:var(--acc);cursor:pointer}
+.val{font-size:12px;color:var(--dim);width:38px;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .opc-linha{flex-direction:column;align-items:flex-start;gap:9px}
+  .opc-ctrl{width:100%;justify-content:space-between}
+  input[type=range]{flex:1;width:auto}
+}
+
 /* ---------- telas estreitas (celular / APK) ---------- */
 @media(max-width:640px){
   body{font-size:14px}
@@ -875,7 +933,9 @@ function novoJogo(rolagem){
   const g = {
     screen:"jogo", mes:1, dia:1, pa:4, paMax:4,
     energia:st.energia, sanidade:st.sanidade, fome:st.fome,
-    dinheiro:st.dinheiro, passagens:st.passagens,
+    dinheiro:Math.round(st.dinheiro * (DIFICULDADES[CFG.dificuldade] || DIFICULDADES.clt).dinheiro),
+    passagens:st.passagens,
+    dificuldade:CFG.dificuldade,
     desempenho:40, qualificacao:6, rede:8, advertencias:0, diasNoCargo:0,
     fgts:0, horasExtras:0, horasNoturnas:0, faltas:0, adiantamento:0,
     divida:0, dividaParc:0, mesesSemAluguel:0, bike:false, moto:false,
@@ -952,6 +1012,8 @@ function checarFim(g){
   return false;
 }
 function fim(g, venceu, titulo, texto){
+  SOM.pararMusica();
+  SOM.efeito(venceu ? "vitoria" : "derrota");
   g.fim = { venceu, titulo, texto };
   g.screen = venceu ? "vitoria" : "derrota";
   apagarSave();          // run encerrada e run encerrada: sem CONTINUAR pra desfazer a morte
@@ -1025,7 +1087,7 @@ const ACOES = [
 { id:"feedback", cat:"trabalho", em:"🗣️", n:"Pedir Feedback ao Supervisor", pa:1,
   d:"Mostra exatamente o que falta pra sua promocao.",
   quando:(g)=>!ehFimDeSemana(g.dia) && !ehTopo(g),
-  run:(g)=>{ const req = REQ_PROMO[g.nivel]; const falta = faltaParaPromocao(g);
+  run:(g)=>{ const req = reqPromo(g, g.nivel); const falta = faltaParaPromocao(g);
     return { e:{ desempenho:2, sanidade:-3 },
       txt:"Feedback recebido.",
       popup:{ titulo:"Feedback do supervisor", em:"🗣️",
@@ -1203,7 +1265,7 @@ function linhaReq(nome, atual, alvo, inverso){
 }
 function faltaParaPromocao(g){
   if (ehTopo(g)) return [];
-  const r = REQ_PROMO[g.nivel], f = [];
+  const r = reqPromo(g, g.nivel), f = [];
   if (g.desempenho   < r.des)    f.push("Desempenho");
   if (g.qualificacao < r.qual)   f.push("Qualificacao");
   if (g.rede         < r.rede)   f.push("Rede");
@@ -1221,9 +1283,10 @@ function executarAcao(id){
   const a = ACOES.find(x => x.id === id);
   if (!a) return;
   if (a.quando && !a.quando(G)) return;
-  if (G.pa < a.pa) { flashAviso("Sem Pontos de Acao. Encerre o dia."); return; }
+  if (G.pa < a.pa) { SOM.efeito("bloqueado"); flashAviso("Sem Pontos de Acao. Encerre o dia."); return; }
   const ok = a.pode ? a.pode(G) : true;
-  if (ok !== true){ flashAviso(typeof ok === "string" ? ok : "Acao indisponivel."); return; }
+  if (ok !== true){ SOM.efeito("bloqueado");
+    flashAviso(typeof ok === "string" ? ok : "Acao indisponivel."); return; }
 
   if (a.mg){                                   // acao com minigame
     const tipo = typeof a.mg === "function" ? a.mg(G) : a.mg;
@@ -1238,6 +1301,10 @@ function executarAcao(id){
 }
 
 function finalizarAcao(a, res){
+  const e = res.e || {};
+  SOM.efeito(e.advertencias > 0 ? "advertencia"
+           : e.dinheiro > 0 ? "dinheiro"
+           : e.dinheiro < 0 ? "gasto" : "acao");
   aplicar(G, res.e);
   const det = resumoDelta(res.e);
   addLog(G, `<b>${esc(a.n)}</b> — ${res.txt}${det ? `<br><span class="tiny">${det}</span>` : ""}`, res.tipo || "");
@@ -1250,6 +1317,7 @@ function finalizarAcao(a, res){
 /* =========================== 9. VIRADA DE DIA ============================= */
 function encerrarDia(){
   if (!G || G.screen !== "jogo" || G.popup) return;
+  SOM.efeito("dormir");
   const g = G, cid = cidadeAtual(g);
 
   /* falta injustificada */
@@ -1263,7 +1331,8 @@ function encerrarDia(){
   if (g.trabalhouHoje && setorAtual(g).noturno && chance(0.25)) g.horasNoturnas += 2;
 
   /* sono */
-  let en = 23, san = 4;
+  const dfc = difJogo(g);
+  let en = Math.round(23 * dfc.sono), san = 4;
   if (g.fome >= 80){ en -= 8; san -= 8; addLog(g, "Dormiu com fome. Acordou pior do que deitou.", "dn"); }
   if (g.sanidade < 25){ en -= 6; addLog(g, "Insonia de ansiedade. O teto ficou muito interessante.", "dn"); }
   if (/Sanidade ao dormir/.test(cid.perk||"")) san += 3;
@@ -1283,19 +1352,21 @@ function encerrarDia(){
   if (checarFim(g)) { salvar(); render(); return; }
 
   /* evento aleatorio */
-  if (chance(0.58)){
+  if (chance(0.58 * dfc.eventos)){
     const disp = EVENTOS.filter(ev => !ev.quando || ev.quando(g));
     if (disp.length){
       const ev = pick(disp);
-      aplicar(g, ev.e); if (ev.extra) ev.extra(g);
-      addLog(g, `<b>${esc(ev.t)}</b> — ${esc(ev.x)}<br><span class="tiny">${resumoDelta(ev.e)}</span>`, "ev");
-      g.popup = { titulo: ev.t, em:"🎲", html:`<p>${esc(ev.x)}</p><p class="small">${resumoDelta(ev.e)}</p>` };
+      const efeito = escalarDano(ev.e, dfc.dano);
+      aplicar(g, efeito); if (ev.extra) ev.extra(g);
+      addLog(g, `<b>${esc(ev.t)}</b> — ${esc(ev.x)}<br><span class="tiny">${resumoDelta(efeito)}</span>`, "ev");
+      g.popup = { titulo: ev.t, em:"🎲", html:`<p>${esc(ev.x)}</p><p class="small">${resumoDelta(efeito)}</p>` };
     }
   }
   if (checarFim(g)) { salvar(); render(); return; }
 
   /* avanca */
   if (g.dia >= 30) fecharMes(g); else { g.dia++; iniciarDia(g); }
+  if (!g.fim) SOM.efeito("acordar");
   checarConquistas(g);
   salvar(); render();
 }
@@ -1386,7 +1457,7 @@ function avaliar(g){
             <p class="small">Desempenho atual: <b class="${g.desempenho>=70?'c-ok':'c-bad'}">${Math.round(g.desempenho)}</b></p>` };
   }
 
-  const r = REQ_PROMO[g.nivel];
+  const r = reqPromo(g, g.nivel);
   const falta = faltaParaPromocao(g);
 
   if (falta.length === 0){
@@ -1399,6 +1470,7 @@ function avaliar(g){
     g.aluguel = Math.round(g.aluguel * 1.12 / 10) * 10;   // subiu de cargo, subiu de endereco
     aplicar(g, { sanidade:12, rede:5 });
     addLog(g, `<b>PROMOVIDO!</b> Agora voce e ${esc(cargoAtual(g).n)}. Salario ${money0(antes)} → <b class="c-ok">${money0(g.salarioBase)}</b>.`, "up");
+    SOM.efeito("promocao");
     addLog(g, `Voce mudou pra um lugar melhor: aluguel ${money0(aluguelAntes)} → <b class="c-bad">${money0(g.aluguel)}</b>.`, "dn");
     return { titulo:"PROMOCAO!", em:"🎉",
       html:`<p>Seu nome foi aprovado no comite. Voce agora e <b>${esc(cargoAtual(g).n)}</b>.</p>
@@ -1417,6 +1489,7 @@ function avaliar(g){
 
   if (g.avaliacoesRuins >= 2) return demitir(g);
 
+  SOM.efeito("negado");
   aplicar(g, { sanidade:-6 });
   addLog(g, `Avaliacao do mes ${g.mes}: sem promocao. Falta ${falta.join(", ")}.`, "dn");
   return { titulo:"Avaliacao de Desempenho", em:"📋",
@@ -1484,7 +1557,260 @@ function checarConquistas(g){
   }
 }
 
-/* ============================= 12. RENDER / UI ============================ */
+/* ====================== 12. CONFIGURACOES DO JOGADOR ======================
+   Guardadas separadas do save da partida: trocar de run nao reseta o volume.
+   ========================================================================== */
+const CFG_KEY = "simulador_clt_es_cfg";
+const CFG = {
+  musica: 40, efeitos: 70,
+  crt: true, animacoes: true, fonte: "normal",
+  dificuldade: "clt", abertura: true, confirmarDia: false,
+};
+
+function carregarConfig(){
+  try {
+    const bruto = localStorage.getItem(CFG_KEY);
+    if (bruto) Object.assign(CFG, JSON.parse(bruto) || {});
+  } catch (e) { /* localStorage bloqueado: fica no padrao */ }
+  CFG.musica  = clamp(+CFG.musica  || 0, 0, 100);
+  CFG.efeitos = clamp(+CFG.efeitos || 0, 0, 100);
+}
+function salvarConfig(){
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); } catch (e) {}
+}
+function aplicarConfig(){
+  document.body.classList.toggle("no-crt", !CFG.crt);
+  document.body.classList.toggle("reduce-motion", !CFG.animacoes);
+  document.body.classList.remove("fonte-p", "fonte-g");
+  if (CFG.fonte === "pequena") document.body.classList.add("fonte-p");
+  if (CFG.fonte === "grande")  document.body.classList.add("fonte-g");
+  SOM.volumes();
+  salvarConfig();
+}
+
+/* A dificuldade fica gravada na partida: nao da pra trocar pro facil no
+   ultimo dia pra escapar de uma derrota. */
+const DIFICULDADES = {
+  estagio: { n:"Estagio", d:"Mais folego pra aprender: comeca com mais dinheiro, eventos ruins doem menos e a promocao cobra menos.",
+             dinheiro:1.7, dano:0.7, req:0.85, sono:1.15, eventos:0.85 },
+  clt:     { n:"CLT", d:"O jogo como foi balanceado. Aperta, mas e justo.",
+             dinheiro:1, dano:1, req:1, sono:1, eventos:1 },
+  escala:  { n:"Escala 12x36", d:"Comeca duro: menos dinheiro, eventos mais frequentes e pesados, sono que nao recupera e regua de promocao mais alta.",
+             dinheiro:0.52, dano:1.35, req:1.12, sono:0.85, eventos:1.2 },
+};
+const difJogo = (g) => DIFICULDADES[(g && g.dificuldade) || CFG.dificuldade] || DIFICULDADES.clt;
+
+/* Requisitos de promocao ja ajustados pela dificuldade da partida. */
+function reqPromo(g, nivel){
+  const base = REQ_PROMO[nivel];
+  if (!base) return null;
+  const m = difJogo(g).req;
+  return { des: Math.round(base.des * m), qual: Math.round(base.qual * m),
+           rede: Math.round(base.rede * m), dias: Math.round(base.dias * m),
+           advMax: Math.round(base.advMax / m) };
+}
+
+/* Escala o impacto de um evento conforme a dificuldade. So mexe no que
+   prejudica: dificuldade facil nao deve encolher um Pix da vo. */
+const PIOR_QUANDO_SOBE = { fome:1, advertencias:1 };
+function escalarDano(e, mult){
+  if (mult === 1 || !e) return e;
+  const saida = {};
+  for (const k in e){
+    const v = e[k];
+    if (typeof v !== "number"){ saida[k] = v; continue; }
+    const ruim = PIOR_QUANDO_SOBE[k] ? v > 0 : v < 0;
+    saida[k] = ruim ? Math.round(v * mult) : v;
+  }
+  return saida;
+}
+
+/* ============================== 13. AUDIO =================================
+   Tudo sintetizado na hora com WebAudio: nenhum arquivo de som, nenhuma
+   requisicao de rede. O jogo continua sendo um HTML solto que roda offline.
+   ========================================================================== */
+const nota = (n) => 440 * Math.pow(2, (n - 69) / 12);
+
+/* Trilhas: cada linha e um passo de colcheia. 0 = silencio. */
+const MUSICAS = {
+  /* Menu: Am - F - C - G, arrastado, meio melancolico. */
+  menu: { bpm: 84,
+    baixo:  [45,0,0,45, 0,0,45,0, 41,0,0,41, 0,0,41,0, 40,0,0,40, 0,0,40,0, 43,0,0,43, 0,0,43,0],
+    melodia:[69,0,72,0, 74,0,0,72, 69,0,0,0, 65,0,67,0, 64,0,67,0, 72,0,0,69, 67,0,0,0, 0,0,0,0],
+    pad:    [57,0,0,0, 0,0,0,0, 53,0,0,0, 0,0,0,0, 52,0,0,0, 0,0,0,0, 55,0,0,0, 0,0,0,0],
+    ritmo:  [1,0,0,0, 2,0,0,0, 1,0,0,0, 2,0,0,0, 1,0,0,0, 2,0,0,0, 1,0,1,0, 2,0,0,0] },
+  /* Jogo: Dm repetitivo, discreto, ritmo de linha de producao. */
+  jogo: { bpm: 104,
+    baixo:  [38,0,38,0, 45,0,38,0, 41,0,41,0, 48,0,41,0, 36,0,36,0, 43,0,36,0, 40,0,40,0, 45,0,0,0],
+    melodia:[0,0,0,0, 74,0,77,0, 0,0,0,0, 72,0,74,0, 0,0,0,0, 70,0,74,0, 0,0,0,0, 72,0,0,0],
+    pad:    [50,0,0,0, 0,0,0,0, 53,0,0,0, 0,0,0,0, 48,0,0,0, 0,0,0,0, 52,0,0,0, 0,0,0,0],
+    ritmo:  [1,0,3,0, 2,0,3,0, 1,0,3,0, 2,0,3,3, 1,0,3,0, 2,0,3,0, 1,1,3,0, 2,0,3,0] },
+};
+
+const SOM = {
+  ctx:null, mestre:null, gMus:null, gSfx:null, ruidoBuf:null,
+  desejada:null, tocando:null, timer:0, passo:0, proximo:0,
+
+  /* Navegador so libera audio depois de um gesto do usuario. */
+  iniciar(){
+    if (this.ctx){ if (this.ctx.state === "suspended") this.ctx.resume(); this.retomar(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try { this.ctx = new AC(); } catch (e) { return; }
+    this.mestre = this.ctx.createGain(); this.mestre.gain.value = 0.9;
+    this.mestre.connect(this.ctx.destination);
+    this.gMus = this.ctx.createGain(); this.gMus.connect(this.mestre);
+    this.gSfx = this.ctx.createGain(); this.gSfx.connect(this.mestre);
+    const n = Math.floor(this.ctx.sampleRate * 0.5);
+    this.ruidoBuf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
+    const d = this.ruidoBuf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    this.volumes();
+    this.retomar();
+  },
+  volumes(){
+    if (!this.ctx) return;
+    this.gMus.gain.value = (CFG.musica / 100) * 0.26;
+    this.gSfx.gain.value = (CFG.efeitos / 100) * 0.55;
+    this.retomar();
+  },
+  retomar(){
+    if (!this.ctx) return;
+    if (CFG.musica <= 0) this.pararLoop();
+    else if (this.desejada && this.tocando !== this.desejada) this.tocarMusica(this.desejada);
+  },
+
+  /* ------------------------------ sintese ------------------------------- */
+  tom(freq, dur, o){
+    if (!this.ctx) return;
+    o = o || {};
+    const t = this.ctx.currentTime + (o.atraso || 0);
+    const osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+    osc.type = o.tipo || "square";
+    osc.frequency.setValueAtTime(freq, t);
+    if (o.para) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.para), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, o.vol || 0.22), t + (o.ataque || 0.008));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(o.destino || this.gSfx);
+    osc.start(t); osc.stop(t + dur + 0.03);
+  },
+  batida(dur, o){
+    if (!this.ctx || !this.ruidoBuf) return;
+    o = o || {};
+    const t = this.ctx.currentTime + (o.atraso || 0);
+    const src = this.ctx.createBufferSource(); src.buffer = this.ruidoBuf; src.loop = true;
+    const f = this.ctx.createBiquadFilter();
+    f.type = o.filtro || "bandpass"; f.frequency.value = o.freq || 1400; f.Q.value = o.q || 1;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(o.vol || 0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(o.destino || this.gSfx);
+    src.start(t); src.stop(t + dur + 0.02);
+  },
+
+  /* ---------------------------- efeitos ---------------------------------- */
+  efeito(nome){
+    if (!this.ctx || CFG.efeitos <= 0) return;
+    const T = (f, d, o) => this.tom(f, d, o);
+    switch (nome){
+      case "clique":  T(520, .05, { vol:.10 }); break;
+      case "aba":     T(760, .04, { tipo:"triangle", vol:.10 }); break;
+      case "acao":    T(440, .06, { vol:.13 }); T(660, .07, { vol:.11, atraso:.06 }); break;
+      case "bloqueado": T(150, .16, { tipo:"sawtooth", vol:.13, para:110 }); break;
+      case "dado":
+        for (let i = 0; i < 6; i++)
+          this.batida(.05, { atraso:i * .075, freq:2200 + Math.random() * 1400, q:3, vol:.13 });
+        break;
+      case "dinheiro":
+        T(880, .07, { tipo:"triangle", vol:.14 });
+        T(1175, .07, { tipo:"triangle", vol:.13, atraso:.06 });
+        T(1568, .13, { tipo:"triangle", vol:.12, atraso:.12 });
+        break;
+      case "gasto":   T(420, .22, { tipo:"sine", vol:.14, para:190 }); break;
+      case "dormir":  T(330, .5, { tipo:"sine", vol:.13, para:110 }); break;
+      case "acordar":
+        T(523, .09, { tipo:"triangle", vol:.11 });
+        T(659, .09, { tipo:"triangle", vol:.11, atraso:.09 });
+        T(784, .16, { tipo:"triangle", vol:.11, atraso:.18 });
+        break;
+      case "popup":   T(620, .05, { tipo:"triangle", vol:.09 });
+                      T(830, .07, { tipo:"triangle", vol:.08, atraso:.05 }); break;
+      case "advertencia":
+        T(300, .11, { tipo:"square", vol:.15 });
+        T(300, .13, { tipo:"square", vol:.15, atraso:.17 });
+        break;
+      case "acerto":  T(1200, .05, { vol:.12 }); T(1760, .07, { vol:.10, atraso:.045 }); break;
+      case "falha":   T(200, .13, { tipo:"square", vol:.12, para:140 });
+                      this.batida(.1, { freq:400, vol:.1 }); break;
+      case "promocao":
+        [523, 659, 784, 1047].forEach((f, i) =>
+          T(f, .16, { tipo:"triangle", vol:.15, atraso:i * .1 }));
+        T(1319, .5, { tipo:"triangle", vol:.12, atraso:.42 });
+        T(1047, .5, { tipo:"sine", vol:.08, atraso:.42 });
+        break;
+      case "negado":  T(392, .18, { tipo:"sawtooth", vol:.12 });
+                      T(311, .3, { tipo:"sawtooth", vol:.12, atraso:.17 }); break;
+      case "vitoria":
+        [523, 659, 784, 1047, 1319].forEach((f, i) =>
+          T(f, .18, { tipo:"triangle", vol:.16, atraso:i * .12 }));
+        T(1568, .8, { tipo:"triangle", vol:.14, atraso:.62 });
+        break;
+      case "derrota":
+        T(392, .35, { tipo:"sawtooth", vol:.15, para:330 });
+        T(294, .45, { tipo:"sawtooth", vol:.15, atraso:.3, para:247 });
+        T(196, .9, { tipo:"sine", vol:.16, atraso:.7, para:98 });
+        break;
+      case "abertura":
+        T(392, .5, { tipo:"sine", vol:.1 });
+        T(587, .5, { tipo:"sine", vol:.09, atraso:.1 });
+        T(784, .9, { tipo:"sine", vol:.1, atraso:.2 });
+        break;
+    }
+  },
+
+  /* ----------------------------- trilha ---------------------------------- */
+  tocarMusica(nomeTrilha){
+    this.desejada = nomeTrilha;
+    if (!this.ctx || CFG.musica <= 0 || !MUSICAS[nomeTrilha]){ this.pararLoop(); return; }
+    if (this.tocando === nomeTrilha && this.timer) return;
+    this.pararLoop();
+    this.tocando = nomeTrilha; this.passo = 0;
+    this.proximo = this.ctx.currentTime + 0.08;
+    this.timer = setInterval(() => this.agendar(), 25);
+  },
+  pararMusica(){ this.desejada = null; this.pararLoop(); },
+  pararLoop(){ if (this.timer) clearInterval(this.timer); this.timer = 0; this.tocando = null; },
+
+  /* Agendamento com antecedencia: o setInterval so enfileira, quem toca no
+     tempo certo e o relogio do proprio WebAudio. */
+  agendar(){
+    const m = MUSICAS[this.tocando];
+    if (!m || !this.ctx){ this.pararLoop(); return; }
+    const passoDur = 60 / m.bpm / 2;
+    let guarda = 0;
+    while (this.proximo < this.ctx.currentTime + 0.16 && guarda++ < 40){
+      const i = this.passo % m.baixo.length;
+      const dt = this.proximo - this.ctx.currentTime;
+      if (dt >= 0){
+        if (m.baixo[i])   this.tom(nota(m.baixo[i]),   passoDur * 1.7,
+                            { tipo:"triangle", vol:.22, atraso:dt, destino:this.gMus });
+        if (m.melodia[i]) this.tom(nota(m.melodia[i]), passoDur * 1.5,
+                            { tipo:"square", vol:.10, atraso:dt, destino:this.gMus });
+        if (m.pad[i])     this.tom(nota(m.pad[i]),     passoDur * 7,
+                            { tipo:"sine", vol:.10, atraso:dt, ataque:.15, destino:this.gMus });
+        const r = m.ritmo[i];
+        if (r === 1) this.tom(70, .12, { tipo:"sine", vol:.28, para:42, atraso:dt, destino:this.gMus });
+        if (r === 2) this.batida(.13, { freq:1900, q:.9, vol:.14, atraso:dt, destino:this.gMus });
+        if (r === 3) this.batida(.04, { freq:6500, q:2, vol:.05, atraso:dt, destino:this.gMus });
+      }
+      this.proximo += passoDur;
+      this.passo++;
+    }
+  },
+};
+
+/* ============================= 14. RENDER / UI ============================ */
 const app = () => document.getElementById("app");
 const layer = () => document.getElementById("layer");
 
@@ -1531,6 +1857,32 @@ function htmlHolerite(g, h){
   <p class="tiny muted" style="margin-top:10px">Tabelas de INSS e IRRF com referencia de 2025, arredondadas para fins de jogo. Setor: ${esc(st.nome)} (jornada ${st.jornada}h/mes).</p>`;
 }
 
+/* ----------------------- tela: abertura do estudio ------------------------ */
+let splashTimer = 0;
+function telaSplash(){
+  clearTimeout(splashTimer);
+  app().innerHTML = `
+  <div class="splash" data-go="pularSplash">
+    <div class="splash-in">
+      <div class="splash-cima">um jogo feito pela</div>
+      <div class="selo">
+        <div class="selo-letras">D.F.B.G</div>
+        <div class="selo-linha"></div>
+        <div class="selo-sub">PRODUCTIONS</div>
+      </div>
+    </div>
+    <div class="splash-pular">toque para pular</div>
+  </div>`;
+  SOM.efeito("abertura");
+  splashTimer = setTimeout(fecharSplash, 2400);
+}
+function fecharSplash(){
+  clearTimeout(splashTimer); splashTimer = 0;
+  if (!G || G.screen !== "splash") return;
+  G = { screen:"menu" };
+  render();
+}
+
 /* ------------------------------- tela: menu ------------------------------- */
 function telaMenu(){
   const temSave = !!localStorage.getItem(SAVE_KEY);
@@ -1547,6 +1899,7 @@ function telaMenu(){
         <button class="btn btn-p btn-lg" data-go="rolar">🎲 NOVA JORNADA</button>
         ${temSave ? `<button class="btn btn-lg" data-go="continuar">💾 CONTINUAR</button>` : ""}
         <button class="btn btn-lg" data-go="ajuda">📖 COMO JOGAR</button>
+        <button class="btn btn-lg" data-go="opcoes">⚙️ OPCOES</button>
       </div>
     </div></div>
 
@@ -1568,9 +1921,9 @@ function telaMenu(){
       </div></div>
     </div>
 
-    <div class="flex" style="justify-content:center">
-      <button class="btn small" data-go="crt">Alternar efeito CRT</button>
-      <button class="btn small" data-go="motion">Alternar animacoes</button>
+    <div style="text-align:center;color:var(--dim2);font-size:11.5px;letter-spacing:.16em;
+                text-transform:uppercase;padding:4px 0 10px">
+      D.F.B.G Productions
     </div>
   </div></div>`;
 }
@@ -1620,7 +1973,7 @@ function telaRolagem(anim){
       <button class="btn btn-lg" data-go="menu">VOLTAR</button>
     </div>
   </div></div>`;
-  if (anim) setTimeout(()=>telaRolagem(false), 420);
+  if (anim){ SOM.efeito("dado"); setTimeout(()=>telaRolagem(false), 420); }
 }
 
 /* ------------------------------- tela: jogo ------------------------------ */
@@ -1628,7 +1981,7 @@ function telaJogo(){
   const g = G, cid = cidadeAtual(g), st = setorAtual(g);
   const acoes = acoesDisponiveis(g).filter(a => a.cat === UI.aba);
   const cats = [["trabalho","Trabalho"],["casa","Casa"],["cidade","Cidade"],["carreira","Carreira"],["grana","Grana"]];
-  const req = ehTopo(g) ? null : REQ_PROMO[g.nivel];
+  const req = ehTopo(g) ? null : reqPromo(g, g.nivel);
   const falta = faltaParaPromocao(g);
 
   app().innerHTML = `
@@ -1684,6 +2037,7 @@ function telaJogo(){
               <button class="btn btn-p" data-go="dormir">🌙 Dormir / Encerrar o Dia</button>
               <button class="btn" data-go="ajuda">📖 Como jogar</button>
               <button class="btn" data-go="ficha">📋 Ficha completa</button>
+              <button class="btn" data-go="opcoes">⚙️ Opcoes</button>
               <button class="btn" data-go="menu">⏏️ Sair (salva)</button>
             </div>
           </div>
@@ -1767,22 +2121,30 @@ function telaFim(){
 
 /* --------------------------------- popups -------------------------------- */
 function render(){
-  if (!G || G.screen === "menu") { telaMenu(); pintarLayer(); return; }
-  if (G.screen === "rolagem")    { telaRolagem(true); pintarLayer(); return; }
-  if (G.screen === "vitoria" || G.screen === "derrota"){ telaFim(); pintarLayer(); return; }
+  if (G && G.screen === "splash"){ SOM.pararMusica(); telaSplash(); pintarLayer(); return; }
+  if (!G || G.screen === "menu") { SOM.tocarMusica("menu"); telaMenu(); pintarLayer(); return; }
+  if (G.screen === "rolagem")    { SOM.tocarMusica("menu"); telaRolagem(true); pintarLayer(); return; }
+  if (G.screen === "vitoria" || G.screen === "derrota"){
+    SOM.pararMusica(); telaFim(); pintarLayer(); return;
+  }
+  SOM.tocarMusica("jogo");
   telaJogo(); pintarLayer();
 }
 
+let ultimoPopup = null;
 function pintarLayer(){
   const L = layer();
+  if (L.dataset.mg) return;             // modal aberto (opcoes, ajuda, minigame) tem prioridade
   if (G && G.popup){
+    if (G.popup !== ultimoPopup){ SOM.efeito("popup"); ultimoPopup = G.popup; }
     const p = G.popup;
     L.innerHTML = `<div class="veil"><div class="card">
       <div class="card-h"><h3 style="color:var(--txt);font-size:16px;text-transform:none">${p.em||"📌"} ${esc(p.titulo)}</h3></div>
       <div class="card-b stack">${p.html || `<p>${esc(p.texto||"")}</p>`}
       <button class="btn btn-p btn-block" data-go="fecharPopup">ENTENDIDO</button></div>
     </div></div>`;
-  } else if (!L.dataset.mg) {
+  } else {
+    ultimoPopup = null;
     L.innerHTML = "";
   }
 }
@@ -1835,7 +2197,83 @@ function modalFicha(){
 }
 function fecharModal(){ const L = layer(); delete L.dataset.mg; L.innerHTML = ""; pintarLayer(); }
 
-/* ============================ 13. CENA 2D (CANVAS) ========================
+/* ---------------------------- menu de opcoes ------------------------------ */
+function linhaOpc(nome, desc, ctrl){
+  return `<div class="opc-linha"><div class="txt"><div class="nome">${nome}</div>
+    ${desc ? `<div class="desc">${desc}</div>` : ""}</div>
+    <div class="opc-ctrl">${ctrl}</div></div>`;
+}
+function segmentado(chave, opcoes, atual){
+  return `<div class="seg">${opcoes.map(([v, r]) =>
+    `<button data-set="${chave}:${v}" class="${atual === v ? "on" : ""}">${r}</button>`).join("")}</div>`;
+}
+function deslizante(chave, valor){
+  return `<input type="range" min="0" max="100" step="5" value="${valor}" data-cfg="${chave}"
+    aria-label="${chave}"><span class="val" id="val-${chave}">${valor}%</span>`;
+}
+
+function modalOpcoes(){
+  const L = layer(); L.dataset.mg = "1";
+  const emJogo = G && G.screen === "jogo";
+  const d = DIFICULDADES[CFG.dificuldade];
+  L.innerHTML = `<div class="veil wide"><div class="card">
+    <div class="card-h"><h3 style="color:var(--txt);text-transform:none;font-size:16px">⚙️ Opcoes</h3>
+      <button class="btn small" data-go="fecharAjuda">Fechar</button></div>
+    <div class="card-b" style="max-height:74vh;overflow-y:auto">
+
+      <div class="opc-grupo">Som</div>
+      ${linhaOpc("Musica", "Trilha do menu e do jogo, sintetizada na hora.",
+                 deslizante("musica", CFG.musica))}
+      ${linhaOpc("Efeitos sonoros", "Cliques, dados, dinheiro, promocao, minigames.",
+                 deslizante("efeitos", CFG.efeitos))}
+      ${linhaOpc("Silenciar tudo", "Zera musica e efeitos de uma vez.",
+                 `<button class="btn small" data-go="mudo">${CFG.musica === 0 && CFG.efeitos === 0 ? "Reativar som" : "Silenciar"}</button>`)}
+
+      <div class="opc-grupo">Imagem</div>
+      ${linhaOpc("Efeito CRT", "Linhas de varredura de tubo antigo por cima da tela.",
+                 segmentado("crt", [[1, "Ligado"], [0, "Desligado"]], CFG.crt ? 1 : 0))}
+      ${linhaOpc("Animacoes", "Desligue se a tela piscar demais ou o aparelho engasgar.",
+                 segmentado("animacoes", [[1, "Normais"], [0, "Reduzidas"]], CFG.animacoes ? 1 : 0))}
+      ${linhaOpc("Tamanho da letra", "",
+                 segmentado("fonte", [["pequena", "P"], ["normal", "M"], ["grande", "G"]], CFG.fonte))}
+
+      <div class="opc-grupo">Jogo</div>
+      ${linhaOpc("Dificuldade", esc(d.d) + (emJogo
+                 ? `<br><b class="c-acc">A partida atual continua em ${esc(difJogo(G).n)}: a dificuldade e gravada no comeco da run.</b>`
+                 : ""),
+                 segmentado("dificuldade", [["estagio", "Estagio"], ["clt", "CLT"], ["escala", "Escala 12x36"]], CFG.dificuldade))}
+      ${linhaOpc("Abertura do estudio", "A vinheta da D.F.B.G Productions ao abrir o jogo.",
+                 segmentado("abertura", [[1, "Mostrar"], [0, "Pular"]], CFG.abertura ? 1 : 0))}
+      ${linhaOpc("Confirmar antes de dormir", "Evita encerrar o dia sem querer com Pontos de Acao sobrando.",
+                 segmentado("confirmarDia", [[1, "Sim"], [0, "Nao"]], CFG.confirmarDia ? 1 : 0))}
+
+      <div class="opc-grupo">Dados salvos</div>
+      ${linhaOpc("Partida salva",
+                 (() => { const s = carregar(); return s
+                   ? `Mes ${s.mes}, dia ${s.dia}, em ${esc(REGIOES[s.regiao].cidades[s.cidade].nome)}.`
+                   : "Nenhuma partida salva no momento."; })(),
+                 `<button class="btn small btn-bad" data-go="apagarPartida">Apagar</button>`)}
+      ${linhaOpc("Restaurar padroes", "Volta todas as opcoes acima ao original.",
+                 `<button class="btn small" data-go="resetCfg">Restaurar</button>`)}
+
+      <div class="opc-grupo">Teclado</div>
+      <div class="pay">
+        <div class="l"><span>1 a 5</span><b>trocar de aba</b></div>
+        <div class="l"><span>Espaco</span><b>encerrar o dia</b></div>
+        <div class="l"><span>Enter ou Esc</span><b>fechar aviso</b></div>
+      </div>
+
+      <div class="opc-grupo">Sobre</div>
+      <p class="small muted" style="margin:0">
+        <b>Simulador CLT ES — O Peso da Carteira</b><br>
+        Um jogo feito pela <b class="c-acc">D.F.B.G PRODUCTIONS</b>.<br>
+        Roda offline, num arquivo so, sem pedir permissao nenhuma.
+      </p>
+    </div>
+  </div></div>`;
+}
+
+/* ============================ 15. CENA 2D (CANVAS) ========================
    Pixel art desenhada por codigo: ceu por periodo do dia, skyline conforme o
    cenario da cidade, chuva/calor, onibus passando e o boneco reagindo.
    ========================================================================== */
@@ -2099,7 +2537,7 @@ function desenharBoneco(ctx, W, chao, st, g, noturno){
   ctx.restore();
 }
 
-/* ============================== 14. MINIGAMES ============================= */
+/* ============================== 16. MINIGAMES ============================= */
 let mgTimers = [];
 function limparMinigame(){ mgTimers.forEach(t => { clearInterval(t); clearTimeout(t); cancelAnimationFrame(t); }); mgTimers = []; }
 
@@ -2147,7 +2585,9 @@ function mgOnibus(L, fim){
   mgTimers.push(requestAnimationFrame(loop));
 
   const tentar = () => {
-    if (pos >= zona && pos <= zona + larg) acertos++;
+    const pegou = pos >= zona && pos <= zona + larg;
+    SOM.efeito(pegou ? "acerto" : "falha");
+    if (pegou) acertos++;
     rodada++;
     if (rodada >= 3){ fim(acertos / 3); return; }
     zona = alvo(); upZona();
@@ -2183,12 +2623,14 @@ function mgMeta(L, fim){
     const c = e.target.closest(".mg-cell"); if (!c) return;
     if (atual < 0) return;                       // caixa ja conferida: espera a proxima acender
     if (+c.dataset.i === atual){
+      SOM.efeito("acerto");
       acertos++; atual = -1;
       c.className = "mg-cell"; c.textContent = "✅";
       b.querySelector("#mgP").textContent = acertos;
       b.querySelector("#mgBar").style.width = Math.min(100, acertos / alvoTotal * 100) + "%";
       if (acertos >= alvoTotal) fim(1);
-    } else { c.className = "mg-cell bad"; acertos = Math.max(0, acertos - 1);
+    } else { SOM.efeito("falha");
+      c.className = "mg-cell bad"; acertos = Math.max(0, acertos - 1);
       b.querySelector("#mgP").textContent = acertos; }
   };
   mgTimers.push(setInterval(() => {
@@ -2235,6 +2677,7 @@ function mgCliente(L, fim){
        <div class="mg-opts">${ops.map((o,k)=>`<button class="btn" data-k="${k}">${esc(o[0])}</button>`).join("")}</div>`);
     b.querySelectorAll("[data-k]").forEach(btn => btn.onclick = () => {
       const v = ops[+btn.dataset.k][1];
+      SOM.efeito(v > 0 ? "acerto" : "falha");
       paciencia = clamp(paciencia + (v > 0 ? 16 : v === -1 ? -18 : -32), 0, 100);
       i++; desenhar();
     });
@@ -2258,7 +2701,9 @@ function mgConferencia(L, fim){
        <div class="mg-opts" style="margin-top:10px">${opcoes.map(o=>`<button class="btn" data-v="${o}">${o}</button>`).join("")}</div>`);
     requestAnimationFrame(()=>{ const p = box.querySelector("#mgP2"); if (p) p.style.width = "0%"; });
     box.querySelectorAll("[data-v]").forEach(btn => btn.onclick = () => {
-      if (+btn.dataset.v === resp) acertos++;
+      const certo = +btn.dataset.v === resp;
+      SOM.efeito(certo ? "acerto" : "falha");
+      if (certo) acertos++;
       clearTimeout(prazo); i++; proxima();
     });
     prazo = setTimeout(() => { i++; proxima(); }, 6100);
@@ -2267,7 +2712,7 @@ function mgConferencia(L, fim){
   proxima();
 }
 
-/* ============================== 15. TUTORIAL ============================== */
+/* ============================== 17. TUTORIAL ============================== */
 const TEXTO_AJUDA = `
 <h4>A ideia</h4>
 <p class="small">Voce e um trabalhador CLT capixaba. Os <b>dados</b> decidem onde voce nasce, em que setor cai e de onde vem. Voce <b>sempre</b> comeca no cargo mais baixo da escada. O jogo e sobreviver ao mes e arrancar promocao.</p>
@@ -2345,7 +2790,7 @@ const TEXTO_AJUDA = `
 <li>Advertencia alta trava promocao mesmo com Desempenho 100. Use EPI/CIPA e sindicato.</li>
 </ul>`;
 
-/* =========================== 16. SAVE / LOAD ============================== */
+/* =========================== 18. SAVE / LOAD ============================== */
 function salvar(){
   try {
     if (!G || G.screen !== "jogo") return;
@@ -2368,10 +2813,48 @@ function carregar(){
 }
 function apagarSave(){ try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
-/* =========================== 17. EVENTOS DE UI ============================ */
+/* =========================== 19. EVENTOS DE UI ============================ */
+
+/* Chaves de configuracao que sao liga/desliga (chegam como "1"/"0"). */
+const CFG_BOOL = { crt:1, animacoes:1, abertura:1, confirmarDia:1 };
+
+/* O navegador so libera audio depois de um gesto. Primeiro toque/tecla arma tudo. */
+function armarAudio(){
+  SOM.iniciar();
+  if (G && G.screen === "jogo") SOM.tocarMusica("jogo");
+  else if (G && G.screen !== "splash") SOM.tocarMusica("menu");
+}
+document.addEventListener("pointerdown", armarAudio, { once:true });
+document.addEventListener("keydown", armarAudio, { once:true });
+
+document.addEventListener("input", (ev) => {
+  const alvo = ev.target.closest("[data-cfg]");
+  if (!alvo) return;
+  const chave = alvo.dataset.cfg;
+  CFG[chave] = clamp(+alvo.value, 0, 100);
+  const rotulo = document.getElementById("val-" + chave);
+  if (rotulo) rotulo.textContent = CFG[chave] + "%";
+  aplicarConfig();
+});
+document.addEventListener("change", (ev) => {
+  const alvo = ev.target.closest("[data-cfg='efeitos']");
+  if (alvo) SOM.efeito("dinheiro");        // amostra pra ouvir o volume escolhido
+});
+
 document.addEventListener("click", (ev) => {
+  const alvoSet = ev.target.closest("[data-set]");
+  if (alvoSet){
+    const corte = alvoSet.dataset.set.indexOf(":");
+    const chave = alvoSet.dataset.set.slice(0, corte);
+    const valor = alvoSet.dataset.set.slice(corte + 1);
+    CFG[chave] = CFG_BOOL[chave] ? valor === "1" : valor;
+    aplicarConfig(); SOM.efeito("clique");
+    modalOpcoes();
+    return;
+  }
+
   const alvoAba = ev.target.closest("[data-aba]");
-  if (alvoAba){ UI.aba = alvoAba.dataset.aba; render(); return; }
+  if (alvoAba){ SOM.efeito("aba"); UI.aba = alvoAba.dataset.aba; render(); return; }
 
   const alvoAct = ev.target.closest("[data-act]");
   if (alvoAct && !alvoAct.disabled){ executarAcao(alvoAct.dataset.act); return; }
@@ -2379,65 +2862,119 @@ document.addEventListener("click", (ev) => {
   const alvoGo = ev.target.closest("[data-go]");
   if (!alvoGo) return;
   const go = alvoGo.dataset.go;
+  if (go !== "pularSplash") SOM.efeito("clique");
 
   switch (go){
+    case "pularSplash": fecharSplash(); break;
+
     case "rolar":
       rolagemAtual = rolarPersonagem();
       G = { screen:"rolagem" };
+      SOM.tocarMusica("menu");
       telaRolagem(true); pintarLayer();
       break;
+
     case "aceitar":
       G = novoJogo(rolagemAtual);
       UI.aba = "trabalho";
       G.popup = { titulo:"Carteira assinada", em:"📗",
         html:`<p>Bem-vindo a <b>${esc(cidadeAtual(G).nome)}</b>. Aluguel de <b>${money0(G.aluguel)}</b> vence dia 8, o salario cai dia 5.</p>
-              <p class="small muted">Voce tem 4 Pontos de Acao por dia. Comece batendo o ponto — e o unico jeito de subir Desempenho.</p>` };
+              <p class="small muted">Dificuldade desta partida: <b>${esc(difJogo(G).n)}</b>. Voce tem 4 Pontos de Acao por dia — comece batendo o ponto, e o unico jeito de subir Desempenho.</p>` };
       apagarSave(); salvar(); render();
       break;
+
     case "continuar": {
-      const s = carregar();
-      if (!s){ flashAviso("Nao ha jogo salvo."); return; }
-      G = s; UI.aba = "trabalho"; render();
+      const salvo = carregar();
+      if (!salvo){ flashAviso("Nao ha jogo salvo."); return; }
+      G = salvo; UI.aba = "trabalho"; render();
       break; }
+
     case "menu":
       salvar(); cancelAnimationFrame(Cena.raf); Cena.raf = 0;
       G = { screen:"menu" }; render();
       break;
-    case "dormir":   encerrarDia(); break;
-    case "ajuda":    modalAjuda(); break;
-    case "ficha":    if (G && G.screen === "jogo") modalFicha(); break;
+
+    case "dormir":
+      if (CFG.confirmarDia && G && G.screen === "jogo" && G.pa > 0){ modalConfirmarDia(); break; }
+      encerrarDia();
+      break;
+    case "dormirConfirma": fecharModal(); encerrarDia(); break;
+
+    case "ajuda":  modalAjuda(); break;
+    case "opcoes": modalOpcoes(); break;
+    case "ficha":  if (G && G.screen === "jogo") modalFicha(); break;
     case "fecharAjuda": fecharModal(); break;
+
     case "fecharPopup":
       if (G) G.popup = null;
       pintarLayer();
       if (G && (G.screen === "vitoria" || G.screen === "derrota")) render();
       break;
-    case "crt":    document.body.classList.toggle("no-crt"); break;
-    case "motion": document.body.classList.toggle("reduce-motion"); break;
+
+    case "mudo": {
+      const silenciado = CFG.musica === 0 && CFG.efeitos === 0;
+      CFG.musica  = silenciado ? 40 : 0;
+      CFG.efeitos = silenciado ? 70 : 0;
+      aplicarConfig(); modalOpcoes();
+      break; }
+
+    case "apagarPartida":
+      apagarSave();
+      flashAviso("Partida salva apagada.");
+      modalOpcoes();
+      break;
+
+    case "resetCfg":
+      Object.assign(CFG, { musica:40, efeitos:70, crt:true, animacoes:true,
+                           fonte:"normal", dificuldade:"clt", abertura:true, confirmarDia:false });
+      aplicarConfig(); modalOpcoes(); render();
+      break;
   }
 });
+
+function modalConfirmarDia(){
+  const L = layer(); L.dataset.mg = "1";
+  L.innerHTML = `<div class="veil"><div class="card">
+    <div class="card-h"><h3 style="color:var(--txt);text-transform:none;font-size:16px">🌙 Encerrar o dia?</h3></div>
+    <div class="card-b stack">
+      <p style="margin:0">Voce ainda tem <b>${G.pa}</b> Ponto(s) de Acao hoje. Dormir agora joga fora o que sobrou.</p>
+      <div class="flex">
+        <button class="btn btn-p" data-go="dormirConfirma">Dormir mesmo assim</button>
+        <button class="btn" data-go="fecharAjuda">Voltar</button>
+      </div>
+    </div></div></div>`;
+}
 
 document.addEventListener("keydown", (e) => {
   const L = layer();
   if (L.dataset.mg && L._tecla){ L._tecla(e); return; }
+  if (G && G.screen === "splash" && (e.key === "Enter" || e.key === " " || e.key === "Escape")){
+    e.preventDefault(); fecharSplash(); return;
+  }
   if (G && G.popup && (e.key === "Enter" || e.key === "Escape")){
     G.popup = null; pintarLayer();
     if (G.screen === "vitoria" || G.screen === "derrota") render();
     return;
   }
+  if (L.dataset.mg && e.key === "Escape"){ fecharModal(); return; }
   if (!G || G.screen !== "jogo" || L.innerHTML) return;
-  if (e.key === " "){ e.preventDefault(); encerrarDia(); }
+  if (e.key === " "){
+    e.preventDefault();
+    if (CFG.confirmarDia && G.pa > 0) modalConfirmarDia(); else encerrarDia();
+  }
   if (e.key >= "1" && e.key <= "5"){
     const abas = ["trabalho","casa","cidade","carreira","grana"];
-    UI.aba = abas[+e.key - 1]; render();
+    SOM.efeito("aba"); UI.aba = abas[+e.key - 1]; render();
   }
 });
 
+/* ================================ 20. BOOT =============================== */
+carregarConfig();
 if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-  document.body.classList.add("reduce-motion");
+  CFG.animacoes = false;
+aplicarConfig();
 
-/* ================================ 18. BOOT =============================== */
-G = { screen:"menu" };
+G = { screen: CFG.abertura ? "splash" : "menu" };
 render();
 window.__cltCarregou = true;   // avisa o bloco de diagnostico que deu tudo certo
 </script>
