@@ -30,7 +30,7 @@ def checar(condicao, ok, falha):
         ERROS.append(falha)
 
 
-def main(caminho):
+def main(caminho, minimo=False):
     apk_path = pathlib.Path(caminho)
     raiz = apk_path.parents[2]
 
@@ -53,14 +53,17 @@ def main(caminho):
     # Precisa continuar STORED e alinhado em 4 bytes DEPOIS de assinado; se a
     # assinatura tivesse deslocado a entrada, a instalacao falharia com
     # INSTALL_PARSE_FAILED_RESOURCES_ARSC_COMPRESSED / _NOT_ALIGNED.
-    with zipfile.ZipFile(apk_path) as z:
+    if minimo:
+        print("  [--]    variante minima: sem resources.arsc e sem icone")
+    else:
+      with zipfile.ZipFile(apk_path) as z:
         info = z.getinfo("resources.arsc")
-    checar(info.compress_type == zipfile.ZIP_STORED,
+      checar(info.compress_type == zipfile.ZIP_STORED,
            "resources.arsc sem compressao (exigido no targetSdk 30+)",
            "resources.arsc esta comprimido")
-    nome_len, extra_len = struct.unpack_from("<HH", bruto, info.header_offset + 26)
-    offset_dados = info.header_offset + 30 + nome_len + extra_len
-    checar(offset_dados % 4 == 0,
+      nome_len, extra_len = struct.unpack_from("<HH", bruto, info.header_offset + 26)
+      offset_dados = info.header_offset + 30 + nome_len + extra_len
+      checar(offset_dados % 4 == 0,
            f"resources.arsc alinhado em 4 bytes apos assinar (offset {offset_dados})",
            f"resources.arsc desalinhado apos assinar (offset {offset_dados})")
 
@@ -90,7 +93,11 @@ def main(caminho):
            f"pediu permissoes: {a.get_permissions()}")
 
     # ---- icone do launcher ----------------------------------------------
-    icones = a.get_app_icon()
+    if minimo:
+        print("  [--]    variante minima: icone padrao do Android")
+        icones = "res/ic_launcher.png"; nomes = list(nomes) + ["res/ic_launcher.png"]
+    else:
+      icones = a.get_app_icon()
     checar(icones == "res/ic_launcher.png",
            f"icone do launcher resolvido = {icones}", f"icone nao resolveu: {icones}")
     checar("res/ic_launcher.png" in nomes, "arquivo do icone presente no APK",
@@ -117,4 +124,4 @@ def main(caminho):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], len(sys.argv) > 2 and sys.argv[2] == "1")

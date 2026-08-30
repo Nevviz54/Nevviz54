@@ -16,6 +16,27 @@ esquema v2, porque a versao do `apksig` disponivel no Maven Central quebra ao
 assinar v1 num JDK moderno — e o v2 exige Android 7. O Gradle usa o `apksigner`
 do SDK, que assina v1+v2+v3 e por isso alcanca o Android 6.
 
+> Tentativa registrada: assinar v1 com o `jarsigner` do JDK antes do v2 **nao
+> funciona**. O `apksig` 2.3.0 apaga as entradas `META-INF/` ao assinar, e
+> `setOtherSignersSignaturesPreserved(true)` lanca *"not yet implemented"*.
+> Assinar v1 depois do v2 tambem nao serve, porque o v2 cobre o arquivo inteiro.
+
+## Duas variantes do APK
+
+Um APK montado sem o SDK oficial tem varias pecas feitas a mao, e o parser de
+pacotes do Android e mais rigoroso que qualquer biblioteca de leitura. Para
+conseguir isolar um `INSTALL_PARSE_FAILED` sem ter aparelho aqui, o build gera
+duas versoes que diferem **so** na tabela de recursos:
+
+| Arquivo | Contem | Serve para |
+|---|---|---|
+| `SimuladorCLT-ES.apk` | manifesto + dex + jogo + `resources.arsc` + icone | uso normal |
+| `SimuladorCLT-ES-minimo.apk` | manifesto + dex + jogo | diagnostico: sem `resources.arsc`, nome do app como texto literal e icone padrao |
+
+`./build.sh --minimo` gera a segunda. Se so a minima instalar, o problema esta
+na tabela de recursos montada com o ARSCLib. Se nenhuma instalar, o problema
+esta no manifesto binario, no dex ou no proprio download.
+
 ## Instalar no celular
 
 1. Baixe o `.apk` para o aparelho.

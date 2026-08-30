@@ -72,19 +72,34 @@ java -cp "$LIBS/dx.jar" com.android.dx.command.Main \
 echo "     classes.dex: $(du -h "$STAGE/classes.dex" | cut -f1)"
 
 # -------------------------------------------------------------------- manifesto
+if [ "${1:-}" = "--minimo" ]; then
+  # Variante de diagnostico: sem resources.arsc e sem icone. E o APK mais
+  # simples que ainda e valido - serve pra isolar se a tabela de recursos
+  # montada a mao e o que o parser do Android esta rejeitando.
+  MANIFESTO="$AQUI/AndroidManifest-minimo.xml"
+  APK_FINAL="$OUT/SimuladorCLT-ES-minimo.apk"
+  MINIMO=1
+else
+  MANIFESTO="$AQUI/AndroidManifest.xml"
+  MINIMO=0
+fi
+
+if [ "$MINIMO" = "0" ]; then
 passo "4/8  Gerando resources.arsc (icone e nome do app)"
 javac -nowarn -classpath "$LIBS/arsclib.jar" -d "$OUT/classes" "$AQUI/tools/GerarRecursos.java"
 java -cp "$LIBS/arsclib.jar:$OUT/classes" GerarRecursos "$STAGE/resources.arsc" | sed 's/^/     /'
 cp "$AQUI/res/ic_launcher.png" "$STAGE/res/ic_launcher.png"
+else
+  echo "     (variante minima: sem resources.arsc, sem icone)"
+fi
 
 passo "5/8  Compilando o AndroidManifest para XML binario"
-"$PY" "$AQUI/tools/compilar_manifesto.py" \
-      "$AQUI/AndroidManifest.xml" "$STAGE/AndroidManifest.xml"
+"$PY" "$AQUI/tools/compilar_manifesto.py" "$MANIFESTO" "$STAGE/AndroidManifest.xml"
 
 # ------------------------------------------------------------------------ jogo
 passo "6/8  Empacotando (com alinhamento do resources.arsc)"
 cp "$RAIZ/index.html" "$STAGE/assets/index.html"
-"$PY" "$AQUI/tools/empacotar.py" "$STAGE" "$OUT/nao-assinado.apk"
+"$PY" "$AQUI/tools/empacotar.py" "$STAGE" "$OUT/nao-assinado.apk" "$MINIMO"
 
 # ------------------------------------------------------------------- assinatura
 passo "7/8  Assinando (APK Signature Scheme v2)"
@@ -108,7 +123,7 @@ java --add-exports java.base/sun.security.x509=ALL-UNNAMED \
 
 # ------------------------------------------------------------------- conferencia
 passo "8/8  Conferindo o APK final"
-"$PY" "$AQUI/tools/verificar_apk.py" "$APK_FINAL"
+"$PY" "$AQUI/tools/verificar_apk.py" "$APK_FINAL" "$MINIMO"
 
 rm -f "$OUT/nao-assinado.apk"
 printf "\n\033[1;32m APK pronto: %s (%s)\033[0m\n\n" "$APK_FINAL" "$(du -h "$APK_FINAL" | cut -f1)"

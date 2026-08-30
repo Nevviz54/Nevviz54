@@ -2,11 +2,9 @@
 <!--
   Manifesto do Simulador CLT ES.
 
-  android:icon e android:label apontam para ids do resources.arsc gerado por
-  tools/GerarRecursos.java. Aparecem aqui como hexadecimal porque o pyaxml
-  infere o tipo pelo texto; tools/compilar_manifesto.py converte esses valores
-  de INT_HEX para REFERENCE depois de codificar (o PackageManager so aceita
-  referencia nesses dois atributos).
+  VARIANTE MINIMA de diagnostico: sem resources.arsc e sem icone, com o nome do
+  app como texto literal. E o APK mais simples que ainda e valido, usado para
+  isolar se a tabela de recursos montada a mao e o que o Android rejeita.
 
   configChanges = 0x40007fff cobre TODAS as mudancas de configuracao, para que
   nada recrie a Activity (o que reiniciaria o WebView no meio da run).
@@ -31,8 +29,7 @@
         android:anyDensity="true" />
 
     <application
-        android:icon="0x7f010000"
-        android:label="0x7f020000"
+        android:label="Simulador CLT ES"
         android:hardwareAccelerated="true"
         android:allowBackup="true"
         android:supportsRtl="true">

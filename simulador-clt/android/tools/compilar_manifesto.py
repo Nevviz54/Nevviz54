@@ -127,8 +127,10 @@ def conferir(dados):
             print(f"        {nome:22s} {TIPOS.get(tipo, tipo):9s} = {legivel}")
             if nome in NAO_PODE_SER_STRING and tipo == 3:
                 problemas.append(f"{nome} saiu como STRING (deveria ser numerico/booleano)")
-            if nome in PRECISA_SER_REFERENCIA and tipo != 1:
-                problemas.append(f"{nome} nao ficou como REFERENCE (tipo {tipo})")
+            # icon/label podem ser texto literal; o que nao pode e ficar como
+            # numero cru, porque ai o PackageManager le com getResourceId e acha 0.
+            if nome in PRECISA_SER_REFERENCIA and tipo in (16, 17):
+                problemas.append(f"{nome} ficou como numero cru em vez de REFERENCE")
     if tags < 5:
         problemas.append(f"so {tags} tags decodificadas - manifesto truncado?")
     if problemas:

@@ -55,6 +55,7 @@ public class Assinar {
                 .verify();
 
         System.out.println("assinatura valida : " + r.isVerified());
+        System.out.println("esquema v1 (JAR)  : " + r.isVerifiedUsingV1Scheme());
         System.out.println("esquema v2        : " + r.isVerifiedUsingV2Scheme());
         for (X509Certificate c : r.getSignerCertificates()) {
             System.out.println("assinante         : " + c.getSubjectX500Principal());
