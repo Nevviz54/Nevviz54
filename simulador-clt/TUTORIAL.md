@@ -33,8 +33,36 @@ tirar 12 duas vezes não caia sempre no mesmo lugar.
 | `d12` | **Região** | 12 regiões do ES, da mais dura à melhor |
 | `d12` | **Cidade** | as **78 cidades reais do estado**, ordenadas dentro da região |
 | `d12` | **Setor** | entre os setores daquela cidade, do pior ao melhor emprego |
-| `d12` | **Empresa** | 12 empregadores por setor — a posição vale de **−6% a +12%** no salário base |
+| `d12` | **Empresa** | 12 vagas naquela cidade — 3 pequenas, 3 médias, 3 grandes, 3 gigantes. O porte vale de **−6% a +12%** no salário base |
 | `d12` | **Origem** | 12 bagagens de vida, da dívida herdada ao tio na firma |
+
+### Empresas reais do ES
+
+**77 empregadores de 12 cidades** aparecem no jogo pelo nome — Vale e ArcelorMittal
+na Serra, Banestes e Unimed em Vitória, Suzano em Aracruz, Frisa e Nicafé em
+Colatina, Samarco em Anchieta, Perim em Cachoeiro, Casagrande em Linhares.
+
+| Cidade | Vagas reais | Cidade | Vagas reais |
+|---|---|---|---|
+| Vitória | 24 | Cariacica | 9 |
+| Serra | 20 | Linhares | 5 |
+| Colatina | 13 | Vila Velha | 5 |
+| Cachoeiro de Itapemirim | 4 | Aracruz | 2 |
+| Anchieta, São Mateus, Viana, Castelo | 1 cada | | |
+
+Nas outras 66 cidades os empregadores são descritivos ("Serraria de Granito",
+"Cooperativa Agrícola Capixaba") — foi o jeito de o jogo funcionar no estado
+inteiro sem inventar nomes de empresa.
+
+Quando uma cidade tem mais empresas reais de um porte do que as três vagas
+daquela faixa — Vitória tem seis bancos "gigante", por exemplo — o jogo sorteia
+quais entram, então em partidas diferentes aparecem empresas diferentes.
+
+> ⚠️ **O porte é uma aproximação para efeito de jogo.** Ele saiu de uma lista
+> trazida pelo jogador, não foi verificado em nenhuma base, e **não é avaliação
+> de nenhuma dessas empresas como empregadora**. O único efeito mecânico é o
+> salário-base ser um pouco maior nas empresas maiores — uma regularidade do
+> mercado de trabalho, não um juízo sobre a firma.
 
 A soma dos cinco dados (5 a 60) vira sua **nota de sorte** no fim da rolagem:
 até 15 "Azar de doer", até 25 "Vida dura", até 35 "Na média capixaba",

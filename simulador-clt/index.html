@@ -387,6 +387,7 @@ const d12  = () => dN(12);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const chance = (p) => Math.random() < p;
 const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const embaralhar = (a) => a.slice().sort(() => Math.random() - 0.5);
 const money = (n) => "R$ " + (Math.round(n * 100) / 100)
   .toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const money0 = (n) => "R$ " + Math.round(n).toLocaleString("pt-BR");
@@ -717,7 +718,158 @@ const EMPRESAS = {
   pesca:["Barco de Pesca Artesanal","Peixaria do Mercado","Entreposto de Peixe","Peixaria Industrial","Camara Fria do Litoral","Pesqueira Barra do Sul","Beneficiadora de Camarao","Frigorifico de Pescado","Industria de Pescado Congelado","Frigorifico Exportador","Complexo Pesqueiro Industrial","Exportadora Internacional de Pescado"],
   transporte:["Van Escolar Regional","Mototaxi e Entrega","Fretamento Litoral","Garagem Municipal","Transportadora de Cargas","Logistica Rodoviaria ES","Viacao Urbana Capixaba","Empresa de Onibus Intermunicipal","Transportadora de Cargas Pesadas","Grupo de Transporte Regional","Operador Logistico Nacional","Grupo Logistico Multimodal"],
 };
-const fatorEmpresa = (idx) => 0.94 + (idx / 11) * 0.18;
+/* ===================== EMPREGADORES REAIS DO ESPIRITO SANTO ================
+   Nomes vindos de uma lista montada pelo jogador, filtrada: fora os
+   marcadores genericos ("concessionarias do ES", "clinicas independentes"),
+   fora o que estava na area errada e fora as duplicatas.
+
+   porte: 1 pequena · 2 media · 3 grande · 4 gigante
+   O porte e uma APROXIMACAO para efeito de jogo, baseada em porte de operacao
+   e relevancia no setor. Nao foi verificado em nenhuma base (este build nao
+   tem acesso a internet) e nao e avaliacao de nenhuma dessas empresas como
+   empregadora. O que o jogo faz com o porte e so isto: empresa maior paga um
+   salario-base um pouco maior, que e uma regularidade do mercado, nao um
+   juizo sobre a firma.
+
+   Onde a lista nao alcanca - e ela cobre 12 das 78 cidades - o jogo completa
+   com empregadores descritivos genericos, para toda cidade ter 12 opcoes.
+   ========================================================================== */
+const EMPREGADORES = {
+  siderurgia: [
+    { n:"Vale",                    p:4, c:["Vitoria","Serra"] },
+    { n:"ArcelorMittal Tubarao",   p:4, c:["Serra"] },
+    { n:"Samarco",                 p:4, c:["Anchieta"] },
+    { n:"Brametal",                p:3, c:["Linhares"] },
+    { n:"Techno-Cells",            p:3, c:["Colatina"] },
+    { n:"Eletromarquez",           p:2, c:["Colatina"] },
+    { n:"Metalosa",                p:1, c:["Colatina"] },
+  ],
+  portuario: [
+    { n:"Vix Logistica",           p:4, c:["Serra","Vitoria"] },
+    { n:"Sertrading",              p:4, c:["Cariacica"] },
+    { n:"Portocel",                p:3, c:["Aracruz"] },
+    { n:"Columbia Trading",        p:3, c:["Cariacica"] },
+    { n:"Multilift",               p:2, c:["Cariacica"] },
+    { n:"Vipe Logistica",          p:2, c:["Cariacica"] },
+  ],
+  transporte: [
+    { n:"Viacao Aguia Branca",     p:4, c:["Cariacica"] },
+    { n:"JSL",                     p:4, c:["Serra"] },
+    { n:"Localiza",                p:4, c:["Vitoria"] },
+    { n:"Tegma",                   p:3, c:["Serra"] },
+    { n:"Patrus Transportes",      p:3, c:["Serra"] },
+    { n:"Expresso Rio Doce",       p:3, c:["Cariacica"] },
+    { n:"Translovato",             p:2, c:["Serra"] },
+    { n:"Mira Transportes",        p:2, c:["Colatina"] },
+    { n:"Transnoves Transportes",  p:1, c:["Cariacica"] },
+    { n:"Transportadora MGA",      p:1, c:["Serra"] },
+  ],
+  varejo: [
+    { n:"Extrabom",                p:4, c:["Vitoria","Serra","Vila Velha"] },
+    { n:"Grupo Carone",            p:4, c:["Vila Velha","Serra"] },
+    { n:"Assai Atacadista",        p:4, c:["Serra"] },
+    { n:"Atacadao",                p:4, c:["Serra"] },
+    { n:"Coca-Cola Andina",        p:4, c:["Cariacica"] },
+    { n:"Supermercados Perim",     p:3, c:["Cachoeiro de Itapemirim"] },
+    { n:"Casagrande",              p:3, c:["Linhares"] },
+    { n:"Unimarka",                p:3, c:["Colatina"] },
+    { n:"Hortifruti",              p:2, c:["Vitoria"] },
+    { n:"Extrafruti",              p:2, c:["Serra"] },
+    { n:"Oriundi",                 p:2, c:["Serra"] },
+  ],
+  saude: [
+    { n:"Unimed Vitoria",                  p:4, c:["Vitoria"] },
+    { n:"Hospital Santa Rita",             p:4, c:["Vitoria"] },
+    { n:"Hospital Evangelico de Vila Velha", p:4, c:["Vila Velha"] },
+    { n:"Rede Meridional",                 p:4, c:["Cariacica","Vitoria"] },
+    { n:"Unimed Sul Capixaba",             p:4, c:["Cachoeiro de Itapemirim"] },
+    { n:"Samp",                            p:3, c:["Vitoria"] },
+    { n:"Unimed Noroeste Capixaba",        p:3, c:["Colatina"] },
+    { n:"Sao Bernardo Apart Hospital",     p:3, c:["Colatina"] },
+    { n:"Hospital Evangelico de Cachoeiro", p:3, c:["Cachoeiro de Itapemirim"] },
+    { n:"Hospital Unimed Linhares",        p:3, c:["Linhares"] },
+    { n:"Linhares Medical Center",         p:2, c:["Linhares"] },
+  ],
+  construcao: [
+    { n:"MRV",                        p:4, c:["Vitoria","Serra"] },
+    { n:"Lorenge",                    p:3, c:["Vitoria"] },
+    { n:"Sa Cavalcante",              p:3, c:["Vila Velha"] },
+    { n:"Morar Construtora",          p:3, c:["Vitoria"] },
+    { n:"Kemp Engenharia",            p:3, c:["Vitoria"] },
+    { n:"Espiral Engenharia",         p:3, c:["Vitoria"] },
+    { n:"Portico Engenharia Estrutural", p:2, c:["Serra"] },
+    { n:"Civix Engenharia de Estruturas", p:2, c:["Serra"] },
+    { n:"Vix Artefatos de Concreto",  p:1, c:["Serra"] },
+    { n:"Concreto Show",              p:1, c:["Serra"] },
+  ],
+  bancario: [
+    { n:"Banestes",                p:4, c:["Vitoria"] },
+    { n:"Banco do Brasil",         p:4, c:["Vitoria"] },
+    { n:"Caixa Economica Federal", p:4, c:["Vitoria"] },
+    { n:"Bradesco",                p:4, c:["Vitoria"] },
+    { n:"Itau",                    p:4, c:["Vitoria"] },
+    { n:"Santander",               p:4, c:["Vitoria"] },
+    { n:"Sicoob ES",               p:3, c:["Vitoria"] },
+    { n:"Sicredi",                 p:3, c:["Vitoria"] },
+    { n:"Unicred",                 p:3, c:["Vitoria"] },
+    { n:"Sicoob Sul",              p:3, c:["Cachoeiro de Itapemirim"] },
+    { n:"Sicoob Conexao",          p:2, c:["Colatina","Linhares"] },
+    { n:"Credi-Garoto",            p:2, c:["Vila Velha"] },
+  ],
+  celulose: [
+    { n:"Suzano",                  p:4, c:["Aracruz"] },
+  ],
+  petroleo: [
+    { n:"Petrobras",               p:4, c:["Vitoria","Sao Mateus"] },
+  ],
+  rochas: [
+    { n:"Biancogres",              p:3, c:["Serra"] },
+    { n:"Granitos Preto Sao Gabriel", p:3, c:["Colatina"] },
+  ],
+  agro: [
+    { n:"Fertilizantes Heringer",  p:3, c:["Viana"] },
+    { n:"Nicafe",                  p:3, c:["Colatina"] },
+    { n:"Uniaves",                 p:2, c:["Castelo"] },
+    { n:"Pelisucar",               p:1, c:["Colatina"] },
+  ],
+  pesca: [
+    { n:"Frisa",                   p:4, c:["Colatina"] },
+  ],
+  confeccao: [
+    { n:"Cia do Jeans",            p:2, c:["Colatina"] },
+  ],
+};
+
+/* Porte -> rotulo e peso no salario base. */
+const PORTES = [
+  null,
+  { n:"Pequena", e:"⭐⭐",       f:0.94 },
+  { n:"Media",   e:"⭐⭐⭐",     f:1.00 },
+  { n:"Grande",  e:"⭐⭐⭐⭐",   f:1.06 },
+  { n:"Gigante", e:"⭐⭐⭐⭐⭐", f:1.12 },
+];
+const fatorEmpresa = (porte) => (PORTES[porte] || PORTES[2]).f;
+
+/* Monta as 12 vagas daquela cidade naquele setor: tres por faixa de porte,
+   com as empresas reais entrando primeiro e as descritivas completando. */
+function empresasDaCidade(setor, nomeCidade){
+  const reais = (EMPREGADORES[setor] || [])
+    .filter(e => e.c.indexOf(nomeCidade) >= 0)
+    .map(e => ({ n:e.n, p:e.p, real:true }));
+  const genericas = EMPRESAS[setor].map((n, i) =>
+    ({ n, p: Math.min(4, Math.floor(i / 3) + 1), real:false }));
+
+  const lista = [];
+  for (let porte = 1; porte <= 4; porte++){
+    // Cidade grande costuma ter mais empresas reais numa faixa do que as tres
+    // vagas disponiveis. Sortear quais entram faz com que, ao longo de varias
+    // partidas, todas as empresas da lista aparecam em algum momento.
+    const faixa = embaralhar(reais.filter(e => e.p === porte))
+      .concat(genericas.filter(e => e.p === porte));
+    for (let i = 0; i < 3 && i < faixa.length; i++) lista.push(faixa[i]);
+  }
+  return lista;
+}
 
 /* Rolagem 5 (d12): de onde voce veio. Ordenadas da pior bagagem para a melhor. */
 const ORIGENS = [
@@ -948,18 +1100,19 @@ function rolarPersonagem(){
   const r2 = d12(), cid = escolherPorRolagem(reg.item.cidades, r2);
   const r3 = d12(), lista = setoresDaCidade(cid.item);
   const set = escolherPorRolagem(lista, r3);
-  const r4 = d12(), emp = escolherPorRolagem(EMPRESAS[set.item], r4);
+  const r4 = d12(), vagas = empresasDaCidade(set.item, cid.item.nome);
+  const emp = escolherPorRolagem(vagas, r4);
   const r5 = d12(), ori = escolherPorRolagem(ORIGENS, r5);
   return { r1, r2, r3, r4, r5, total: r1 + r2 + r3 + r4 + r5,
            regiao: reg.idx, cidade: cid.idx, setor: set.item,
-           empresa: emp.item, empresaIdx: emp.idx,
+           empresa: emp.item.n, empresaPorte: emp.item.p, empresaReal: emp.item.real,
            origem: ori.item, origemIdx: ori.idx };
 }
 
 /* Salario do cargo ja com o peso da empresa sorteada. */
 function salarioBaseDe(g, nivel){
   return Math.round(salarioDoCargo(g.regiao, g.cidade, g.setor, nivel)
-                    * (g.empresaFator || 1) / 10) * 10;
+                    * fatorEmpresa(g.empresaPorte) / 10) * 10;
 }
 
 function novoJogo(rolagem){
@@ -975,8 +1128,9 @@ function novoJogo(rolagem){
     fgts:0, horasExtras:0, horasNoturnas:0, faltas:0, adiantamento:0,
     divida:0, dividaParc:0, mesesSemAluguel:0, bike:false, moto:false,
     regiao:rolagem.regiao, cidade:rolagem.cidade, setor:rolagem.setor,
-    nivel:0, empresa:rolagem.empresa, empresaIdx:rolagem.empresaIdx,
-    empresaFator:fatorEmpresa(rolagem.empresaIdx), origemNome:rolagem.origem.n,
+    nivel:0, empresa:rolagem.empresa,
+    empresaPorte:rolagem.empresaPorte, empresaReal:rolagem.empresaReal,
+    origemNome:rolagem.origem.n,
     rolagens:{ r1:rolagem.r1, r2:rolagem.r2, r3:rolagem.r3, r4:rolagem.r4, r5:rolagem.r5,
                total:rolagem.total },
     aluguel:cid.aluguel, valeTransporte:true, planoSaude:false,
@@ -1244,12 +1398,17 @@ const ACOES = [
   run:(g)=>{ const p = 0.2 + g.qualificacao/220 + g.rede/300;
     if (chance(p)){
       const cid = cidadeAtual(g);
-      const novoSetor = pick(cid.setores);
-      const novaEmp = pick(EMPRESAS[novoSetor]);
-      const inc = Math.round(g.salarioBase*0.12/10)*10;
-      g.empresa = novaEmp; g.salarioBase += inc; g.advertencias = 0; g.diasNoCargo = 0;
+      const vagas = empresasDaCidade(g.setor, cid.nome);
+      // quem troca de firma costuma subir de porte, nao descer
+      const melhores = vagas.filter(v => v.p >= (g.empresaPorte || 1));
+      const nova = pick(melhores.length ? melhores : vagas);
+      const antes = g.salarioBase;
+      g.empresa = nova.n; g.empresaPorte = nova.p; g.empresaReal = nova.real;
+      g.salarioBase = Math.max(antes + 60, salarioBaseDe(g, g.nivel));
+      g.advertencias = 0; g.diasNoCargo = 0;
       return { e:{ sanidade:12, rede:6 },
-        txt:`Proposta aceita! Voce agora e ${cargoAtual(g).n} na <b>${esc(novaEmp)}</b> (+${money0(inc)}).`,
+        txt:`Proposta aceita! Voce agora e ${cargoAtual(g).n} na <b>${esc(nova.n)}</b> ` +
+            `(${PORTES[nova.p].n}, ${money0(g.salarioBase - antes)} a mais).`,
         tipo:"up" };
     }
     return { e:{ sanidade:-9, energia:-6 }, txt:"'Vamos manter seu curriculo no banco de dados.'", tipo:"dn" };
@@ -1556,9 +1715,9 @@ function demitir(g){
   /* re-rola setor e empresa na mesma cidade (novos dados) */
   const cid = cidadeAtual(g);
   const r3 = d12(), set = escolherPorRolagem(setoresDaCidade(cid), r3);
-  const r4 = d12(), emp = escolherPorRolagem(EMPRESAS[set.item], r4);
+  const r4 = d12(), emp = escolherPorRolagem(empresasDaCidade(set.item, cid.nome), r4);
   g.setor = set.item;
-  g.empresa = emp.item; g.empresaIdx = emp.idx; g.empresaFator = fatorEmpresa(emp.idx);
+  g.empresa = emp.item.n; g.empresaPorte = emp.item.p; g.empresaReal = emp.item.real;
   g.recolocacaoRolagens = { r3, r4 };
   g.nivel = 0; g.diasNoCargo = 0; g.desempenho = 40; g.advertencias = 0;
   g.avaliacoesRuins = 0; g.reajuste = 0;
@@ -1995,8 +2154,10 @@ const ETAPAS_ROL = [
     sub:(r)=>"Voce entra como " + SETORES[r.setor].cargos[0].n },
   { rot:"EMPRESA", ico:"🏢",
     txt:(r)=>r.empresa,
-    sub:(r)=>{ const f = Math.round((fatorEmpresa(r.empresaIdx) - 1) * 100);
-               return (f >= 0 ? "+" : "") + f + "% no salario base"; } },
+    sub:(r)=>{ const P = PORTES[r.empresaPorte];
+               const f = Math.round((P.f - 1) * 100);
+               return `${P.e} ${P.n}${r.empresaReal ? " · empresa real do ES" : ""}` +
+                      ` · ${f >= 0 ? "+" : ""}${f}% no salario base`; } },
   { rot:"ORIGEM",  ico:"🎒",
     txt:(r)=>r.origem.n,
     sub:(r)=>r.origem.d },
@@ -2082,7 +2243,7 @@ function telaRolagem(){
 
   const cid = REGIOES[r.regiao].cidades[r.cidade];
   const st = SETORES[r.setor];
-  const sal = Math.round(salarioDoCargo(r.regiao, r.cidade, r.setor, 0) * fatorEmpresa(r.empresaIdx) / 10) * 10;
+  const sal = Math.round(salarioDoCargo(r.regiao, r.cidade, r.setor, 0) * fatorEmpresa(r.empresaPorte) / 10) * 10;
   const sorte = classificarSorte(r.total);
 
   app().innerHTML = `
@@ -2248,6 +2409,7 @@ function telaFim(){
         <div class="l"><span>Cidade</span><b>${esc(cid.nome)} · ${esc(REGIOES[g.regiao].nome)}</b></div>
         <div class="l"><span>Ultimo cargo</span><b>${esc(cargoAtual(g).n)}</b></div>
         <div class="l"><span>Empresa</span><b>${esc(g.empresa)}</b></div>
+        <div class="l"><span>Porte</span><b>${PORTES[g.empresaPorte].e} ${PORTES[g.empresaPorte].n}${g.empresaReal?" · real":""}</b></div>
         <div class="l"><span>Meses sobrevividos</span><b>${g.mes}</b></div>
         <div class="l"><span>Dias de ponto batido</span><b>${g.st.diasTrabalhados}</b></div>
         <div class="l"><span>Promocoes</span><b class="c-ok">${g.st.promocoes}</b></div>
@@ -2873,9 +3035,17 @@ da lista e escolhe entre os dois vizinhos, para 12 nunca cair sempre igual.</p>
 <li><code>d12</code> <b>Regiao</b> — 12 regioes do Espirito Santo, da mais dura (Extremo Norte) a melhor (Grande Vitoria).</li>
 <li><code>d12</code> <b>Cidade</b> — as <b>78 cidades reais do estado</b>, ordenadas dentro da regiao.</li>
 <li><code>d12</code> <b>Setor</b> — entre os setores que aquela cidade tem, do pior emprego (teleatendimento) ao melhor (bancario).</li>
-<li><code>d12</code> <b>Empresa</b> — 12 empregadores por setor, do mais precario ao melhor. A posicao vale de <b>-6% a +12%</b> no salario base.</li>
+<li><code>d12</code> <b>Empresa</b> — 12 vagas naquela cidade, da menor para a maior:
+  3 pequenas, 3 medias, 3 grandes e 3 gigantes. O porte vale de <b>-6% a +12%</b> no salario base.</li>
 <li><code>d12</code> <b>Origem</b> — 12 bagagens, da divida herdada ao tio na firma.</li>
 </ul>
+<p class="small"><b>Sobre as empresas reais:</b> 77 empregadores de 12 cidades do ES
+aparecem no jogo pelo nome. O porte e uma aproximacao para efeito de jogo, feita a
+partir de uma lista trazida pelo jogador — nao foi verificado em nenhuma base e
+<b>nao e avaliacao de nenhuma dessas empresas como empregadora</b>. O unico efeito
+do porte e o salario-base ser um pouco maior nas empresas maiores, que e uma
+regularidade do mercado, nao um juizo sobre a firma. Nas outras 66 cidades os
+empregadores sao descritivos ("Serraria de Granito", "Cooperativa Agricola").</p>
 <p class="small">A soma dos cinco dados (5 a 60) vira sua nota de sorte no fim da rolagem.
 Cidade pequena tambem promove mais devagar e cobra mais caro pelos cursos: no interior o
 curso quase sempre e em outra cidade.</p>

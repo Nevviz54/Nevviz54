@@ -9,7 +9,8 @@ sem permissões, funciona offline). Detalhes e como rebuildar em [`android/`](an
 
 - 🎲 **5 rolagens de d12**, lançadas uma de cada vez com animação: região, cidade, setor, empresa e origem. **Dado alto = lugar melhor** — e dentro de cada número ainda há sorteio.
 - 🗺️ **12 regiões do ES · as 78 cidades reais do estado**, ordenadas da mais dura à melhor, cada uma com aluguel, passagem, clima, cenário 2D e vantagem/desvantagem próprios.
-- 🏗️ **16 setores · 96 cargos · 192 empresas** baseados na economia capixaba real. Você **sempre** começa no degrau mais baixo, e a firma sorteada vale de −6% a +12% no salário.
+- 🏗️ **16 setores · 96 cargos**, e **77 empresas reais do ES** em 12 cidades (Vale, ArcelorMittal, Suzano, Banestes, Unimed, Frisa, Samarco, Perim…) mais empregadores descritivos nas outras 66. Você **sempre** começa no degrau mais baixo.
+- ⭐ **Porte da empresa** em 4 faixas — pequena, média, grande, gigante — vale de −6% a +12% no salário base.
 - 📈 **Progressão de carreira**: 5 promoções até o topo, cada uma exigindo Desempenho, Qualificação, Rede, tempo de casa e ficha limpa.
 - 🧾 **Holerite CLT de verdade**: insalubridade, periculosidade, hora extra a 50%, adicional noturno, INSS progressivo, IRRF, vale-transporte, FGTS, rescisão.
 - 🎮 **4 minigames** (ônibus, meta, cliente difícil, conferência de carga) ligados ao seu setor.
