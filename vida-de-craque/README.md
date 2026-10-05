@@ -9,6 +9,13 @@ carrões, mansões, polêmicas... Feito em HTML, CSS e JavaScript puro, sem inst
 Abra o arquivo `index.html` com dois cliques. Roda direto no navegador (Chrome, Edge,
 Firefox), inclusive sem internet.
 
+Também dá para jogar pela **página publicada no Claude** (link privado da sua conta): lá os
+saves ficam na nuvem e funcionam no celular e no PC.
+
+> ⚠️ Visualizadores de arquivo (o do app do Claude, o "abrir arquivo" do celular) bloqueiam o
+> salvamento e os downloads. O jogo avisa quando isso acontece; nesse caso use
+> **Exportar → Copiar código** ou abra pelo link online / direto no navegador.
+
 ## 🌍 O mundo
 
 **20 ligas, 414 clubes e cerca de 2.700 jogadores reais** (elencos da temporada 2025/26):
@@ -93,9 +100,11 @@ viver até os 100 anos... Ficam na aba **Conquistas**.
 
 Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 
-- **Salvar** o jogo (5 slots + salvamento automático toda semana)
+- **Salvar** o jogo (5 slots + salvamento automático toda semana). Os saves vão para a nuvem
+  (pela página do Claude) ou para o navegador (IndexedDB, com bem mais espaço que antes)
 - **Carregar** um jogo salvo
-- **Exportar/Importar** o save para um arquivo (`.vdc`) — bom para backup ou levar para outro PC
+- **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
+- **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
 - **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, tema claro/escuro, salvamento automático, sons e volume, cutscenes e animações (dá para desligar)
 - **Voltar ao menu principal**
 

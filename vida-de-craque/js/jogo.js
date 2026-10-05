@@ -26,8 +26,10 @@ const Jogo = {
         return this.s && this.s.modo === 'tecnico' ? Tecnico : Jogador;
     },
 
-    iniciar() {
+    async iniciar(retomar = {}) {
         this.aplicarOpcoes();
+        await Salvar.iniciar();
+        Salvar.aoMudar = () => this.atualizarSaves();
         window.addEventListener('resize', () => this.aplicarOpcoes());
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -39,6 +41,7 @@ const Jogo = {
             }
         });
         this.menu();
+        if (retomar.continuar && Salvar.ultimo()) ACOES.menuContinuar();
     },
 
     // -----------------------------------------------------------------
@@ -51,7 +54,7 @@ const Jogo = {
         document.body.dataset.tema = o.tema;
         document.body.classList.toggle('sem-anim', o.animacoes === false);
         if (o.resolucao === 'auto') {
-            Object.assign(el.style, { width: '100vw', height: '100vh', transform: 'none', left: '0px', top: '0px' });
+            Object.assign(el.style, { width: '', height: '', transform: 'none', left: '', top: '' });
             document.body.classList.remove('res-fixa');
         } else {
             const [w, h] = o.resolucao.split('x').map(Number);
@@ -108,7 +111,7 @@ const Jogo = {
         this.s = null;
         this.fecharPausa();
         const ult = Salvar.ultimo();
-        const meta = ult ? Salvar.listar().find(x => x.slot === ult).meta : null;
+        const meta = ult ? Salvar.metaDe(ult) : null;
         UI.render(`
         <div class="tela-menu">
             <div class="menu-fundo"></div>
@@ -123,6 +126,8 @@ const Jogo = {
                     <button class="btn btn-grande" data-acao="menuOpcoes">⚙️ Opções</button>
                     <button class="btn btn-grande" data-acao="menuAjuda">📖 Como jogar</button>
                 </div>
+                ${Salvar.onde() === 'memoria' ? `<div class="aviso-save">${this.textoOndeSalva()}</div>` : ''}
+                ${Salvar.onde() === 'nuvem' ? '<p class="menu-nuvem">☁️ Saves na nuvem da sua conta</p>' : ''}
                 <p class="menu-rodape">D.F.B.G PRODUCTIONS · ${DADOS.paises.reduce((t, p) => t + p.ligas.length, 0)} ligas · ${DADOS.paises.reduce((t, p) => t + p.ligas.reduce((u, l) => u + l.times.length, 0), 0)} clubes</p>
             </div>
         </div>`);
@@ -159,11 +164,119 @@ const Jogo = {
             </div>`).join('')}
         </div>
         <div class="linha-botoes">
-            ${modoSalvar ? '<button class="btn" data-acao="saveExportar">📤 Exportar para arquivo</button>' : ''}
-            <button class="btn" data-acao="saveImportar">📥 Importar arquivo</button>
+            ${modoSalvar ? '<button class="btn" data-acao="saveExportar">📤 Exportar (arquivo ou código)</button>' : ''}
+            <button class="btn" data-acao="saveImportar">📥 Importar (arquivo ou código)</button>
         </div>
-        <p class="cinza pequeno">Os jogos ficam salvos neste navegador. Use "Exportar" para guardar um arquivo de segurança ou levar para outro computador.</p>`;
+        <div class="${Salvar.onde() === 'memoria' ? 'aviso-save' : 'cinza pequeno'}">${this.textoOndeSalva()}</div>`;
         return html;
+    },
+
+    textoOndeSalva() {
+        const onde = Salvar.onde();
+        if (onde === 'nuvem') return '☁️ Seus jogos ficam salvos na nuvem (na sua conta Claude) e também neste aparelho: dá para continuar no celular ou no PC. Use "Exportar" para guardar uma cópia extra.';
+        if (onde === 'navegador') return '💾 Os jogos ficam salvos neste navegador. Use "Exportar" para guardar uma cópia ou levar para outro aparelho.';
+        return '⚠️ <b>Este visualizador está bloqueando o salvamento</b> — os saves só duram até você fechar a página. '
+            + 'Para não perder nada, use <b>📤 Exportar</b> (baixar arquivo ou copiar o código) e depois <b>📥 Importar</b>. '
+            + 'Ou abra o jogo pelo link online ou direto no navegador (Chrome, Edge, Safari) em vez do visualizador de arquivos.';
+    },
+
+    // redesenha a tela que mostra saves quando a lista muda (ex.: a nuvem conectou)
+    atualizarSaves() {
+        if (document.querySelector('#overlay .lista-saves')) return this.abrirPausa(this.subPausa);
+        if (document.querySelector('#app .lista-saves')) return ACOES.menuCarregar();
+        if (!this.s && document.querySelector('#app .menu-titulo')) this.menu();
+    },
+
+    // Exportar: baixar arquivo, compartilhar (celular) ou copiar o código do save
+    async telaExportar() {
+        const s = this.s;
+        if (!s) return;
+        if (TelaPartida.ativo()) return UI.toast('Termine a partida antes de exportar.', 'erro');
+        const dados = await Salvar.codificar(s);
+        const nome = Salvar.nomeArquivo(s);
+        const promessa = UI.modal({
+            titulo: '📤 Exportar jogo',
+            largo: true,
+            html: `<p>Guarde uma cópia do seu jogo (${Math.max(1, Math.round(dados.length / 1024))} KB). Escolha um jeito:</p>
+                <div class="exp-opcoes">
+                    <button class="btn btn-primario" data-exp="baixar">💾 Baixar arquivo</button>
+                    ${Salvar.podeCompartilhar() ? '<button class="btn" data-exp="compartilhar">📤 Compartilhar / salvar no celular</button>' : ''}
+                    <button class="btn" data-exp="copiar">📋 Copiar código do save</button>
+                </div>
+                <p class="exp-status"></p>
+                <textarea class="codigo-save" readonly hidden></textarea>
+                <p class="cinza pequeno">Para continuar depois: <b>Carregar jogo → 📥 Importar</b> e escolha o arquivo ou cole o código.
+                ${Salvar.onde() === 'memoria' ? '<br>⚠️ Neste visualizador o download pode ser bloqueado. Se nenhum arquivo aparecer, use <b>Copiar código</b> e cole num bloco de notas, e-mail ou WhatsApp.' : ''}</p>`,
+            botoes: [{ txt: 'Fechar', classe: 'btn-fantasma' }],
+        });
+        const raiz = document.querySelector('#modais .modal-fundo:last-child');
+        const status = raiz.querySelector('.exp-status');
+        const area = raiz.querySelector('.codigo-save');
+        raiz.addEventListener('click', async e => {
+            const b = e.target.closest('[data-exp]');
+            if (!b) return;
+            if (b.dataset.exp === 'baixar') {
+                const r = await Salvar.baixar(nome, dados);
+                status.textContent = r.ok ? `✅ Arquivo "${nome}" enviado para os downloads.${r.incerto ? ' Se ele não aparecer, use "Copiar código".' : ''}` : '⚠️ ' + r.erro + '.';
+            } else if (b.dataset.exp === 'compartilhar') {
+                const r = await Salvar.compartilhar(nome, dados);
+                status.textContent = r.ok ? '✅ Save compartilhado!' : '⚠️ ' + r.erro + '. Tente "Copiar código".';
+            } else {
+                area.hidden = false;
+                area.value = dados;
+                const ok = await Salvar.copiar(dados, area);
+                status.textContent = ok ? '✅ Código copiado! Cole num lugar seguro (bloco de notas, e-mail, WhatsApp...).'
+                    : '👇 Selecione todo o texto abaixo e copie (Ctrl+A e Ctrl+C, ou segure o dedo e "Copiar").';
+                if (!ok) { area.focus(); area.select(); }
+            }
+        });
+        await promessa;
+    },
+
+    // Importar: escolher o arquivo exportado ou colar o código
+    async telaImportar() {
+        let raiz = null;
+        const promessa = UI.modal({
+            titulo: '📥 Importar jogo',
+            largo: true,
+            html: `<p>Abra um save que você exportou antes:</p>
+                <div class="exp-opcoes"><button class="btn btn-primario" data-imp="arquivo">📂 Escolher arquivo</button></div>
+                <input type="file" class="imp-arquivo" hidden>
+                <p>…ou cole aqui o código do save:</p>
+                <textarea class="codigo-save" placeholder="Cole o código aqui (ele começa com G...)"></textarea>
+                <p class="exp-status"></p>`,
+            botoes: [
+                { txt: '📥 Carregar código', antes: () => { abrir(raiz.querySelector('.codigo-save').value, 'o código'); return false; } },
+                { txt: 'Cancelar', valor: null, classe: 'btn-fantasma' },
+            ],
+        });
+        raiz = document.querySelector('#modais .modal-fundo:last-child');
+        const status = raiz.querySelector('.exp-status');
+        const inp = raiz.querySelector('.imp-arquivo');
+        const abrir = async (txt, origem) => {
+            if (!String(txt || '').trim()) { status.textContent = '⚠️ Cole o código do save primeiro.'; return; }
+            status.textContent = '⏳ Lendo o save...';
+            let s;
+            try {
+                s = await Salvar.decodificar(txt);
+            } catch (e) {
+                status.textContent = `⚠️ Não deu para abrir ${origem}: ${e.message}.`;
+                return;
+            }
+            raiz._fechar(true);
+            await Jogo.carregarEstado(s);
+            await Salvar.salvar(s, 'auto');
+        };
+        raiz.querySelector('[data-imp=arquivo]').addEventListener('click', () => inp.click());
+        inp.addEventListener('change', async () => {
+            const f = inp.files[0];
+            if (!f) return;
+            let txt = '';
+            try { txt = await f.text(); } catch (e) { status.textContent = '⚠️ Não deu para ler esse arquivo.'; return; }
+            inp.value = '';
+            abrir(txt, 'o arquivo');
+        });
+        await promessa;
     },
 
     // Completa campos novos em saves de versões antigas
@@ -321,6 +434,7 @@ const Jogo = {
             <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
             <h4>⌨️ Atalhos</h4>
             <p><b>ESC</b>: abre/fecha o menu de pausa (salvar, carregar, opções, voltar ao menu).</p>
+            <p><b>Saves</b>: o jogo salva sozinho toda semana. Pelo link online do Claude os saves vão para a nuvem da sua conta (celular e PC). Para guardar uma cópia, use <b>📤 Exportar</b> (arquivo ou código) e depois <b>📥 Importar</b>.</p>
         </div>`;
     },
 
@@ -407,7 +521,13 @@ const Jogo = {
             Mundo.posSemana(s);
             if (s.semana >= TOTAL_SEMANAS) await this.fimTemporada();
             if (s.pessoa.morto) { this.ocupado = false; return this.fimDeVida(); }
-            if (this.opcoes.autosave) await Salvar.salvar(s, 'auto');
+            if (this.opcoes.autosave) {
+                const r = await Salvar.salvar(s, 'auto');
+                if (!r.ok && !this.avisouAutosave) {
+                    this.avisouAutosave = true;
+                    UI.toast('⚠️ O salvamento automático falhou: ' + r.erro + '. Use Exportar para não perder o progresso.', 'erro');
+                }
+            }
         } catch (e) {
             console.error(e);
             UI.toast('Ops! Aconteceu um erro: ' + e.message, 'erro');
@@ -721,12 +841,11 @@ Object.assign(ACOES, {
     async menuContinuar() {
         const slot = Salvar.ultimo();
         if (!slot) return;
-        UI.toast('Carregando...');
-        Jogo.carregarEstado(await Salvar.carregar(slot));
+        await ACOES.saveCarregar({ slot }, null, null, true);
     },
     async apagarTudo() {
         if (!(await UI.confirmar('Apagar TODOS os jogos salvos? Isso não pode ser desfeito.', 'Apagar tudo'))) return;
-        for (const slot of Salvar.SLOTS) Salvar.apagar(slot);
+        for (const slot of Salvar.SLOTS) await Salvar.apagar(slot);
         UI.toast('Saves apagados.');
     },
     novoModo: d => Jogo.formNovo(d.modo),
@@ -753,6 +872,7 @@ Object.assign(ACOES, {
         if (!(await UI.confirmar('Voltar ao menu principal? O progresso desde o último salvamento será perdido.', 'Voltar ao menu', 'Cancelar'))) return;
         if (TelaPartida.m) { TelaPartida.parar(); TelaPartida.m = null; TelaPartida.fase = 'fora'; TelaPartida.resolve = null; }
         Jogo.ocupado = false;
+        Salvar.enviarNuvemPendente();
         Jogo.menu();
     },
 
@@ -761,33 +881,33 @@ Object.assign(ACOES, {
         const s = Jogo.s;
         if (!s) return;
         if (TelaPartida.ativo()) return UI.toast('Termine a partida antes de salvar.', 'erro');
-        const meta = Salvar.listar().find(x => x.slot === d.slot).meta;
+        const meta = Salvar.metaDe(d.slot);
         if (meta && !(await UI.confirmar(`Sobrescrever o ${Salvar.nomeSlot(d.slot)}?`, 'Sobrescrever'))) return;
-        const ok = await Salvar.salvar(s, d.slot);
-        UI.toast(ok ? '💾 Jogo salvo!' : '⚠️ Não foi possível salvar (espaço cheio?). Tente exportar para arquivo.', ok ? '' : 'erro');
+        UI.toast('💾 Salvando...');
+        const r = await Salvar.salvar(s, d.slot);
+        if (!r.ok) UI.toast('⚠️ Não foi possível salvar: ' + r.erro + '. Use 📤 Exportar para guardar o jogo.', 'erro');
+        else if (Salvar.onde() === 'memoria') UI.toast('⚠️ Salvo só até fechar a página (este visualizador bloqueia o salvamento). Use 📤 Exportar!', 'erro');
+        else if (Salvar.nuvem && r.nuvem !== true) UI.toast('💾 Salvo neste aparelho, mas a nuvem falhou: ' + r.erro, 'erro');
+        else UI.toast(Salvar.nuvem ? '☁️ Jogo salvo na nuvem!' : '💾 Jogo salvo!');
         if (Jogo.subPausa) Jogo.abrirPausa(Jogo.subPausa);
     },
-    async saveCarregar(d) {
-        if (Jogo.s && !(await UI.confirmar('Carregar este jogo? O progresso não salvo será perdido.', 'Carregar'))) return;
-        UI.toast('Carregando...');
-        Jogo.carregarEstado(await Salvar.carregar(d.slot));
+    async saveCarregar(d, el, ev, semConfirmar) {
+        if (Jogo.s && !semConfirmar && !(await UI.confirmar('Carregar este jogo? O progresso não salvo será perdido.', 'Carregar'))) return;
+        UI.toast('📂 Carregando...');
+        try {
+            Jogo.carregarEstado(await Salvar.carregar(d.slot));
+        } catch (e) {
+            UI.aviso('Não deu para carregar', `O ${Salvar.nomeSlot(d.slot)} não abriu: ${U.esc(e.message)}.`, '⚠️');
+        }
     },
     async saveApagar(d) {
         if (!(await UI.confirmar(`Apagar o ${Salvar.nomeSlot(d.slot)}?`, 'Apagar'))) return;
-        Salvar.apagar(d.slot);
+        await Salvar.apagar(d.slot);
         if (Jogo.s && document.getElementById('overlay').innerHTML) Jogo.abrirPausa(d.salvar === '1' ? 'salvar' : 'carregar');
         else ACOES.menuCarregar();
     },
-    async saveExportar() {
-        if (!Jogo.s) return;
-        await Salvar.exportar(Jogo.s);
-        UI.toast('📤 Arquivo exportado!');
-    },
-    async saveImportar() {
-        const s = await Salvar.importar();
-        if (s) Jogo.carregarEstado(s);
-        else UI.toast('Nenhum arquivo válido selecionado.', 'erro');
-    },
+    saveExportar: () => Jogo.telaExportar(),
+    saveImportar: () => Jogo.telaImportar(),
 
     // casca
     aba: d => { Jogo.aba = d.aba; Jogo.atualizar(); document.querySelector('.conteudo')?.scrollTo(0, 0); },
@@ -808,4 +928,11 @@ Object.assign(ACOES, {
     negVender: d => Vida.venderNegocio(Jogo.s, +d.id),
 });
 
-window.addEventListener('load', () => Jogo.iniciar());
+// Na página publicada no Claude, uma atualização do jogo recarrega a página:
+// o "hot" guarda se havia um jogo aberto para continuar dele automaticamente.
+window.addEventListener('load', () => {
+    const hot = window.claude && window.claude.hot;
+    if (hot && hot.snapshot) hot.snapshot(() => ({ continuar: !!(Jogo.s && !Jogo.s.pessoa.morto) }));
+    if (hot && hot.ready) hot.ready(dados => Jogo.iniciar(dados || {}));
+    else Jogo.iniciar((hot && hot.data) || {});
+});
