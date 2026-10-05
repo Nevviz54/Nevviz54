@@ -14,6 +14,27 @@ const COPAS_DEF = [
     { id: 'LIB', nome: 'Copa Libertadores', icone: '🏆', vagas: { BRA1: 8, ARG1: 8 } },
 ];
 
+// Copas nacionais: mata-mata com os 32 melhores clubes do país
+const SEMANAS_COPA_NAC = [3, 12, 23, 33, 43];
+const FASES_COPA_NAC = ['1ª fase', 'Oitavas de final', 'Quartas de final', 'Semifinal', 'Final'];
+const COPAS_NAC = [
+    { id: 'CBR', pais: 'BRA', nome: 'Copa do Brasil' },
+    { id: 'FAC', pais: 'ENG', nome: 'FA Cup' },
+    { id: 'CDR', pais: 'ESP', nome: 'Copa del Rey' },
+    { id: 'CIT', pais: 'ITA', nome: 'Coppa Italia' },
+    { id: 'DFB', pais: 'GER', nome: 'DFB-Pokal' },
+    { id: 'CDF', pais: 'FRA', nome: 'Coupe de France' },
+    { id: 'KNV', pais: 'NED', nome: 'KNVB Beker' },
+    { id: 'CAR', pais: 'ARG', nome: 'Copa Argentina' },
+];
+
+// Estrutura do clube (níveis 1 a 5)
+const INFRA = {
+    estadio: { nome: 'Estádio', icone: '🏟️', desc: 'Mais torcida: aumenta a receita e a força jogando em casa.' },
+    ct: { nome: 'Centro de Treinamento', icone: '🏋️', desc: 'Os jogadores evoluem mais rápido e recuperam o físico melhor.' },
+    base: { nome: 'Categoria de base', icone: '🌱', desc: 'Joias melhores na peneira anual e nos garotos que sobem.' },
+};
+
 const Mundo = {
     // -----------------------------------------------------------------
     //  Criação
@@ -134,6 +155,27 @@ const Mundo = {
     // -----------------------------------------------------------------
     liga: (s, id) => s.ligas.find(l => l.id === id),
     copa: (s, id) => s.copas.find(c => c.id === id),
+    semanasCopa: c => c.semanas || SEMANAS_COPA,
+    fasesCopa: c => c.fases || FASES_COPA,
+    ehFinal: (s, jogo) => jogo.tipo === 'copa' && jogo.r === Mundo.fasesCopa(Mundo.copa(s, jogo.comp)).length - 1,
+
+    // Clássicos (rivalidades definidas em js/dados/rivais.js)
+    classico(s, h, a) {
+        if (!Mundo._rivais) {
+            Mundo._rivais = new Set();
+            for (const [x, y] of (DADOS.rivais || [])) { Mundo._rivais.add(x + '|' + y); Mundo._rivais.add(y + '|' + x); }
+        }
+        return Mundo._rivais.has(s.times[h].nome + '|' + s.times[a].nome);
+    },
+
+    // Estrutura do clube: cria os níveis na primeira consulta
+    infra(t) {
+        if (!t.infra) {
+            const n = U.clamp(Math.round((t.rep - 48) / 8), 1, 5);
+            t.infra = { estadio: n, ct: U.clamp(n + U.int(-1, 0), 1, 5), base: U.clamp(n + U.int(-1, 1), 1, 5) };
+        }
+        return t.infra;
+    },
     pais: id => DADOS.paises.find(p => p.id === id),
     elenco: (s, t) => t.elenco.map(id => s.jog[id]).filter(Boolean),
 
@@ -206,7 +248,18 @@ const Mundo = {
             U.embaralhar(ids);
             const jogos = [[]];
             for (let i = 0; i + 1 < ids.length; i += 2) jogos[0].push([ids[i], ids[i + 1]]);
-            s.copas.push({ id: def.id, nome: def.nome, icone: def.icone, times: ids, fase: 0, jogos, res: [[]], campeao: null });
+            s.copas.push({ id: def.id, nome: def.nome, icone: def.icone, times: ids, fase: 0, jogos, res: [[]], campeao: null, semanas: SEMANAS_COPA, fases: FASES_COPA });
+        }
+        for (const def of COPAS_NAC) {
+            const ligas = s.ligas.filter(l => l.pais === def.pais).sort((a, b) => a.nivel - b.nivel);
+            if (!ligas.length) continue;
+            const ids = [];
+            for (const l of ligas) ids.push(...l.times.slice().sort((a, b) => s.times[b].rep - s.times[a].rep));
+            const participantes = U.embaralhar(ids.slice(0, 32));
+            const jogos = [[]];
+            for (let i = 0; i + 1 < participantes.length; i += 2) jogos[0].push([participantes[i], participantes[i + 1]]);
+            s.copas.push({ id: def.id, pais: def.pais, nome: def.nome, icone: '🥇', times: participantes, fase: 0, jogos, res: [[]], campeao: null, semanas: SEMANAS_COPA_NAC, fases: FASES_COPA_NAC });
+            s.campeoes[def.id] = s.campeoes[def.id] || [];
         }
     },
 
@@ -216,12 +269,10 @@ const Mundo = {
             const r = liga.sem.indexOf(semana);
             if (r >= 0) for (const [h, a] of liga.rodadas[r]) lista.push({ tipo: 'liga', comp: liga.id, r, h, a });
         }
-        const f = SEMANAS_COPA.indexOf(semana);
-        if (f >= 0) {
-            for (const c of s.copas) {
-                if (c.fase === f && !c.campeao && c.jogos[f]) {
-                    for (const [h, a] of c.jogos[f]) lista.push({ tipo: 'copa', comp: c.id, r: f, h, a });
-                }
+        for (const c of s.copas) {
+            const f = Mundo.semanasCopa(c).indexOf(semana);
+            if (f >= 0 && c.fase === f && c.campeao == null && c.jogos[f]) {
+                for (const [h, a] of c.jogos[f]) lista.push({ tipo: 'copa', comp: c.id, r: f, h, a });
             }
         }
         return lista;
@@ -242,7 +293,7 @@ const Mundo = {
                 const j = jogos.find(([h, a]) => h === tid || a === tid);
                 if (!j) return;
                 const res = (c.res[f] || []).find(x => x.h === j[0] && x.a === j[1]);
-                lista.push({ sem: SEMANAS_COPA[f], comp: c.id, nomeComp: c.nome, rodada: FASES_COPA[f], h: j[0], a: j[1], res });
+                lista.push({ sem: Mundo.semanasCopa(c)[f], comp: c.id, nomeComp: c.nome, rodada: Mundo.fasesCopa(c)[f], h: j[0], a: j[1], res });
             });
         }
         return lista.sort((a, b) => a.sem - b.sem);
@@ -269,11 +320,11 @@ const Mundo = {
             c.res[f].push({ h: jogo.h, a: jogo.a, gh: r.gh, ga: r.ga, venc: r.venc, pen: r.pen || null });
             if (c.res[f].length === c.jogos[f].length) {
                 const venc = c.jogos[f].map(([h, a]) => c.res[f].find(x => x.h === h && x.a === a).venc);
-                if (f === FASES_COPA.length - 1) {
+                if (f === Mundo.fasesCopa(c).length - 1) {
                     c.campeao = venc[0];
                     s.campeoes[c.id] = s.campeoes[c.id] || [];
                     s.campeoes[c.id].push({ ano: s.ano, tid: venc[0] });
-                    Mundo.noticia(s, `${c.icone} ${s.times[venc[0]].nome} é campeão da ${c.nome}!`, 'titulo');
+                    Mundo.noticia(s, `${c.icone} ${s.times[venc[0]].nome} conquista ${c.nome} ${s.ano}!`, 'titulo');
                 } else {
                     c.fase = f + 1;
                     c.jogos[f + 1] = [];
@@ -282,10 +333,11 @@ const Mundo = {
                 }
             }
         }
-        // moral do time
+        // moral do time (clássico pesa mais)
+        const peso = Mundo.classico(s, jogo.h, jogo.a) ? 1.6 : 1;
         for (const [tid, gf, gc] of [[jogo.h, r.gh, r.ga], [jogo.a, r.ga, r.gh]]) {
             const t = s.times[tid];
-            t.moral = U.clamp(t.moral + (gf > gc ? 6 : gf < gc ? -6 : 0) + (gf - gc), 10, 95);
+            t.moral = U.clamp(t.moral + ((gf > gc ? 6 : gf < gc ? -6 : 0) + (gf - gc)) * peso, 10, 95);
             t.moral += (50 - t.moral) * 0.05;
         }
     },
@@ -346,6 +398,7 @@ const Mundo = {
         }
         destino.saldo -= preco;
         destino.elenco.push(p.id);
+        if (s.car && s.car.capitao === p.id && Mundo.timeDoUsuario(s, origem ? origem.id : -1)) s.car.capitao = null;
         p.tid = destino.id;
         p.contr = U.int(2, 5);
         p.sal = Math.max(p.sal, Mundo.salarioPedido(p, Mundo.riquezaDoTime(s, destino)));
@@ -426,14 +479,15 @@ const Mundo = {
     //  Fim de temporada
     // -----------------------------------------------------------------
     fimDeTemporada(s) {
-        const resumo = { ano: s.ano, campeoes: [], subiram: [], desceram: [], premios: [] };
+        const resumo = { ano: s.ano, campeoes: [], subiram: [], desceram: [], premios: [], copas: [] };
+        for (const c of s.copas) if (c.campeao != null) resumo.copas.push({ id: c.id, nome: c.nome, icone: c.icone, tid: c.campeao });
 
         // Campeões e classificação final
         for (const liga of s.ligas) {
             const cl = Mundo.classificacao(s, liga);
             s.classifFinal[liga.id] = cl;
             s.campeoes[liga.id].push({ ano: s.ano, tid: cl[0] });
-            resumo.campeoes.push({ liga: liga.nome, tid: cl[0] });
+            resumo.campeoes.push({ liga: liga.nome, ligaId: liga.id, nivel: liga.nivel, tid: cl[0] });
             // artilheiro
             let art = null;
             for (const tid of liga.times) for (const p of Mundo.elenco(s, s.times[tid])) if (!art || p.g > art.g) art = p;
@@ -456,6 +510,46 @@ const Mundo = {
             const pr = { ano: s.ano, tipo: 'Bola de Ouro', pid: melhor.id, nome: melhor.nome, tid: melhor.tid, info: `${melhor.g} gols, ${melhor.a} assist.` };
             s.premios.push(pr);
             resumo.premios.unshift(pr);
+        }
+        // Revelação (até 21 anos) e Luva de Ouro (goleiros)
+        let rev = null, rv = -1, luva = null, lv = -1;
+        for (const p of Object.values(s.jog)) {
+            if (p.tid < 0 || p.j < 10) continue;
+            const liga = Mundo.liga(s, s.times[p.tid].liga);
+            const media = p.ns / p.j;
+            if (p.idade <= 21) {
+                const v = p.ovr + (media - 6.5) * 5 + p.g * 0.2 + p.a * 0.1 - (liga.nivel - 1) * 6;
+                if (v > rv) { rv = v; rev = p; }
+            }
+            if (p.pos === 'GOL' && p.j >= 15) {
+                const v = p.ovr * 0.6 + media * 4 - (liga.nivel - 1) * 6 + (liga.riqueza - 1) * 2;
+                if (v > lv) { lv = v; luva = p; }
+            }
+        }
+        if (rev) {
+            const pr = { ano: s.ano, tipo: 'Prêmio Revelação', pid: rev.id, nome: rev.nome, tid: rev.tid, info: `${rev.idade} anos, nota ${(rev.ns / rev.j).toFixed(2)}` };
+            s.premios.push(pr);
+            resumo.premios.splice(1, 0, pr);
+        }
+        if (luva) {
+            const pr = { ano: s.ano, tipo: 'Luva de Ouro', pid: luva.id, nome: luva.nome, tid: luva.tid, info: `nota ${(luva.ns / luva.j).toFixed(2)}` };
+            s.premios.push(pr);
+            resumo.premios.splice(2, 0, pr);
+        }
+        // Técnico do Ano: quem mais superou as expectativas numa liga principal
+        let tec = null, tv = -1e9;
+        for (const liga of s.ligas.filter(l => l.nivel === 1)) {
+            const cl = Mundo.classificacao(s, liga);
+            const porForca = liga.times.slice().sort((a, b) => Mundo.forca(s, s.times[b]) - Mundo.forca(s, s.times[a]));
+            cl.forEach((tid, i) => {
+                const v = (porForca.indexOf(tid) - i) + (i === 0 ? 4 : 0) + liga.riqueza;
+                if (v > tv) { tv = v; tec = tid; }
+            });
+        }
+        if (tec != null) {
+            const pr = { ano: s.ano, tipo: 'Técnico do Ano', pid: null, tid: tec, nome: Mundo.timeDoUsuario(s, tec) ? s.pessoa.nome : `Técnico do ${s.times[tec].nome}`, info: s.times[tec].nome };
+            s.premios.push(pr);
+            resumo.premios.push(pr);
         }
 
         // Acesso e rebaixamento
@@ -488,7 +582,7 @@ const Mundo = {
         for (const p of Object.values(s.jog)) {
             if (p.user) continue;
             p.idade++;
-            Mundo.evoluir(p);
+            Mundo.evoluir(p, p.tid >= 0 && Mundo.timeDoUsuario(s, p.tid) ? 0.8 + Mundo.infra(s.times[p.tid]).ct * 0.12 : 1);
             const vaiParar = (p.idade >= 40) || (p.idade >= 35 && U.chance((p.idade - 33) * 0.22)) || (p.idade >= 31 && p.ovr < 50 && U.chance(0.5));
             if (vaiParar) {
                 aposentados.push(p);
@@ -525,8 +619,9 @@ const Mundo = {
         for (const t of s.times) {
             const liga = Mundo.liga(s, t.liga);
             const nJovens = U.int(1, 2);
+            const bonusBase = Mundo.timeDoUsuario(s, t.id) ? (Mundo.infra(t).base - 3) * 3 : 0;
             for (let i = 0; i < nJovens; i++) {
-                Mundo.gerarJogador(s, t, U.escolha(POSICOES.concat(['MEI', 'ATA', 'ZAG'])), Mundo.pais(t.pais).nomes, t.rep, liga.riqueza, true);
+                Mundo.gerarJogador(s, t, U.escolha(POSICOES.concat(['MEI', 'ATA', 'ZAG'])), Mundo.pais(t.pais).nomes, t.rep + bonusBase, liga.riqueza, true);
             }
             if (Mundo.timeDoUsuario(s, t.id)) {
                 if (t.elenco.length < 18) Mundo.reforcarElenco(s, t, 18);
@@ -548,11 +643,11 @@ const Mundo = {
         return resumo;
     },
 
-    evoluir(p) {
+    evoluir(p, fator = 1) {
         const gap = Math.max(0, p.pot - p.ovr);
         let d;
-        if (p.idade <= 21) d = gap * U.rand(0.18, 0.42) + (p.j >= 15 ? 1 : 0);
-        else if (p.idade <= 24) d = gap * U.rand(0.15, 0.4) + (p.j >= 15 ? 0.5 : 0);
+        if (p.idade <= 21) d = gap * U.rand(0.18, 0.42) * fator + (p.j >= 15 ? 1 : 0);
+        else if (p.idade <= 24) d = gap * U.rand(0.15, 0.4) * fator + (p.j >= 15 ? 0.5 : 0);
         else if (p.idade <= 28) d = U.rand(-1, 1.6);
         else if (p.idade <= 30) d = U.rand(-2, 0.6);
         else if (p.idade <= 32) d = U.rand(-3.5, 0);
@@ -582,7 +677,7 @@ const Escalacao = {
         const slots = FORMACOES[form];
         const nota = new Map();
         const disp = Mundo.elenco(s, t).filter(Escalacao.disponivel);
-        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) - Math.max(0, 75 - p.cond) * 0.25);
+        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) + (p.bonusFixo || 0) - Math.max(0, 75 - p.cond) * 0.25);
         disp.sort((a, b) => nota.get(b.id) - nota.get(a.id));
         const usados = new Set();
         const res = new Array(slots.length).fill(null);

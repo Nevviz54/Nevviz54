@@ -11,6 +11,26 @@ const TREINOS = {
 
 const FORCA_SELECAO = { BRA: 88, ARG: 89, FRA: 89, ESP: 90, ENG: 87, GER: 85, ITA: 83, NED: 84 };
 
+// Habilidades especiais: compradas com pontos de habilidade
+const HABILIDADES = {
+    finalizador: { nome: 'Finalizador', icone: '🎯', custo: 4, desc: '+15% de chance de gol nos chutes.' },
+    cabeceio: { nome: 'Cabeça de ouro', icone: '🤕', custo: 3, desc: '+25% nos lances de cabeça.' },
+    garcom: { nome: 'Garçom', icone: '🍽️', custo: 4, desc: '+15% nas assistências.' },
+    batedor: { nome: 'Batedor oficial', icone: '🌀', custo: 3, desc: '+20% em faltas e pênaltis.' },
+    driblador: { nome: 'Driblador', icone: '🕺', custo: 3, desc: '+20% nas jogadas de efeito (drible, cavadinha...).' },
+    paredao: { nome: 'Paredão', icone: '🧤', custo: 4, desc: '+15% nas defesas (goleiros).' },
+    xerife: { nome: 'Xerife', icone: '🛡️', custo: 4, desc: '+12% nos desarmes e metade dos cartões.' },
+    decisivo: { nome: 'Decisivo', icone: '⏱️', custo: 4, desc: '+20% em todos os lances depois dos 75 minutos.' },
+    motorzinho: { nome: 'Motorzinho', icone: '🔋', custo: 3, desc: 'Cansa menos e recupera o físico mais rápido.' },
+    blindado: { nome: 'Corpo blindado', icone: '🦾', custo: 4, desc: 'Metade das lesões.' },
+    lider: { nome: 'Líder', icone: '©️', custo: 4, desc: 'O técnico confia mais em você: mais chances de ser titular.' },
+    estrela: { nome: 'Estrela da mídia', icone: '📸', custo: 3, desc: '+30% de fama e patrocínios mais gordos.' },
+};
+
+const COMEMORACOES = ['Correr para a torcida', 'Robozinho', 'Dancinha', 'Siuuu', 'Mão no ouvido', 'Coraçãozinho com as mãos',
+    'Cambalhota', 'Arqueiro', 'Dormir no gramado', 'Beijo para a câmera', 'Ajoelhar e apontar para o céu', 'Tirar a camisa'];
+const CAMISA_PADRAO = { GOL: 1, ZAG: 4, LAT: 2, VOL: 5, MEI: 10, PON: 11, ATA: 9 };
+
 const Jogador = {
     p: s => s.jog[s.car.pid],
     meuTime: s => { const p = s.jog[s.car.pid]; return p ? p.tid : -1; },
@@ -22,6 +42,7 @@ const Jogador = {
             { id: 'treino', nome: 'Treino', icone: '🏋️', render: Jogador.treino },
             { id: 'vida', nome: 'Atividades', icone: '🎯', render: Comum.vida },
             { id: 'clube', nome: 'Meu clube', icone: '🏟️', render: Jogador.clube },
+            { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
             { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
             { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
             { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
@@ -57,7 +78,7 @@ const Jogador = {
         }, 30);
     },
 
-    iniciar(form, tid) {
+    async iniciar(form, tid) {
         const s = Jogo.sTmp;
         Jogo.sTmp = null;
         s.modo = 'jogador';
@@ -69,14 +90,28 @@ const Jogador = {
         p.user = true;
         p.contr = 3;
         p.sal = U.redondo(Math.max(6000, p.sal * 0.6));
-        s.car = { tipo: 'jogador', pid: p.id, treino: 'normal', hist: [], prog: 0, selecao: { jogos: 0, gols: 0 }, pedirTransf: false, aumentoAno: -1, estudo: 0, clubes: [t.id] };
+        s.car = {
+            tipo: 'jogador', pid: p.id, treino: 'normal', hist: [], prog: 0, selecao: { jogos: 0, gols: 0 }, pedirTransf: false, aumentoAno: -1, estudo: 0, clubes: [t.id],
+            habs: [], pontos: 2, camisa: CAMISA_PADRAO[form.pos] || 10, comemoracao: 'Correr para a torcida',
+        };
+        Jogo.migrar(s);
         Vida.log(s, `👶 Você nasceu ${Jogador.noPais(form.pais)}. Desde pequeno, só pensava em bola.`, '');
         Vida.log(s, `✍️ Aos 17 anos, você assinou seu primeiro contrato com o ${t.nome}! Salário: ${U.dinheiro(p.sal)}/ano.`, 'bom');
         Mundo.noticia(s, `🌱 ${t.nome} contrata o jovem ${form.nome}, de 17 anos.`, 'clube');
         Jogo.s = s;
         Jogo.aba = 'inicio';
         Jogo.atualizar();
-        UI.aviso('Sua vida começa agora!', `Bem-vindo ao <b>${U.esc(t.nome)}</b>, ${U.esc(form.nome)}!<br><br>Escolha seu treino na aba <b>Treino</b>, faça atividades, cuide da família e clique em <b>Avançar semana</b>. Nos jogos, você vai decidir alguns lances!`, '⚽');
+        await Jogador.cenaNovoClube(s, t, 'Seu primeiro contrato profissional!');
+        await UI.aviso('Sua vida começa agora!', `Bem-vindo ao <b>${U.esc(t.nome)}</b>, ${U.esc(form.nome)}!<br><br>Escolha seu treino na aba <b>Treino</b> (lá também ficam as <b>habilidades especiais</b>), faça atividades, cuide da família e clique em <b>Avançar semana</b>. Nos jogos, você vai decidir alguns lances!`, '⚽');
+    },
+
+    cenaNovoClube(s, t, frase) {
+        const p = Jogador.p(s);
+        return Cena.novoClube(s, t, {
+            papel: 'jogador', nome: p.nome, camisa: s.car.camisa,
+            linhas: [['Posição', POS_NOME[p.pos]], ['Camisa', s.car.camisa], ['Contrato', `até ${s.ano + p.contr - 1}`], ['Salário', `${U.dinheiro(p.sal)}/ano`]],
+            frase: frase || 'Agora é mostrar serviço!',
+        });
     },
 
     noPais(id) {
@@ -153,6 +188,15 @@ const Jogador = {
                 </div>
                 <h3>🇺🇳 Seleção</h3>
                 <p>${s.car.selecao.jogos ? `${s.car.selecao.jogos} jogos e ${s.car.selecao.gols} gols pela seleção ${Mundo.pais(s.pessoa.pais).bandeira}.` : 'Ainda não foi convocado. Continue evoluindo!'}</p>
+                <h3>👕 Sua identidade</h3>
+                <div class="identidade">
+                    ${t ? Cena.camisa(t, p.nome, s.car.camisa) : ''}
+                    <div class="form-identidade">
+                        <label class="campo">Número da camisa<input class="inp curto" type="number" min="1" max="99" value="${s.car.camisa}" data-mudar="jgCamisa"></label>
+                        <label class="campo">Comemoração de gol<select class="sel" data-mudar="jgComemora">${COMEMORACOES.map(c => `<option ${s.car.comemoracao === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+                        <small class="cinza">Sua comemoração aparece na narração e deixa você mais famoso. Tirar a camisa dá cartão amarelo!</small>
+                    </div>
+                </div>
             </div>
             <div class="cartao"><h3>📜 Histórico</h3>
                 <p>Carreira: <b>${totJ}</b> jogos · <b>${totG}</b> gols</p>
@@ -196,6 +240,15 @@ const Jogador = {
                 <div class="stat-fundo"><div class="stat-preenche azul" style="width:${Math.round((s.car.prog || 0) * 100)}%"></div></div>
                 <p class="cinza pequeno">Jovens evoluem mais rápido. Felicidade alta e jogar partidas ajudam. Depois dos 30, o corpo começa a cobrar a conta.</p>
             </div>
+        </div>
+        <div class="cartao">
+            <div class="cartao-topo"><h3>⚡ Habilidades especiais</h3><span class="pontos-hab">Pontos: <b>${s.car.pontos || 0}</b></span></div>
+            <p class="cinza pequeno">Você ganha pontos quando sua habilidade sobe, quando é o melhor em campo e quando faz hat-trick.</p>
+            <div class="grade-habs">${Object.entries(HABILIDADES).map(([k, h]) => {
+            const tem = (s.car.habs || []).includes(k);
+            return `<button class="hab ${tem ? 'tem' : ''}" data-acao="jgHab" data-h="${k}" ${tem || (s.car.pontos || 0) < h.custo ? 'disabled' : ''}>
+                    <span class="hab-icone">${h.icone}</span><b>${h.nome}</b><small>${h.desc}</small><span class="hab-custo">${tem ? '✔ Desbloqueada' : `${h.custo} pontos`}</span></button>`;
+        }).join('')}</div>
         </div>`;
     },
 
@@ -241,20 +294,33 @@ const Jogador = {
                 if (p.ovr < p.pot || p.idade < 24) {
                     p.ovr++;
                     if (p.ovr > p.pot) p.pot = p.ovr;
-                    Vida.log(s, `📈 Sua habilidade subiu para ${p.ovr}!`, 'bom');
+                    s.car.pontos = (s.car.pontos || 0) + 1;
+                    Vida.log(s, `📈 Sua habilidade subiu para ${p.ovr}! (+1 ponto de habilidade)`, 'bom');
+                    UI.toast(`📈 Habilidade ${p.ovr}! +1 ponto de habilidade`);
                 }
             }
-            p.cond = U.clamp(p.cond + tr.cond, 30, 100);
-            if (U.chance(tr.les * (p.idade > 30 ? 1.5 : 1))) {
-                p.les = U.int(1, 4);
+            const hab = id => (s.car.habs || []).includes(id);
+            p.cond = U.clamp(p.cond + tr.cond + (hab('motorzinho') ? 5 : 0), 30, 100);
+            if (U.chance(tr.les * (p.idade > 30 ? 1.5 : 1) * (hab('blindado') ? 0.5 : 1))) {
+                p.les = U.int(1, 6);
                 Vida.log(s, `🚑 Você se lesionou no treino. Vai ficar ${p.les} semana(s) fora.`, 'ruim');
                 Vida.mudar(s, { felicidade: -5, saude: -3 });
                 UI.toast('🚑 Lesão no treino!', 'erro');
+                await Jogador.lesaoSeria(s);
             }
             if (s.car.treino === 'intenso') pessoa.saude = U.clamp(pessoa.saude - 0.3, 0, 100);
         }
         Jogador.jogouSemana = false;
         p.cond = Math.min(p.cond, 65 + pessoa.felicidade * 0.35);
+        if (p.recaida > 0) {
+            p.recaida--;
+            if (p.les <= 0 && U.chance(0.2)) {
+                p.les = U.int(3, 8);
+                Vida.log(s, `🚑 RECAÍDA! A lesão voltou e você vai ficar ${p.les} semanas fora.`, 'ruim');
+                Vida.mudar(s, { felicidade: -8, saude: -4 });
+                UI.toast('🚑 Recaída da lesão!', 'erro');
+            }
+        }
 
         // seleção
         if ((s.semana === 10 || s.semana === 32) && p.tid >= 0 && p.les <= 0) await Jogador.convocacao(s);
@@ -270,6 +336,13 @@ const Jogador = {
         }
         // aposentadoria forçada
         if (p.idade >= 41) await Jogador.aposentar(s, true);
+    },
+
+    async lesaoSeria(s) {
+        const p = Jogador.p(s);
+        if (p.les < 3) return;
+        const custo = U.redondo(Math.max(5000, p.sal * 0.06));
+        await Vida.decisaoLesao(s, p, { custo, pagar: v => { s.pessoa.dinheiro -= v; }, quem: 'você', proprio: true });
     },
 
     async convocacao(s) {
@@ -363,7 +436,8 @@ const Jogador = {
         Mundo.noticia(s, atual ? `💸 ${p.nome} deixa o ${atual.nome} e assina com o ${dest.nome}${taxa ? ` por ${U.dinheiro(taxa)}` : ''}.` : `✍️ ${dest.nome} contrata ${p.nome}, que estava livre.`, 'transfer');
         Vida.log(s, `✍️ Você assinou com o ${dest.nome}! Salário: ${U.dinheiro(sal)}/ano.`, 'bom');
         Vida.mudar(s, { felicidade: 8, fama: 2 });
-        await UI.aviso('Novo clube!', `Você é o novo reforço do <b>${U.esc(dest.nome)}</b>!`, '🎉');
+        Conquistas.maximo(s, 'maiorVenda', taxa);
+        await Jogador.cenaNovoClube(s, dest, taxa ? `Uma transferência de ${U.dinheiro(taxa)}!` : 'Chegou de graça e quer mostrar serviço!');
     },
 
     jogouSemana: false,
@@ -386,26 +460,36 @@ const Jogador = {
             if (st.g) txt += ` e marcou ${st.g} gol${st.g > 1 ? 's' : ''}${st.g >= 3 ? ' — HAT-TRICK!' : '!'}`;
             if (st.a) txt += ` ${st.g ? 'Deu' : 'e deu'} ${st.a} assistência${st.a > 1 ? 's' : ''}.`;
             if (st.vm) txt += ' 🟥 Foi expulso.';
-            if (r.melhor === p.id) txt += ' ⭐ Melhor em campo!';
+            if (r.melhor === p.id) { txt += ' ⭐ Melhor em campo! (+1 ponto de habilidade)'; s.car.pontos = (s.car.pontos || 0) + 1; Conquistas.contar(s, 'mvps'); }
+            if (st.g >= 3) { Conquistas.contar(s, 'hattricks'); s.car.pontos = (s.car.pontos || 0) + 1; }
+            const classico = Mundo.classico(s, jogo.h, jogo.a);
+            if (classico) txt += venceu ? ' 🔥 Vitória no CLÁSSICO!' : '';
             Vida.log(s, txt, n >= 7.5 ? 'bom' : n < 6 ? 'ruim' : '');
-            Vida.mudar(s, { fama: Math.max(0, st.g * 0.6 + st.a * 0.3 + (n - 6.8) * 0.4) * (Mundo.liga(s, t.liga).nivel === 1 ? 1 : 0.5), felicidade: (venceu ? 1.5 : empate ? 0 : -1.5) + (n - 6.5) });
+            const kc = classico ? 2 : 1;
+            Vida.mudar(s, { fama: (Math.max(0, st.g * 0.6 + st.a * 0.3 + (n - 6.8) * 0.4) * (Mundo.liga(s, t.liga).nivel === 1 ? 1 : 0.5) + (st.comemorou || 0) * 0.3) * kc, felicidade: ((venceu ? 1.5 : empate ? 0 : -1.5) + (n - 6.5)) * kc });
+            if (st.comemorou && /ouvido/i.test(s.car.comemoracao) && lado === 1 && U.chance(0.25)) {
+                Vida.log(s, '🙉 Sua comemoração "mão no ouvido" provocou a torcida rival e virou polêmica!', '');
+                Vida.mudar(s, { fama: 2 });
+            }
         } else {
             const noBanco = m.banco.some(b => b.includes(p.id));
             const motivo = p.les > 0 ? 'lesionado' : p.susp > 0 ? 'suspenso' : noBanco ? 'no banco' : 'fora dos relacionados';
             Vida.log(s, `🪑 Você ficou ${motivo} ${naRes} por ${gf} x ${gc} contra o ${adv.nome}.`, '');
             if (motivo === 'no banco' || motivo === 'fora dos relacionados') Vida.mudar(s, { felicidade: -1.5 });
         }
-        if (jogo.tipo === 'copa' && jogo.r === 3 && venceu) {
+        if (st && st.les && p.les >= 3) await Jogador.lesaoSeria(s);
+        if (Mundo.ehFinal(s, jogo) && venceu) {
             const c = Mundo.copa(s, jogo.comp);
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${c.nome} (${t.nome})` });
-            Vida.mudar(s, { felicidade: 20, fama: 10 });
-            Vida.log(s, `🏆 CAMPEÃO DA ${c.nome.toUpperCase()}!`, 'titulo');
+            Vida.mudar(s, { felicidade: 20, fama: c.pais ? 6 : 10 });
+            Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
+            await Cena.titulo(c.nome, t, `${p.nome} levanta a taça!`);
             return '<div class="rf-linha destaque-bom">🏆 VOCÊ É CAMPEÃO!</div>';
         }
         return '';
     },
 
-    antesFimTemporada(s) {
+    async antesFimTemporada(s) {
         const p = Jogador.p(s);
         const t = p.tid >= 0 ? s.times[p.tid] : null;
         s.car.hist.push({ ano: s.ano, time: t ? t.nome : 'Sem clube', idade: p.idade, ovr: p.ovr, j: p.j, g: p.g, a: p.a, nota: p.j ? (p.ns / p.j).toFixed(2) : null });
@@ -414,8 +498,29 @@ const Jogador = {
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${liga.nome} (${t.nome})` });
             Vida.mudar(s, { felicidade: 15, fama: liga.nivel === 1 ? 8 : 3 });
             Vida.log(s, `🏆 CAMPEÃO DA ${liga.nome.toUpperCase()} com o ${t.nome}!`, 'titulo');
+            await Cena.titulo(liga.nome, t, `${p.nome} é campeão com o ${t.nome}!`);
         }
         Vida.log(s, `📊 Temporada ${s.ano}: ${p.j} jogos, ${p.g} gols, ${p.a} assistências.`, '');
+    },
+
+    resumoTemporada(s) {
+        const p = Jogador.p(s);
+        const t = p.tid >= 0 ? s.times[p.tid] : null;
+        const liga = t ? Mundo.liga(s, t.liga) : null;
+        const inicio = s.car.ovrInicioTemp || p.ovr;
+        return {
+            tid: t ? t.id : -1, ligaId: liga ? liga.id : null, ligaCurto: liga ? liga.curto : null,
+            ehMeu: pr => pr.pid === p.id,
+            frase: p.idade < 23 ? 'O futuro é seu, garoto!' : p.idade < 31 ? 'No auge. Bora fazer história!' : 'A experiência vale ouro.',
+            html: `${t ? Cena.camisa(t, p.nome, s.car.camisa) : ''}<div class="cena-titulo">${U.esc(p.nome)}</div>
+                <div class="grade-numeros">
+                    <div><b data-alvo="${p.j}">0</b><small>jogos</small></div>
+                    <div><b data-alvo="${p.g}">0</b><small>gols</small></div>
+                    <div><b data-alvo="${p.a}">0</b><small>assistências</small></div>
+                    <div><b data-alvo="${p.j ? (p.ns / p.j).toFixed(2) : 0}" data-casas="1">0</b><small>nota média</small></div>
+                </div>
+                <div class="cena-sub">Habilidade: ${inicio} → <b>${p.ovr}</b> ${p.ovr > inicio ? '📈' : p.ovr < inicio ? '📉' : ''}</div>`,
+        };
     },
 
     async depoisFimTemporada(s, resumo) {
@@ -425,7 +530,8 @@ const Jogador = {
             s.pessoa.trofeus.push({ ano: resumo.ano, txt: pr.tipo });
             Vida.mudar(s, { fama: pr.tipo === 'Bola de Ouro' ? 25 : 6, felicidade: 15 });
             Vida.log(s, `🏅 Você ganhou o prêmio: ${pr.tipo}!`, 'titulo');
-            await UI.aviso('Prêmio!', `Você ganhou o prêmio <b>${U.esc(pr.tipo)}</b>!`, '🏅');
+            s.car.pontos = (s.car.pontos || 0) + 2;
+            await Cena.simples(pr.tipo === 'Bola de Ouro' ? '⚽' : '🏅', U.esc(pr.tipo).toUpperCase(), `${U.esc(p.nome)} — ${U.esc(pr.info || '')} (+2 pontos de habilidade)`, 'radial-gradient(circle at 50% 35%, #6b5200 0%, #05070c 70%)', 'titulo', ['#ffd700', '#fff3b0', '#ffffff']);
         }
         // torneio de seleções
         if (s.car.selecao.jogos > 0 && (resumo.ano % 2 === 0)) await Jogador.torneioSelecoes(s, resumo.ano);
@@ -447,6 +553,7 @@ const Jogador = {
             }
         }
         s.car.vaiSair = false;
+        s.car.ovrInicioTemp = p.ovr;
         if (p.idade >= 36 && p.ovr < 60) {
             const i = await UI.perguntar('Fim da linha?', `Você tem ${p.idade} anos e seu corpo já não responde como antes. Pensa em se aposentar?`, ['👴 Sim, pendurar as chuteiras', '💪 Ainda tenho lenha pra queimar'], '🤔');
             if (i === 0) await Jogador.aposentar(s, false, true);
@@ -496,6 +603,7 @@ const Jogador = {
         p.aposentado = true;
         Mundo.noticia(s, `👋 ${p.nome} se aposenta aos ${p.idade} anos, com ${totG} gols em ${totJ} jogos.`, 'geral');
         Vida.log(s, `👋 Você se aposentou do futebol: ${totJ} jogos, ${totG} gols e ${s.pessoa.trofeus.length} títulos.`, 'titulo');
+        await Cena.simples('👋', `OBRIGADO, ${U.esc(p.nome.split(' ')[0].toUpperCase())}!`, `${totJ} jogos · ${totG} gols · ${s.pessoa.trofeus.length} títulos. A torcida aplaude de pé.`, 'radial-gradient(circle at 50% 40%, #233a5e 0%, #05070c 70%)', 'torcida');
         const i = await UI.perguntar('E agora?', `Fim da carreira de jogador: <b>${totJ} jogos</b>, <b>${totG} gols</b>, <b>${s.pessoa.trofeus.length} títulos</b>.<br><br>O que você quer fazer da vida?`, ['📋 Virar técnico de futebol', '🏖️ Curtir a aposentadoria (encerrar)'], '🤔');
         if (i === 0) {
             Tecnico.iniciarAposentado(s);
@@ -524,6 +632,21 @@ Object.assign(ACOES, {
         if (!(await UI.confirmar(`Assinar com o <b>${U.esc(t.nome)}</b>?`, 'Assinar'))) return;
         Jogador.iniciar(Jogo.formTmp, +d.tid);
     },
+    jgHab: d => {
+        const s = Jogo.s, h = HABILIDADES[d.h];
+        s.car.habs = s.car.habs || [];
+        if (s.car.habs.includes(d.h) || (s.car.pontos || 0) < h.custo) return;
+        s.car.pontos -= h.custo;
+        s.car.habs.push(d.h);
+        if (d.h === 'lider') Jogador.p(s).bonusFixo = 1.5;
+        Vida.log(s, `⚡ Nova habilidade especial: ${h.icone} ${h.nome}!`, 'bom');
+        UI.toast(`⚡ Você desbloqueou ${h.icone} <b>${h.nome}</b>!`);
+        Som.tocar('conquista');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
+    jgCamisa: (d, el) => { Jogo.s.car.camisa = U.clamp(Math.round(+el.value || 10), 1, 99); Jogo.manterRolagem = true; Jogo.atualizar(); },
+    jgComemora: (d, el) => { Jogo.s.car.comemoracao = el.value; UI.toast(`🎉 Nova comemoração: ${el.value}`); },
     jgTreino: d => { Jogo.s.car.treino = d.t; Jogo.manterRolagem = true; Jogo.atualizar(); UI.toast(`Treino: ${TREINOS[d.t].nome}`); },
     async jgConversarTecnico() {
         const s = Jogo.s, p = Jogador.p(s);

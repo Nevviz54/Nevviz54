@@ -122,7 +122,7 @@ const Salvar = {
     },
 
     // Opções do jogo (resolução, velocidade etc.)
-    opcoesPadrao: { resolucao: 'auto', escala: 100, velocidade: 2, autosave: true, tema: 'escuro' },
+    opcoesPadrao: { resolucao: 'auto', escala: 100, velocidade: 2, autosave: true, tema: 'escuro', som: true, volume: 60, cenas: true, animacoes: true },
 
     lerOpcoes() {
         try {

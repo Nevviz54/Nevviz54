@@ -3,6 +3,16 @@
 //  CARREIRA DE TÉCNICO
 // =====================================================================
 
+// Treino coletivo da semana
+const TREINOS_TIME = {
+    equilibrado: { nome: 'Equilibrado', icone: '⚖️', ata: 0, def: 0, cond: 0, desc: 'Sem bônus nem cansaço extra.' },
+    ataque: { nome: 'Finalização', icone: '🎯', ata: 1.5, def: -0.5, cond: 0, desc: '+ataque, um pouco menos de defesa.' },
+    defesa: { nome: 'Marcação', icone: '🛡️', ata: -0.5, def: 1.5, cond: 0, desc: '+defesa, um pouco menos de ataque.' },
+    tatico: { nome: 'Tático', icone: '🧠', ata: 0.8, def: 0.8, cond: -4, desc: 'Melhora tudo, mas cansa o elenco.' },
+    fisico: { nome: 'Físico', icone: '💪', ata: 0, def: 0, cond: 8, desc: 'Elenco recupera mais o físico.' },
+    descanso: { nome: 'Descanso', icone: '😴', ata: -0.6, def: -0.6, cond: 15, desc: 'Recupera muito, mas o time perde ritmo.' },
+};
+
 const Tecnico = {
     meuTime: s => s.car.tid,
     time: s => s.car.tid >= 0 ? s.times[s.car.tid] : null,
@@ -14,6 +24,7 @@ const Tecnico = {
                 { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
                 { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
                 { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
+                { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
                 { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
                 { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
             ];
@@ -26,8 +37,10 @@ const Tecnico = {
             { id: 'calendario', nome: 'Jogos', icone: '📅', render: Tecnico.calendario },
             { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
             { id: 'financas', nome: 'Finanças', icone: '💰', render: Tecnico.financas },
+            { id: 'estrutura', nome: 'Estrutura', icone: '🏗️', render: Tecnico.estrutura },
             { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
             { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
+            { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
             { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
             { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
         ];
@@ -60,15 +73,29 @@ const Tecnico = {
         s.car = Tecnico.novaCarreira(form.rep);
         const t = s.times.find(x => x.nome === nomeClube);
         Vida.log(s, `📋 ${form.nome} começa a carreira de treinador aos ${form.idade} anos.`, 'bom');
+        Jogo.migrar(s);
         Tecnico.contratar(s, t.id);
         Jogo.s = s;
         Jogo.aba = 'inicio';
         Jogo.atualizar();
-        await UI.aviso(`Bem-vindo ao ${t.nome}!`, `Você é o novo técnico do <b>${U.esc(t.nome)}</b>. A diretoria espera que o time termine em <b>${Tecnico.expectativa(s)}º lugar</b> na ${U.esc(Mundo.liga(s, t.liga).nome)}.<br><br>Dica: veja o <b>Elenco</b>, ajuste a <b>Tática</b> e clique em <b>Avançar semana</b>.`, '🤝');
+        await Tecnico.cenaNovoClube(s, t);
+        await UI.aviso(`Bem-vindo ao ${t.nome}!`, `A diretoria espera que o time termine em <b>${Tecnico.expectativa(s)}º lugar</b> na ${U.esc(Mundo.liga(s, t.liga).nome)}.<br><br>Dica: veja o <b>Elenco</b>, ajuste a <b>Tática</b> (treino da semana e capitão também!) e clique em <b>Avançar semana</b>.`, '🤝');
+    },
+
+    cenaNovoClube(s, t) {
+        return Cena.novoClube(s, t, {
+            papel: 'tecnico', nome: s.pessoa.nome,
+            linhas: [['Cargo', 'Técnico'], ['Contrato', `até ${s.ano + s.car.contr - 1}`], ['Salário', `${U.dinheiro(s.car.sal)}/ano`],
+                ['Meta da diretoria', `${Tecnico.expectativa(s)}º lugar`], ['Caixa do clube', U.dinheiro(t.saldo)]],
+            frase: 'A torcida está de olho. Boa sorte, professor!',
+        });
     },
 
     novaCarreira(rep) {
-        return { tipo: 'tecnico', tid: -1, rep, conf: 55, sal: 0, contr: 2, receita: 0, venda: [], ofertas: [], hist: [], titulos: 0, v: 0, e: 0, d: 0, verbaPedida: -1, recusas: {} };
+        return {
+            tipo: 'tecnico', tid: -1, rep, conf: 55, sal: 0, contr: 2, receita: 0, venda: [], ofertas: [], hist: [], titulos: 0, v: 0, e: 0, d: 0, verbaPedida: -1, recusas: {},
+            treinoTime: 'equilibrado', capitao: null, obra: null, clubesTreinados: [], invicto: 0, titTemp: {},
+        };
     },
 
     // vem da carreira de jogador
@@ -97,6 +124,11 @@ const Tecnico = {
         s.car.promessa = null;
         s.car.inicioNoClube = { ano: s.ano, sem: s.semana };
         s.car.v = s.car.e = s.car.d = 0;
+        s.car.capitao = null;
+        s.car.obra = null;
+        s.car.invicto = 0;
+        s.car.clubesTreinados = s.car.clubesTreinados || [];
+        if (!s.car.clubesTreinados.includes(t.nome)) s.car.clubesTreinados.push(t.nome);
         t.tit = null;
         Mundo.noticia(s, `📋 ${s.pessoa.nome} é o novo técnico do ${t.nome}.`, 'clube');
         Vida.log(s, `🤝 Você assinou com o ${t.nome} por 2 temporadas. Salário: ${U.dinheiro(s.car.sal)}/ano.`, 'bom');
@@ -104,7 +136,7 @@ const Tecnico = {
 
     receita(s, t) {
         const liga = Mundo.liga(s, t.liga);
-        return U.redondo(Math.pow(t.rep / 50, 4) * 140000 * (0.1 + liga.riqueza * 0.9));
+        return U.redondo(Math.pow(t.rep / 50, 4) * 140000 * (0.1 + liga.riqueza * 0.9) * (0.8 + Mundo.infra(t).estadio * 0.1));
     },
 
     folha(s, t) {
@@ -229,7 +261,7 @@ const Tecnico = {
             const ef = p ? Math.round(Escalacao.efetivo(p, pos)) : 0;
             const fora = p && p.pos !== pos;
             return `<button class="slot ${sel === i ? 'sel' : ''} ${fora ? 'fora-pos' : ''}" style="left:${x}%;top:${100 - y}%" data-acao="tcSlot" data-i="${i}">
-                <span class="slot-pos">${pos}</span><span class="slot-camisa" style="background:${t.c1};color:${t.c2}">${p ? ef : '?'}</span><span class="slot-nome">${p ? U.esc(p.nome.split(' ').slice(-1)[0]) : '—'}</span></button>`;
+                <span class="slot-pos">${pos}${p && s.car.capitao === p.id ? ' ©' : ''}</span><span class="slot-camisa" style="background:${t.c1};color:${t.c2}">${p ? ef : '?'}</span><span class="slot-nome">${p ? U.esc(p.nome.split(' ').slice(-1)[0]) : '—'}</span></button>`;
         }).join('');
         const usados = new Set(esc);
         const slotPos = sel != null ? slots[sel][0] : null;
@@ -245,6 +277,11 @@ const Tecnico = {
                 </div>
                 <div class="campinho">${campo}<div class="campo-linha-meio"></div><div class="campo-circulo"></div><div class="campo-area cima"></div><div class="campo-area baixo"></div></div>
                 <p class="cinza pequeno">${sel != null ? `Escolha na lista quem vai jogar de <b>${POS_NOME[slotPos]}</b>.` : 'Clique numa posição do campo e depois no jogador da lista. Números em vermelho = jogador fora de posição.'}</p>
+                <h3>🏋️ Treino da semana</h3>
+                <div class="grade-treino-time">${Object.entries(TREINOS_TIME).map(([k, tr]) => `<button class="atividade ${s.car.treinoTime === k ? 'ativa' : ''}" data-acao="tcTreino" data-t="${k}"><span class="at-icone">${tr.icone}</span><b>${tr.nome}</b><small>${tr.desc}</small></button>`).join('')}</div>
+                <h3>©️ Capitão</h3>
+                <select class="sel" data-mudar="tcCapitao"><option value="">— sem capitão —</option>${Mundo.elenco(s, t).sort((a, b) => b.ovr - a.ovr).map(p => `<option value="${p.id}" ${s.car.capitao === p.id ? 'selected' : ''}>${p.pos} · ${U.esc(p.nome)} (${p.ovr}, ${p.idade} anos)</option>`).join('')}</select>
+                <p class="cinza pequeno">Com o capitão em campo o time joga melhor. Veteranos e craques são os melhores líderes.</p>
             </div>
             <div class="cartao">
                 <h3>Jogadores ${t.tit ? '<small class="tag">escalação manual</small>' : '<small class="tag">automática</small>'}</h3>
@@ -333,6 +370,9 @@ const Tecnico = {
                 <div class="ficha">
                     <div><span>Títulos</span><b>${c.titulos}</b></div>
                     <div><span>Temporadas</span><b>${c.hist.length}</b></div>
+                    <div><span>Vitórias na carreira</span><b>${(s.cont && s.cont.vitorias) || 0}</b></div>
+                    <div><span>Clássicos vencidos</span><b>${(s.cont && s.cont.classicosVencidos) || 0}</b></div>
+                    <div><span>Clubes treinados</span><b>${(c.clubesTreinados || []).length}</b></div>
                 </div>
                 <h4>Troféus</h4>
                 <div class="lista-trofeus">${s.pessoa.trofeus.map(t => `<span class="trofeu">🏆 ${U.esc(t.txt)} (${t.ano})</span>`).join('') || '<span class="cinza">Ainda nenhum. Vamos mudar isso!</span>'}</div>
@@ -355,6 +395,32 @@ const Tecnico = {
             s.car.ofertas = s.car.ofertas.filter(o => o.ate > s.semana || o.ano > s.ano);
             if (U.chance(0.35) && s.car.ofertas.length < 4) s.car.ofertas.push(...Tecnico.gerarOfertas(s, 1));
             return;
+        }
+        // treino coletivo
+        const tr = TREINOS_TIME[s.car.treinoTime] || TREINOS_TIME.equilibrado;
+        for (const p of Mundo.elenco(s, t)) {
+            p.cond = U.clamp(p.cond + tr.cond + (Mundo.infra(t).ct - 3), 30, 100);
+            if (p.recaida > 0) {
+                p.recaida--;
+                if (p.les <= 0 && U.chance(0.18)) {
+                    p.les = U.int(3, 8);
+                    Vida.log(s, `🚑 Recaída! ${p.nome} voltou a sentir a lesão (${p.les} semanas).`, 'ruim');
+                }
+            }
+        }
+        if (s.car.treinoTime === 'descanso') t.moral = U.clamp(t.moral + 1, 5, 99);
+        // obras na estrutura
+        if (s.car.obra) {
+            s.car.obra.falta--;
+            if (s.car.obra.falta <= 0) {
+                const inf = Mundo.infra(t), k = s.car.obra.tipo;
+                inf[k] = Math.min(5, inf[k] + 1);
+                s.car.obra = null;
+                if (k === 'estadio') s.car.receita = Tecnico.receita(s, t);
+                if (inf[k] >= 5) Conquistas.contar(s, 'obras5');
+                Vida.log(s, `🏗️ Obra concluída: ${INFRA[k].nome} agora é nível ${inf[k]}!`, 'bom');
+                await Cena.simples(INFRA[k].icone, 'OBRA CONCLUÍDA!', `${INFRA[k].nome} do ${U.esc(t.nome)} agora é nível ${inf[k]} ${'⭐'.repeat(inf[k])}`, `radial-gradient(circle at 50% 40%, ${t.c1}, #05070c 70%)`, 'conquista', [t.c1, t.c2, '#ffd700']);
+            }
         }
         // finanças
         const folha = Tecnico.folha(s, t);
@@ -398,6 +464,9 @@ const Tecnico = {
 
     async demitir(s, motivo) {
         const t = Tecnico.time(s);
+        Conquistas.contar(s, 'demissoes');
+        s.car.capitao = null;
+        s.car.obra = null;
         s.car.hist.push(Tecnico.linhaHist(s, t, 'Demitido'));
         s.car.rep = U.clamp(s.car.rep - 6, 0, 100);
         Mundo.noticia(s, `🚪 ${t.nome} demite o técnico ${s.pessoa.nome}.`, 'clube');
@@ -409,6 +478,7 @@ const Tecnico = {
         s.car.venda = [];
         t.tit = null;
         s.car.ofertas = Tecnico.gerarOfertas(s, U.int(0, 2));
+        await Cena.simples('🚪', 'DEMITIDO', `O ${U.esc(t.nome)} encerrou seu trabalho. ${motivo}`, 'radial-gradient(circle at 50% 40%, #4a0f0f 0%, #05070c 70%)', 'triste');
         await UI.aviso('Demitido!', `A diretoria do <b>${U.esc(t.nome)}</b> decidiu te demitir. ${motivo}<br>Você recebeu ${U.dinheiro(multa)} de multa rescisória.<br><br>Fique de olho nas propostas de outros clubes.`, '🚪');
         Jogo.aba = 'inicio';
     },
@@ -439,6 +509,14 @@ const Tecnico = {
         const venceu = r.venc === t.id || (r.venc == null && gf > gc);
         const empate = r.venc == null && gf === gc;
         if (venceu) s.car.v++; else if (empate) s.car.e++; else s.car.d++;
+        const classico = Mundo.classico(s, jogo.h, jogo.a);
+        if (venceu) {
+            Conquistas.contar(s, 'vitorias');
+            if (gf - gc >= 5) Conquistas.contar(s, 'goleadas');
+            if (classico) Conquistas.contar(s, 'classicosVencidos');
+        }
+        s.car.invicto = venceu || empate ? (s.car.invicto || 0) + 1 : 0;
+        Conquistas.maximo(s, 'maiorInvicto', s.car.invicto);
         let dc;
         if (jogo.tipo === 'liga') {
             const d = (Mundo.forca(s, t) - Mundo.forca(s, adv)) / 10 + (lado === 0 ? 0.25 : -0.25);
@@ -447,19 +525,23 @@ const Tecnico = {
         } else {
             dc = venceu ? (jogo.r === 3 ? 15 : 3) : (Mundo.forca(s, t) > Mundo.forca(s, adv) ? -6 : -2);
         }
+        if (classico) dc *= 1.6;
         s.car.conf = U.clamp(s.car.conf + dc, 0, 100);
         const res = venceu ? 'Vitória' : empate ? 'Empate' : 'Derrota';
-        Vida.log(s, `${venceu ? '✅' : empate ? '➖' : '❌'} ${res} contra o ${adv.nome}: ${gf} x ${gc} (${Mundo.nomeCompeticao(s, jogo.comp)}).`, venceu ? 'bom' : empate ? '' : 'ruim');
-        if (venceu) Vida.mudar(s, { felicidade: 1.5, fama: 0.3 }); else if (!empate) Vida.mudar(s, { felicidade: -1.5 });
-        if (jogo.tipo === 'copa' && jogo.r === 3 && venceu) {
+        Vida.log(s, `${venceu ? '✅' : empate ? '➖' : '❌'} ${res}${classico ? ' no CLÁSSICO' : ''} contra o ${adv.nome}: ${gf} x ${gc} (${Mundo.nomeCompeticao(s, jogo.comp)}).`, venceu ? 'bom' : empate ? '' : 'ruim');
+        const k = classico ? 2.5 : 1;
+        if (venceu) Vida.mudar(s, { felicidade: 1.5 * k, fama: 0.3 * k }); else if (!empate) Vida.mudar(s, { felicidade: -1.5 * k });
+        if (Mundo.ehFinal(s, jogo) && venceu) {
             const c = Mundo.copa(s, jogo.comp);
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${c.nome} (${t.nome})` });
             s.car.titulos++;
-            s.car.rep = U.clamp(s.car.rep + 15, 0, 100);
-            Vida.mudar(s, { felicidade: 25, fama: 15 });
-            Vida.log(s, `🏆 CAMPEÃO DA ${c.nome.toUpperCase()}!`, 'titulo');
-            if (!rapido) await UI.aviso('CAMPEÃO!', `Você levou o ${U.esc(t.nome)} ao título da <b>${U.esc(c.nome)}</b>! A cidade está em festa!`, '🏆');
+            s.car.titTemp = s.car.titTemp || {};
+            if (c.pais) { Conquistas.contar(s, 'copasNacionais'); s.car.titTemp.nac = true; s.car.rep = U.clamp(s.car.rep + 6, 0, 100); Vida.mudar(s, { felicidade: 18, fama: 8 }); }
+            else { Conquistas.contar(s, 'continentais'); s.car.titTemp.cont = true; s.car.rep = U.clamp(s.car.rep + 15, 0, 100); Vida.mudar(s, { felicidade: 25, fama: 15 }); }
+            Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
+            await Cena.titulo(c.nome, t, `${U.esc(s.pessoa.nome)} leva o ${t.nome} ao título!`);
         }
+        await Tecnico.departamentoMedico(s, t, m, rapido);
         // coletiva de imprensa
         if (!rapido && U.chance(0.22)) {
             const opcoes = venceu ? ['👏 "O mérito é todo dos jogadores."', '😎 "Eu avisei que ia dar certo."', '🎯 "Ainda temos muito a melhorar."']
@@ -481,9 +563,10 @@ const Tecnico = {
         return `<div class="rf-linha">🤝 Confiança da diretoria: ${Math.round(s.car.conf)}% <span class="${dc >= 0 ? 'verde' : 'vermelho'}">(${dc >= 0 ? '+' : ''}${dc.toFixed(1)})</span></div>`;
     },
 
-    antesFimTemporada(s) {
+    async antesFimTemporada(s) {
         const t = Tecnico.time(s);
         if (!t) return;
+        Tecnico.titulosPendentes = null;
         const liga = Mundo.liga(s, t.liga);
         const pos = Mundo.posicaoNaLiga(s, t.id);
         const esp = Tecnico.expectativa(s);
@@ -497,23 +580,62 @@ const Tecnico = {
             Vida.mudar(s, { felicidade: 20, fama: liga.nivel === 1 ? 12 : 5 });
             Vida.log(s, `🏆 CAMPEÃO DA ${liga.nome.toUpperCase()} com o ${t.nome}!`, 'titulo');
             obs.push('Campeão');
+            s.car.titTemp = s.car.titTemp || {};
+            if (liga.nivel === 1) { Conquistas.contar(s, 'ligasPrincipais'); s.car.titTemp.liga = true; }
+            Tecnico.titulosPendentes = [liga.nome, t];
+        }
+        if (s.car.titTemp && s.car.titTemp.liga && s.car.titTemp.nac && s.car.titTemp.cont) {
+            Conquistas.contar(s, 'triplices');
+            Vida.log(s, '👑 TRÍPLICE COROA! Liga, copa nacional e copa continental na mesma temporada!', 'titulo');
         }
         const ligasPais = s.ligas.filter(l => l.pais === liga.pais).sort((a, b) => a.nivel - b.nivel);
         const idx = ligasPais.indexOf(liga);
-        if (idx > 0 && pos <= ligasPais[idx - 1].troca) { s.car.conf = U.clamp(s.car.conf + 25, 0, 100); s.car.rep += 4; obs.push('Acesso'); Vida.mudar(s, { felicidade: 12, fama: 4 }); }
+        if (idx > 0 && pos <= ligasPais[idx - 1].troca) { s.car.conf = U.clamp(s.car.conf + 25, 0, 100); s.car.rep += 4; obs.push('Acesso'); Vida.mudar(s, { felicidade: 12, fama: 4 }); Conquistas.contar(s, 'acessos'); }
         if (liga.troca && pos > n - liga.troca) { s.car.conf = U.clamp(s.car.conf - 35, 0, 100); s.car.rep -= 6; obs.push('Rebaixado'); Vida.mudar(s, { felicidade: -15 }); }
         s.car.conf = U.clamp(s.car.conf + (esp - pos) * 3, 0, 100);
         s.car.rep = U.clamp(s.car.rep + (esp - pos) * 0.7, 0, 100);
         if (s.car.promessa === 'titulo' && pos !== 1) { s.car.conf = U.clamp(s.car.conf - 15, 0, 100); obs.push('Promessa não cumprida'); }
         s.car.hist.push(Tecnico.linhaHist(s, t, obs.join(', ')));
         Vida.log(s, `📊 Temporada ${s.ano}: ${pos}º lugar na ${liga.nome} (meta era ${esp}º).`, pos <= esp ? 'bom' : 'ruim');
+        if (Tecnico.titulosPendentes) await Cena.titulo(Tecnico.titulosPendentes[0], t, `${s.pessoa.nome} é campeão com o ${t.nome}!`);
     },
 
-    async depoisFimTemporada(s) {
+    // dados do slide "Sua temporada" da cutscene de fim de ano
+    resumoTemporada(s) {
+        const t = Tecnico.time(s);
+        if (!t) return { tid: -1, html: '', ehMeu: () => false };
+        const liga = Mundo.liga(s, t.liga);
+        const pos = Mundo.posicaoNaLiga(s, t.id), esp = Tecnico.expectativa(s);
+        const tab = liga.tab[t.id];
+        return {
+            tid: t.id, ligaId: liga.id, ligaCurto: liga.curto,
+            ehMeu: p => p.tipo === 'Técnico do Ano' && p.tid === t.id,
+            frase: pos <= esp ? 'A diretoria está feliz. Bora repetir a dose!' : 'Ano difícil. A próxima temporada é para dar a volta por cima.',
+            html: `${Cena.escudo(t, 'pequeno')}<div class="cena-titulo">${U.esc(t.nome)}</div>
+                <div class="grade-numeros">
+                    <div><b data-alvo="${pos}">0</b><small>º lugar</small></div>
+                    <div><b data-alvo="${tab.pts}">0</b><small>pontos</small></div>
+                    <div><b data-alvo="${s.car.v}">0</b><small>vitórias</small></div>
+                    <div><b data-alvo="${tab.gp}">0</b><small>gols marcados</small></div>
+                </div>
+                <div class="cena-sub">${pos <= esp ? '✅' : '❌'} Meta da diretoria: ${esp}º lugar</div>`,
+        };
+    },
+
+    async depoisFimTemporada(s, resumo) {
         const t = Tecnico.time(s);
         s.car.v = s.car.e = s.car.d = 0;
         s.car.promessa = null;
+        s.car.titTemp = {};
         if (!t) return;
+        const tec = resumo && resumo.premios.find(p => p.tipo === 'Técnico do Ano');
+        if (tec && tec.tid === t.id) {
+            s.pessoa.trofeus.push({ ano: resumo.ano, txt: 'Técnico do Ano' });
+            s.car.rep = U.clamp(s.car.rep + 5, 0, 100);
+            Conquistas.contar(s, 'tecnicoAno');
+            Vida.mudar(s, { fama: 8, felicidade: 10 });
+            Vida.log(s, '📋 Você foi eleito o TÉCNICO DO ANO!', 'titulo');
+        }
         // premiação da liga (já está na nova liga, usa a classificação final antiga)
         const ligaAntiga = Object.keys(s.classifFinal).find(id => s.classifFinal[id].includes(t.id));
         const L = Mundo.liga(s, ligaAntiga);
@@ -545,6 +667,75 @@ const Tecnico = {
             if (ofs.length) UI.toast('📨 Você recebeu propostas de outros clubes! Veja na aba Clube.');
         }
         s.car.conf = U.clamp(50 + (s.car.conf - 50) * 0.5, 0, 100);
+        await Tecnico.peneiraBase(s);
+    },
+
+    // -----------------------------------------------------------------
+    //  Peneira anual da base: escolha 1 de 3 joias
+    // -----------------------------------------------------------------
+    async peneiraBase(s) {
+        const t = Tecnico.time(s);
+        if (!t) return;
+        const base = Mundo.infra(t).base;
+        const liga = Mundo.liga(s, t.liga);
+        const cands = [0, 1, 2].map(() => {
+            const p = Mundo.gerarJogador(s, null, U.escolha(POSICOES.concat(['ATA', 'MEI', 'ZAG'])), Mundo.pais(t.pais).nomes, t.rep + (base - 3) * 3 + 4, liga.riqueza, true);
+            p.pot = U.clamp(p.ovr + U.int(10, 16 + base * 3), p.ovr, 96);
+            return p;
+        });
+        const html = `<p>Os olheiros da base (nível ${base} ${'⭐'.repeat(base)}) selecionaram 3 garotos. Você pode promover <b>um</b> ao profissional.</p>
+            <div class="grade-base">${cands.map(p => `<div class="cand-base">${UI.pos(p.pos)}<b>${U.esc(p.nome)}</b><small>${p.idade} anos · ${POS_NOME[p.pos]}</small>
+                <div>Habilidade ${UI.ovr(p.ovr)}</div><div class="estrelas-pot">Potencial ${U.estrelas((p.pot - 55) / 8)}</div></div>`).join('')}</div>`;
+        const i = await UI.modal({
+            titulo: '🌱 Peneira da base', html, largo: true, fechavel: false,
+            botoes: cands.map((p, k) => ({ txt: `Promover ${p.nome.split(' ')[0]}`, valor: k, classe: 'btn-opcao' })).concat([{ txt: 'Nenhum', valor: -1, classe: 'btn-fantasma' }]),
+        });
+        cands.forEach((p, k) => {
+            if (k === i) {
+                Mundo.transferir(s, p, t, 0);
+                p.contr = 4;
+                p.sal = U.redondo(Mundo.salarioPedido(p, liga.riqueza) * 0.5);
+                Conquistas.contar(s, 'joias');
+                Vida.log(s, `🌱 Você promoveu ${p.nome} (${p.pos}, ${p.idade} anos) da base para o profissional.`, 'bom');
+                Mundo.noticia(s, `🌱 ${t.nome} promove a joia ${p.nome} ao time principal.`, 'clube');
+            } else delete s.jog[p.id];
+        });
+    },
+
+    // -----------------------------------------------------------------
+    //  Departamento médico: decisão quando um titular se machuca feio
+    // -----------------------------------------------------------------
+    async departamentoMedico(s, t, m, rapido) {
+        const top = new Set(Mundo.elenco(s, t).sort((a, b) => b.ovr - a.ovr).slice(0, 13).map(p => p.id));
+        const lesionado = Object.keys(m.st).map(Number).map(id => s.jog[id]).find(p => p && p.tid === t.id && m.st[p.id].les && p.les >= 4 && top.has(p.id));
+        if (!lesionado) return;
+        if (rapido) return;
+        const custo = U.redondo(Math.max(50000, lesionado.sal * 0.15));
+        await Vida.decisaoLesao(s, lesionado, { custo, pagar: v => { t.saldo -= v; }, quem: 'o clube' });
+    },
+
+    // -----------------------------------------------------------------
+    //  Estrutura do clube
+    // -----------------------------------------------------------------
+    custoObra(s, t, tipo) {
+        const n = Mundo.infra(t)[tipo];
+        return U.redondo(Math.max(3e5, Tecnico.receita(s, t)) * 10 * Math.pow(n + 1, 1.5));
+    },
+
+    estrutura(s) {
+        const t = Tecnico.time(s);
+        const inf = Mundo.infra(t);
+        const obra = s.car.obra;
+        return `<div class="cartao"><div class="cartao-topo"><h3>🏗️ Estrutura do ${U.esc(t.nome)}</h3><span>Caixa: <b class="${t.saldo < 0 ? 'vermelho' : 'verde'}">${U.dinheiro(t.saldo)}</b></span></div>
+            ${obra ? `<p class="destaque-bom">🚧 Obra em andamento: ${INFRA[obra.tipo].nome} → nível ${inf[obra.tipo] + 1} (faltam ${obra.falta} semanas)</p>` : '<p class="cinza">Investir na estrutura é pensar no longo prazo. Só dá para fazer uma obra por vez (leva 6 semanas).</p>'}
+            <div class="grade-3">${Object.entries(INFRA).map(([k, d]) => {
+            const n = inf[k], custo = Tecnico.custoObra(s, t, k);
+            return `<div class="infra"><div class="infra-icone">${d.icone}</div><h3>${d.nome}</h3>
+                    <div class="infra-nivel">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</div>
+                    <p class="cinza pequeno">${d.desc}</p>
+                    ${n >= 5 ? '<b class="verde">Nível máximo!</b>' : `<button class="btn ${t.saldo >= custo && !obra ? 'btn-primario' : ''}" data-acao="tcObra" data-tipo="${k}" ${obra || t.saldo < custo ? 'disabled' : ''}>Melhorar para nível ${n + 1} · ${U.dinheiro(custo)}</button>`}
+                </div>`;
+        }).join('')}</div></div>`;
     },
 
     sair(s, t) {
@@ -564,6 +755,7 @@ const Tecnico = {
         if (!t) return [];
         if (p.tid === t.id) {
             return [
+                { id: 'capitao', txt: s.car.capitao === p.id ? '©️ Já é o capitão' : '©️ Fazer capitão', desativado: s.car.capitao === p.id },
                 { id: 'renovar', txt: '✍️ Renovar contrato', desativado: p.contr > 2 },
                 { id: 'venda', txt: s.car.venda.includes(p.id) ? '🏷️ Tirar da lista de venda' : '🏷️ Colocar à venda' },
                 { id: 'dispensar', txt: '🚪 Dispensar', classe: 'btn-perigo' },
@@ -575,6 +767,7 @@ const Tecnico = {
     async acaoJogador(s, p, id) {
         const t = Tecnico.time(s);
         if (id === 'proposta') return Tecnico.proposta(s, p);
+        if (id === 'capitao') { s.car.capitao = p.id; UI.toast(`©️ ${p.nome} é o novo capitão!`); }
         if (id === 'venda') {
             if (s.car.venda.includes(p.id)) s.car.venda = s.car.venda.filter(x => x !== p.id);
             else s.car.venda.push(p.id);
@@ -717,8 +910,24 @@ Object.assign(ACOES, {
         Tecnico.contratar(s, t.id);
         Jogo.aba = 'inicio';
         Jogo.atualizar();
+        await Tecnico.cenaNovoClube(s, t);
     },
     tcRecusarOferta: d => { Jogo.s.car.ofertas.splice(+d.i, 1); Jogo.atualizar(); },
+    tcTreino: d => { Jogo.s.car.treinoTime = d.t; Jogo.manterRolagem = true; Jogo.atualizar(); UI.toast(`${TREINOS_TIME[d.t].icone} Treino da semana: ${TREINOS_TIME[d.t].nome}`); },
+    tcCapitao: (d, el) => { Jogo.s.car.capitao = el.value ? +el.value : null; Jogo.manterRolagem = true; Jogo.atualizar(); if (el.value) UI.toast(`©️ ${Jogo.s.jog[+el.value].nome} é o novo capitão!`); },
+    async tcObra(d) {
+        const s = Jogo.s, t = Tecnico.time(s);
+        const custo = Tecnico.custoObra(s, t, d.tipo);
+        if (s.car.obra || t.saldo < custo) return;
+        if (!(await UI.confirmar(`Investir <b>${U.dinheiro(custo)}</b> para melhorar ${INFRA[d.tipo].icone} <b>${INFRA[d.tipo].nome}</b>? A obra leva 6 semanas.`, 'Começar obra'))) return;
+        t.saldo -= custo;
+        s.car.obra = { tipo: d.tipo, falta: 6 };
+        s.car.conf = U.clamp(s.car.conf + 2, 0, 100);
+        Vida.log(s, `🏗️ Você iniciou uma obra: ${INFRA[d.tipo].nome} (${U.dinheiro(custo)}).`, '');
+        Som.tocar('moeda');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
     async tcAposentar() {
         const s = Jogo.s;
         if (!(await UI.confirmar(`Encerrar a carreira de técnico aos ${s.pessoa.idade} anos? Sua vida será simulada até o fim.`, 'Aposentar', 'Ainda não'))) return;

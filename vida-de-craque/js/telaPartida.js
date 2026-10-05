@@ -9,7 +9,7 @@ const TelaPartida = {
     m: null, jogo: null, timer: null, fase: 'pre', resolve: null, rodando: false,
 
     jogar(s, jogo) {
-        return new Promise(resolve => {
+        return new Promise(async resolve => {
             this.resolve = resolve;
             this.jogo = jogo;
             this.criarPartida(s);
@@ -17,6 +17,9 @@ const TelaPartida = {
             this.resultado = null;
             this.extraFim = '';
             this.vistos = 0;
+            const m = this.m, th = s.times[m.h], ta = s.times[m.a];
+            if (m.final) await Cena.duelo('🏆 GRANDE FINAL', th, ta, Mundo.nomeCompeticao(s, jogo.comp));
+            else if (m.classico) await Cena.duelo('🔥 CLÁSSICO', th, ta, Mundo.nomeCompeticao(s, jogo.comp));
             this.render();
         });
     },
@@ -45,13 +48,14 @@ const TelaPartida = {
     render() {
         const m = this.m, s = m.s;
         const th = s.times[m.h], ta = s.times[m.a];
-        const comp = Mundo.nomeCompeticao(s, this.jogo.comp) + (this.jogo.tipo === 'copa' ? ` · ${FASES_COPA[this.jogo.r]}` : ` · Rodada ${this.jogo.r + 1}`);
+        const comp = Mundo.nomeCompeticao(s, this.jogo.comp) + (this.jogo.tipo === 'copa' ? ` · ${Mundo.fasesCopa(Mundo.copa(s, this.jogo.comp))[this.jogo.r]}` : ` · Rodada ${this.jogo.r + 1}`);
+        const selo = m.final ? '<div class="selo-jogo final">🏆 FINAL</div>' : m.classico ? '<div class="selo-jogo classico">🔥 CLÁSSICO</div>' : '';
         UI.render(`
         <div class="tela-partida">
             <div class="placar">
                 <div class="placar-time">${UI.escudo(th, true)}<span>${U.esc(th.nome)}</span><small>${th.form} · ${ESTILOS[m.estilo[0]].nome}</small></div>
                 <div class="placar-centro">
-                    <div class="placar-comp">${U.esc(comp)}</div>
+                    <div class="placar-comp">${U.esc(comp)}</div>${selo}
                     <div class="placar-gols" id="pl-gols">${m.gols[0]} <i>x</i> ${m.gols[1]}</div>
                     <div class="placar-min" id="pl-min">${this.textoMin()}</div>
                 </div>
@@ -128,10 +132,8 @@ const TelaPartida = {
     eventos() {
         const m = this.m;
         const evs = m.eventos.slice().reverse();
-        if (!evs.length) {
-            if (this.fase === 'pre') return this.preJogo();
-            return '<div class="ev ev-apito">⚽ A bola vai rolar!</div>';
-        }
+        if (this.fase === 'pre') return this.preJogo() + evs.map(e => `<div class="ev ev-${e.tipo}">${U.esc(e.txt)}</div>`).join('');
+        if (!evs.length) return '<div class="ev ev-apito">⚽ A bola vai rolar!</div>';
         const vistos = this.vistos || 0;
         this.vistos = m.eventos.length;
         const total = m.eventos.length;
@@ -221,13 +223,28 @@ const TelaPartida = {
         const r = Partida.passo(this.m);
         if (r.pausa) this.parar();
         this.atualizar();
-        if (r.eventos.some(e => e.tipo === 'gol')) {
+        const gol = r.eventos.find(e => e.tipo === 'gol');
+        if (gol) {
             const g = document.getElementById('pl-gols');
             if (g) { g.classList.remove('pisca'); void g.offsetWidth; g.classList.add('pisca'); }
+            TelaPartida.festaGol(gol);
         }
+        if (r.pausa === 'intervalo') Som.tocar('apito');
+        if (r.pausa === 'fim') Som.tocar('apitoFinal');
         if (r.pausa === 'intervalo') this.intervalo();
         else if (r.pausa === 'lance') this.lance();
         else if (r.pausa === 'fim') this.fim();
+    },
+
+    // overlay e som quando sai gol
+    festaGol(ev) {
+        const m = this.m, s = m.s;
+        const t = s.times[ev.lado ? m.a : m.h];
+        let nosso = false;
+        if (m.controle >= 0) nosso = ev.lado === m.controle;
+        else if (m.usuario != null) nosso = ev.lado === Partida.ladoDoUsuario(m);
+        Efeitos.gol(t, nosso || (m.controle < 0 && m.usuario == null));
+        Som.tocar(nosso ? 'gol' : 'golContra');
     },
 
     async intervalo() {
@@ -257,6 +274,8 @@ const TelaPartida = {
         const i = await UI.perguntar(`Seu lance! ${m.min}'`, lance.txt, lance.ops.map(o => o.txt), '⭐');
         const r = Partida.resolverLance(m, lance, i);
         this.atualizar();
+        const gol = r.eventos.find(e => e.tipo === 'gol');
+        if (gol) TelaPartida.festaGol(gol);
         await UI.aviso(r.bom ? 'Boa!' : 'Que pena...', r.txt, r.bom ? '🔥' : '😓');
         if (m.min >= 90) this.fim();
         else this.iniciar();
@@ -286,7 +305,7 @@ const TelaPartida = {
     },
 };
 
-ACOES.plComecar = () => { TelaPartida.fase = 'jogo'; TelaPartida.render(); TelaPartida.iniciar(); };
+ACOES.plComecar = () => { TelaPartida.fase = 'jogo'; TelaPartida.render(); Som.tocar('apito'); TelaPartida.iniciar(); };
 ACOES.plSimular = () => {
     TelaPartida.fase = 'jogo';
     Partida.simularAteOFim(TelaPartida.m);

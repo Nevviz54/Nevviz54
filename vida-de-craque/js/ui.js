@@ -97,10 +97,27 @@ const UI = {
         return r === true;
     },
 
+    // aviso especial de conquista desbloqueada
+    conquista(c) {
+        // espera a cutscene terminar para não aparecer por cima dela
+        if (typeof Cena !== 'undefined' && Cena.ativa) return setTimeout(() => UI.conquista(c), 700);
+        const raiz = document.getElementById('conquistas');
+        if (!raiz) return;
+        const d = document.createElement('div');
+        d.className = 'toast-conquista';
+        d._conquista = c;
+        d.innerHTML = `<span class="tc-icone">${c.icone}</span><div><small>🏅 Conquista desbloqueada!</small><b>${U.esc(c.nome)}</b><span>${U.esc(c.desc)}</span></div>`;
+        raiz.appendChild(d);
+        Som.tocar('conquista');
+        setTimeout(() => d.classList.add('sumindo'), 4200);
+        setTimeout(() => d.remove(), 4900);
+    },
+
     toast(txt, tipo = '') {
         const raiz = document.getElementById('toasts');
         const d = document.createElement('div');
         d.className = 'toast ' + tipo;
+        if (tipo === 'erro') Som.tocar('erro');
         d.innerHTML = txt;
         raiz.appendChild(d);
         setTimeout(() => d.classList.add('sumindo'), 2600);

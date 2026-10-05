@@ -30,7 +30,11 @@ const Partida = {
             st: {}, bonus: {}, copa: jogo.tipo === 'copa', terminou: false,
             usuario: opts.usuario ?? null, controle: opts.controle ?? -1, lancesMin: [],
             subsIA: [U.int(55, 64), U.int(66, 74), U.int(76, 84)],
+            classico: Mundo.classico(s, jogo.h, jogo.a), final: Mundo.ehFinal(s, jogo),
+            fatorCasa: jogo.tipo === 'copa' ? 1 : 1.06 + Mundo.infra(th).estadio * 0.015,
         };
+        if (m.classico) Partida.evento(m, { tipo: 'apito', txt: `🔥 É CLÁSSICO! ${th.nome} x ${ta.nome}, estádio pegando fogo!` });
+        if (m.final) Partida.evento(m, { tipo: 'apito', txt: `🏆 É a GRANDE FINAL! Quem vencer leva a taça!` });
         [th, ta].forEach((t, lado) => {
             const ruido = (m.usuario != null && t.elenco.includes(m.usuario)) ? 1.6 : 0;
             const esc = Escalacao.doTime(s, t, ruido);
@@ -54,6 +58,27 @@ const Partida = {
     },
 
     novoStat: (entrou, lado) => ({ lado, g: 0, a: 0, am: 0, vm: false, les: false, entrou, saiu: null }),
+
+    // habilidade especial do jogador do usuário
+    hab(m, id) {
+        const s = m.s;
+        return m.usuario != null && s.modo === 'jogador' && s.car && Array.isArray(s.car.habs) && s.car.habs.includes(id);
+    },
+
+    // bônus do treino da semana e do capitão (time do técnico usuário)
+    bonusTime(m, lado, t) {
+        const s = m.s;
+        const b = { ata: 0, def: 0 };
+        if (!Mundo.timeDoUsuario(s, t.id)) return b;
+        const tr = TREINOS_TIME[s.car.treinoTime] || TREINOS_TIME.equilibrado;
+        b.ata += tr.ata; b.def += tr.def;
+        if (s.car.capitao != null && m.esc[lado].includes(s.car.capitao)) {
+            const cap = s.jog[s.car.capitao];
+            const lid = 0.4 + (cap.idade >= 28 ? 0.3 : 0) + (cap.ovr >= t.rep + 3 ? 0.3 : 0);
+            b.ata += lid; b.def += lid;
+        }
+        return b;
+    },
 
     ladoDoUsuario(m) {
         if (m.usuario == null) return -1;
@@ -91,10 +116,11 @@ const Partida = {
             const fator = 1 - 0.07 * ausentes;
             const moral = (t.moral - 50) / 25;
             const est = ESTILOS[m.estilo[lado]] || ESTILOS.equilibrado;
+            const bt = Partida.bonusTime(m, lado, t);
             const D = md(gr.D), M = md(gr.M), A = md(gr.A);
             return {
-                ata: (0.55 * A + 0.35 * M + 0.10 * D) * fator + moral + est.ata,
-                def: (0.60 * D + 0.30 * M + 0.10 * A) * fator + moral + est.def,
+                ata: (0.55 * A + 0.35 * M + 0.10 * D) * fator + moral + est.ata + bt.ata,
+                def: (0.60 * D + 0.30 * M + 0.10 * A) * fator + moral + est.def + bt.def,
                 gol: md(gr.G),
                 meio: M * fator,
             };
@@ -133,7 +159,7 @@ const Partida = {
             const at = m.R[lado], de = m.R[1 - lado];
             m.posse[lado] += Math.max(1, at.meio - 40);
             let pc = 0.105 * Math.exp(0.03 * (at.ata - de.def));
-            if (lado === 0 && !m.copa) pc *= 1.1;
+            if (lado === 0) pc *= m.fatorCasa;
             if (U.chance(pc)) {
                 m.fin[lado]++;
                 const pg = U.clamp(0.13 * Math.exp(0.025 * (at.ata - de.gol)), 0.04, 0.4);
@@ -147,7 +173,7 @@ const Partida = {
                 }
             }
             // Cartões
-            if (U.chance(0.0115)) {
+            if (U.chance(m.classico ? 0.015 : 0.0115)) {
                 const p = U.pesado(Partida.emCampo(m, lado), p => PESO_CARTAO[Partida.slotDe(m, lado, p.id)]);
                 if (p) novos.push(...Partida.cartao(m, lado, p, false));
             }
@@ -158,7 +184,7 @@ const Partida = {
             // Lesões
             if (U.chance(0.0009)) {
                 const p = U.escolha(Partida.emCampo(m, lado));
-                if (p) {
+                if (p && !(p.id === m.usuario && Partida.hab(m, 'blindado') && U.chance(0.5))) {
                     m.st[p.id].les = true;
                     add({ tipo: 'lesao', lado, pid: p.id, txt: `🚑 ${p.nome} sente uma lesão e pede para sair.` });
                     const entra = Partida.melhorReserva(m, lado, Partida.slotDe(m, lado, p.id));
@@ -214,11 +240,20 @@ const Partida = {
         m.st[autor.id].g++;
         let ass = assistente || (comAssist ? Partida.sortearAssist(m, lado, autor.id) : null);
         if (ass) m.st[ass.id].a++;
-        const ev = Partida.evento(m, {
+        let comemora = '';
+        const evs = [];
+        if (autor.id === m.usuario && m.s.car && m.s.car.comemoracao) {
+            comemora = ` E comemora: ${m.s.car.comemoracao}!`;
+            m.st[autor.id].comemorou = (m.st[autor.id].comemorou || 0) + 1;
+        }
+        evs.push(Partida.evento(m, {
             tipo: 'gol', lado, pid: autor.id, pid2: ass ? ass.id : null,
-            txt: `⚽ GOOOL do ${Partida.nomeTime(m, lado)}! ${autor.nome} ${U.escolha(JEITOS_GOL)}${ass ? ` (assist.: ${ass.nome})` : ''} — ${Partida.placarTxt(m)}`,
-        });
-        return [ev];
+            txt: `⚽ GOOOL do ${Partida.nomeTime(m, lado)}! ${autor.nome} ${U.escolha(JEITOS_GOL)}${ass ? ` (assist.: ${ass.nome})` : ''} — ${Partida.placarTxt(m)}.${comemora}`,
+        }));
+        if (comemora && /camisa/i.test(m.s.car.comemoracao) && m.esc[lado].includes(autor.id)) {
+            evs.push(...Partida.cartao(m, lado, autor, false));
+        }
+        return evs;
     },
 
     cartao(m, lado, p, direto) {
@@ -327,25 +362,42 @@ const Partida = {
         return U.clamp(0.55 + (p.ovr - 50) / 50 * 0.75, 0.4, 1.3);
     },
 
+    // multiplicador das habilidades especiais num lance
+    multHab(m, lance, o, p) {
+        let k = 1;
+        const grupo = POS_GRUPO[p.pos];
+        const bola = /Pênalti para o seu time|Falta perigosa/.test(lance.txt);
+        if (o.gol && !bola && Partida.hab(m, 'finalizador')) k *= 1.15;
+        if (/abece/.test(o.txt) && Partida.hab(m, 'cabeceio')) k *= 1.25;
+        if (o.ass && Partida.hab(m, 'garcom')) k *= 1.15;
+        if (bola && Partida.hab(m, 'batedor')) k *= 1.2;
+        if (o.estilo && Partida.hab(m, 'driblador')) k *= 1.2;
+        if (lance.defesa && grupo === 'G' && Partida.hab(m, 'paredao')) k *= 1.15;
+        if (lance.defesa && grupo === 'D' && Partida.hab(m, 'xerife')) k *= 1.12;
+        if (m.min >= 75 && Partida.hab(m, 'decisivo')) k *= 1.2;
+        return k;
+    },
+
     // op = índice da opção escolhida (-1 = automático)
     resolverLance(m, lance, op) {
         const lado = Partida.ladoDoUsuario(m);
         const p = m.s.jog[m.usuario];
         if (op < 0) op = U.int(0, lance.ops.length - 1);
         const o = lance.ops[op];
-        const f = Partida.fatorHabilidade(p);
+        const f = Partida.fatorHabilidade(p) * Partida.multHab(m, lance, o, p);
         m.bonus[p.id] = m.bonus[p.id] || 0;
         const res = { txt: '', bom: false, eventos: [] };
 
         if (lance.defesa) {
             const ok = U.chance(U.clamp(o.def * f, 0.05, 0.95));
-            if (o.cartao && U.chance(o.cartao)) {
+            if (o.cartao && U.chance(o.cartao * (Partida.hab(m, 'xerife') ? 0.5 : 1))) {
                 res.eventos.push(...Partida.cartao(m, lado, p, U.chance(o.vermelho || 0)));
             }
             if (ok) {
                 res.bom = true;
                 m.bonus[p.id] += lance.penalti ? 1.2 : 0.5;
                 res.txt = lance.penalti ? '🧤 DEFENDEU O PÊNALTI! A torcida grita seu nome!' : U.escolha(['🛡️ Você trava o lance com perfeição!', '🛡️ Desarme limpo, a torcida aplaude!', '🧤 Que defesa! Você salvou o time!']);
+                if (lance.penalti && m.s.cont) m.s.cont.penaltisDefendidos = (m.s.cont.penaltisDefendidos || 0) + 1;
             } else {
                 m.bonus[p.id] -= 0.4;
                 const golAdv = lance.penalti ? U.chance(0.85) : U.chance(0.28);
@@ -426,7 +478,8 @@ const Partida = {
             if (n > melhorNota) { melhorNota = n; r.melhor = p.id; }
 
             p.j++; p.g += st.g; p.a += st.a; p.ns += n;
-            p.cond = Math.max(30, p.cond - Math.round(minutos / 90 * (10 + Math.max(0, p.idade - 28) * 1.2)));
+            const desgaste = (p.id === m.usuario && Partida.hab(m, 'motorzinho')) ? 0.6 : 1;
+            p.cond = Math.max(30, p.cond - Math.round(minutos / 90 * (10 + Math.max(0, p.idade - 28) * 1.2) * desgaste));
             p.amar += st.am >= 2 ? 0 : st.am;
             if (st.vm) p.susp = U.chance(0.7) ? 1 : 2;
             if (p.amar >= 3) { p.susp = Math.max(p.susp, 1); p.amar = 0; }

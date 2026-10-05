@@ -45,6 +45,23 @@ const DESTINOS = [
     { nome: 'Maldivas', custo: 40000, feliz: 22 },
 ];
 
+// Investimentos e negócios próprios
+const APLICACOES = {
+    poup: { nome: 'Poupança', icone: '🏦', desc: 'Rende pouco, mas é seguro (~4% ao ano).' },
+    acoes: { nome: 'Bolsa de valores', icone: '📈', desc: 'Sobe e desce. No longo prazo costuma render ~8% ao ano.' },
+    cripto: { nome: 'Criptomoedas', icone: '🪙', desc: 'Montanha-russa: pode explodir... ou derreter.' },
+};
+const NEGOCIOS = [
+    { nome: 'Lanchonete', icone: '🍔', custo: 80000 },
+    { nome: 'Lava-jato', icone: '🚿', custo: 120000 },
+    { nome: 'Loja de roupas', icone: '👕', custo: 250000 },
+    { nome: 'Escolinha de futebol', icone: '⚽', custo: 300000, fama: true },
+    { nome: 'Academia', icone: '🏋️', custo: 650000 },
+    { nome: 'Restaurante chique', icone: '🍷', custo: 1500000 },
+    { nome: 'Prédio para alugar', icone: '🏢', custo: 5000000 },
+    { nome: 'Rede de hotéis', icone: '🏨', custo: 20000000 },
+];
+
 const MARCAS = ['Nike', 'Adidas', 'Puma', 'Umbro', 'Mizuno', 'Red Bull', 'Gatorade', 'Pepsi', 'EA Sports', 'Samsung', 'Rexona', 'Head & Shoulders', 'Gillette', 'Kappa', 'Topper', 'Penalty', 'Betano', 'Guaraná Antarctica'];
 
 const Vida = {
@@ -58,6 +75,7 @@ const Vida = {
             felicidade: 70, saude: 90, fama: idade < 20 ? 2 : 10, aparencia: U.int(35, 90),
             rel: [], bens: [], log: [], trofeus: [], patrocinios: [],
             acoes: 0, morto: false, seq: 1,
+            seg: idade < 20 ? 120 : 2500, inv: { poup: 0, acoes: 0, cripto: 0 }, negocios: [],
         };
         const sobrenome = nome.split(' ').slice(-1)[0];
         p.rel.push({ id: p.seq++, tipo: 'pai', nome: Nomes.pessoa('m') + ' ' + sobrenome, sexo: 'm', idade: idade + U.int(22, 38), relacao: U.int(55, 90), vivo: true });
@@ -105,6 +123,7 @@ const Vida = {
         const p = s.pessoa;
         const partes = [];
         const icones = { felicidade: '😊', saude: '❤️', fama: '⭐', aparencia: '💅' };
+        if (d.fama > 0 && s.modo === 'jogador' && s.car && (s.car.habs || []).includes('estrela')) d.fama *= 1.3;
         for (const k of ['felicidade', 'saude', 'fama', 'aparencia']) {
             if (!d[k]) continue;
             const antes = p[k];
@@ -120,6 +139,19 @@ const Vida = {
     },
 
     vivos: (s, tipo) => s.pessoa.rel.filter(r => r.vivo && (!tipo || r.tipo === tipo)),
+
+    patrimonio(s) {
+        const p = s.pessoa, inv = p.inv || {};
+        return p.dinheiro + U.soma(p.bens, b => b.valor) + (inv.poup || 0) + (inv.acoes || 0) + (inv.cripto || 0) + U.soma(p.negocios || [], n => n.valor);
+    },
+
+    numero(n) {
+        n = Math.round(n);
+        if (n >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' bi';
+        if (n >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' mi';
+        if (n >= 1e3) return Math.round(n / 1e3) + ' mil';
+        return String(n);
+    },
     parceiro: s => s.pessoa.rel.find(r => r.vivo && (r.tipo === 'parceiro' || r.tipo === 'conjuge')),
 
     salarioAnual(s) {
@@ -160,10 +192,115 @@ const Vida = {
         for (const r of p.rel) if (r.vivo && r.tipo !== 'pet') r.relacao = U.clamp(r.relacao - 0.25, 0, 100);
         // fama cai devagar sem novidades
         p.fama = U.clamp(p.fama - 0.05, 0, 100);
+        Vida.semanaInvestimentos(s);
+        // seguidores acompanham a fama
+        const alvoSeg = Math.pow(10, 2 + p.fama * 0.065);
+        p.seg = Math.max(0, (p.seg || 0) + (alvoSeg - (p.seg || 0)) * 0.08);
         if (p.dinheiro < -50000 && U.chance(0.08)) {
             Vida.log(s, '💳 Suas dívidas estão crescendo. O banco está ligando todo dia.', 'ruim');
             Vida.mudar(s, { felicidade: -4 });
         }
+    },
+
+    semanaInvestimentos(s) {
+        const p = s.pessoa;
+        p.inv = p.inv || { poup: 0, acoes: 0, cripto: 0 };
+        p.negocios = p.negocios || [];
+        const inv = p.inv;
+        inv.poup *= 1.0008;
+        inv.acoes *= 1 + U.normal(0.0015, 0.022);
+        if (inv.cripto > 0) {
+            const r = Math.random();
+            if (r < 0.005) { inv.cripto *= 0.4; Vida.log(s, '🪙 As criptomoedas DESPENCARAM 60% em uma semana!', 'ruim'); Vida.mudar(s, { felicidade: -6 }); }
+            else if (r < 0.01) { inv.cripto *= 2.5; Vida.log(s, '🪙 Suas criptomoedas foram PARA A LUA! +150%!', 'bom'); Vida.mudar(s, { felicidade: 8 }); }
+            else inv.cripto *= 1 + U.normal(0.0025, 0.08);
+        }
+        for (const k of Object.keys(inv)) inv[k] = Math.max(0, inv[k]);
+        // negócios: renda semanal com risco de falência
+        for (const n of p.negocios.slice()) {
+            if (U.chance(0.0015)) {
+                p.negocios = p.negocios.filter(x => x !== n);
+                Vida.log(s, `📉 Seu negócio "${n.nome}" faliu. Você perdeu o investimento.`, 'ruim');
+                Vida.mudar(s, { felicidade: -8 });
+                continue;
+            }
+            const renda = Math.round(n.valor * 0.0028 * U.rand(0.4, 1.6));
+            p.dinheiro += renda;
+            n.lucro = (n.lucro || 0) + renda;
+            if (n.fama) p.fama = U.clamp(p.fama + 0.03, 0, 100);
+        }
+    },
+
+    async aplicar(s, k, resgatar) {
+        const p = s.pessoa, inv = p.inv;
+        const base = resgatar ? inv[k] : p.dinheiro;
+        if (base < 100) return UI.toast(resgatar ? 'Não há nada aplicado aqui.' : 'Você não tem dinheiro para aplicar.', 'erro');
+        const ap = APLICACOES[k];
+        const pc = await UI.modal({
+            titulo: `${ap.icone} ${resgatar ? 'Resgatar de' : 'Aplicar em'} ${ap.nome}`,
+            html: `<p>${resgatar ? `Aplicado: <b>${U.dinheiro(inv[k])}</b>` : `Seu dinheiro: <b>${U.dinheiro(p.dinheiro)}</b>`}</p>`,
+            botoes: [10, 25, 50, 100].map(v => ({ txt: `${v}% (${U.dinheiro(base * v / 100)})`, valor: v, classe: 'btn-opcao' })).concat([{ txt: 'Cancelar', valor: -1, classe: 'btn-fantasma' }]),
+        });
+        if (pc == null || pc < 0) return;
+        const v = Math.round(base * pc / 100);
+        if (resgatar) { inv[k] -= v; p.dinheiro += v; } else { inv[k] += v; p.dinheiro -= v; }
+        Vida.log(s, `${ap.icone} Você ${resgatar ? 'resgatou' : 'aplicou'} ${U.dinheiro(v)} ${resgatar ? 'de' : 'em'} ${ap.nome}.`, '');
+        Som.tocar('moeda');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
+
+    async abrirNegocio(s, i) {
+        const p = s.pessoa, n = NEGOCIOS[i];
+        if (p.dinheiro < n.custo) return UI.toast('Dinheiro insuficiente!', 'erro');
+        if (!(await UI.confirmar(`Abrir <b>${n.icone} ${n.nome}</b> por <b>${U.dinheiro(n.custo)}</b>?<br><small>Rende por volta de ${U.dinheiro(n.custo * 0.0028)} por semana, mas negócios podem falir.</small>`, 'Abrir negócio'))) return;
+        p.dinheiro -= n.custo;
+        p.negocios.push({ id: p.seq++, nome: n.nome, icone: n.icone, valor: n.custo, fama: !!n.fama, ano: s.ano, lucro: 0 });
+        const txt = `🏪 Você abriu um negócio: ${n.icone} ${n.nome}!${Vida.mudar(s, { felicidade: 4, fama: 1 })}`;
+        Vida.log(s, txt, 'compra');
+        UI.toast(txt);
+        Som.tocar('moeda');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
+
+    async venderNegocio(s, id) {
+        const p = s.pessoa, n = p.negocios.find(x => x.id === id);
+        if (!n) return;
+        const v = Math.round(n.valor * U.rand(0.7, 0.95));
+        if (!(await UI.confirmar(`Vender <b>${n.nome}</b> por <b>${U.dinheiro(v)}</b>?`, 'Vender'))) return;
+        p.negocios = p.negocios.filter(x => x !== n);
+        p.dinheiro += v;
+        Vida.log(s, `💼 Você vendeu ${n.nome} por ${U.dinheiro(v)}.`, '');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
+
+    // Lesão séria: tratamento normal, cirurgia ou infiltração (risco de recaída)
+    async decisaoLesao(s, p, { custo, pagar, quem, proprio }) {
+        const quemTxt = proprio ? 'Você' : p.nome;
+        const i = await UI.perguntar('Departamento médico', `${proprio ? 'Você sofreu' : `<b>${U.esc(p.nome)}</b> sofreu`} uma lesão séria: <b>${p.les} semanas</b> fora. O que fazer?`, [
+            '🩺 Tratamento normal (sem custo)',
+            `🔪 Cirurgia com especialista (${U.dinheiro(custo)}, pago por ${quem})`,
+            '💉 Infiltração para voltar logo (risco de recaída)',
+        ], '🚑');
+        let txt;
+        if (i === 1) {
+            pagar(custo);
+            let n = Math.max(1, Math.ceil(p.les * 0.55));
+            if (U.chance(0.1)) { n += 3; txt = `🔪 A cirurgia teve uma complicação. ${quemTxt} volta em ${n} semanas.`; }
+            else txt = `🔪 Cirurgia um sucesso! ${quemTxt} volta em ${n} semanas em vez de ${p.les}.`;
+            p.les = n;
+        } else if (i === 2) {
+            p.les = Math.max(1, Math.floor(p.les * 0.35));
+            p.recaida = 4;
+            txt = `💉 Infiltração feita. ${quemTxt} volta em ${p.les} semana(s), mas pode ter recaída.`;
+            if (proprio) Vida.mudar(s, { saude: -5 });
+        } else {
+            txt = `🩺 Tratamento normal: ${p.les} semanas de recuperação.`;
+        }
+        Vida.log(s, txt, '');
+        UI.toast(txt);
     },
 
     anoNovo(s) {
@@ -278,6 +415,7 @@ const Vida = {
                 });
                 if (i == null || i < 0) { p.acoes--; return; }
                 const d = DESTINOS[i];
+                Conquistas.contar(s, 'viagens');
                 txt = `✈️ Você viajou para ${d.nome} e voltou renovado.${Vida.mudar(s, { dinheiro: -d.custo, felicidade: d.feliz, saude: 2 })}`;
                 const par = Vida.parceiro(s);
                 if (par) { par.relacao = U.clamp(par.relacao + 10, 0, 100); txt += ` ${par.nome} adorou a viagem.`; }
@@ -285,9 +423,10 @@ const Vida = {
             }
             case 'redes': {
                 const r = Math.random();
-                if (r < 0.08) txt = `📱 Seu post foi mal interpretado e você foi cancelado por um dia.${Vida.mudar(s, { fama: -4, felicidade: -3 })}`;
-                else if (r < 0.2) txt = `📱 Seu post VIRALIZOU! Milhões de curtidas.${Vida.mudar(s, { fama: U.int(3, 6), felicidade: 3 })}`;
-                else txt = `📱 Você postou uma foto treinando. ${U.int(2, 900)} mil curtidas.${Vida.mudar(s, { fama: U.chance(0.5) ? 1 : 0.5, felicidade: 1 })}`;
+                p.seg = p.seg || 0;
+                if (r < 0.08) { p.seg *= 0.95; txt = `📱 Seu post foi mal interpretado e você foi cancelado por um dia. Perdeu seguidores.${Vida.mudar(s, { fama: -4, felicidade: -3 })}`; }
+                else if (r < 0.2) { const ganho = Math.round(p.seg * U.rand(0.1, 0.3) + 500); p.seg += ganho; txt = `📱 Seu post VIRALIZOU! +${Vida.numero(ganho)} seguidores.${Vida.mudar(s, { fama: U.int(3, 6), felicidade: 3 })}`; }
+                else { const ganho = Math.round(p.seg * U.rand(0.005, 0.03) + 20); p.seg += ganho; txt = `📱 Você postou uma foto treinando. ${Vida.numero(Math.max(30, p.seg * U.rand(0.02, 0.12)))} curtidas e +${Vida.numero(ganho)} seguidores.${Vida.mudar(s, { fama: U.chance(0.5) ? 1 : 0.5, felicidade: 1 })}`; }
                 break;
             }
             case 'entrevista': {
@@ -311,6 +450,7 @@ const Vida = {
                 });
                 if (i == null || i < 0) { p.acoes--; return; }
                 const v = Math.round(p.dinheiro * i / 100);
+                Conquistas.contar(s, 'doado', v);
                 txt = `🤝 Você doou ${U.dinheiro(v)} para um hospital infantil.${Vida.mudar(s, { dinheiro: -v, felicidade: 2 + i / 3, fama: Math.min(8, 1 + i / 4) })}`;
                 break;
             }
@@ -456,6 +596,7 @@ const Vida = {
                     const custo = Math.min(Math.max(5000, p.dinheiro * 0.05), 2e6);
                     r.tipo = 'conjuge';
                     mudaRel(15);
+                    Conquistas.contar(s, 'casamentos');
                     txt = `💍 ${r.nome} disse SIM! Vocês fizeram uma festa de casamento linda.${Vida.mudar(s, { dinheiro: -Math.round(custo), felicidade: 15, fama: 2 })}`;
                 } else {
                     mudaRel(-15);
@@ -659,7 +800,7 @@ const EVENTOS = [
     },
     {
         titulo: 'Proposta de patrocínio', icone: '🤑', quando: s => s.pessoa.fama >= 20 && s.pessoa.patrocinios.length < 3, peso: 1.4,
-        prep: (s, c) => { c.marca = U.escolha(MARCAS.filter(m => !s.pessoa.patrocinios.some(p => p.marca === m))); c.semana = U.redondo(150 + Math.pow(s.pessoa.fama, 2.1) * 4); c.v = U.dinheiro(c.semana); },
+        prep: (s, c) => { c.marca = U.escolha(MARCAS.filter(m => !s.pessoa.patrocinios.some(p => p.marca === m))); c.semana = U.redondo((150 + Math.pow(s.pessoa.fama, 2.1) * 4 + Math.sqrt(s.pessoa.seg || 0) * 1.5) * ((s.car && (s.car.habs || []).includes('estrela')) ? 1.3 : 1)); c.v = U.dinheiro(c.semana); },
         texto: 'A {marca} quer você como garoto-propaganda! Oferecem {v} por semana durante 2 temporadas.',
         ops: [
             { txt: 'Aceitar', fn: (s, c) => { s.pessoa.patrocinios.push({ marca: c.marca, semana: c.semana, ate: s.ano + 2 }); return `Contrato assinado com a ${c.marca}!${Vida.mudar(s, { fama: 2, felicidade: 4 })}`; } },

@@ -31,6 +31,7 @@ const Jogo = {
         window.addEventListener('resize', () => this.aplicarOpcoes());
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
+                if (Cena.ativa) return;
                 if (document.querySelector('#modais .modal-fundo')) return;
                 if (!this.s) return;
                 if (document.getElementById('overlay').innerHTML) this.fecharPausa();
@@ -48,6 +49,7 @@ const Jogo = {
         const el = document.getElementById('jogo');
         document.documentElement.style.setProperty('--escala', o.escala / 100);
         document.body.dataset.tema = o.tema;
+        document.body.classList.toggle('sem-anim', o.animacoes === false);
         if (o.resolucao === 'auto') {
             Object.assign(el.style, { width: '100vw', height: '100vh', transform: 'none', left: '0px', top: '0px' });
             document.body.classList.remove('res-fixa');
@@ -84,6 +86,12 @@ const Jogo = {
             <label class="campo">🎨 Tema
                 <select class="sel" data-mudar="opTema"><option value="escuro" ${o.tema === 'escuro' ? 'selected' : ''}>Escuro</option><option value="claro" ${o.tema === 'claro' ? 'selected' : ''}>Claro</option></select>
             </label>
+            <label class="campo check"><input type="checkbox" data-mudar="opSom" ${o.som !== false ? 'checked' : ''}> 🔊 Efeitos sonoros</label>
+            <label class="campo">🔉 Volume: <b id="op-vol-v">${o.volume ?? 60}%</b>
+                <input type="range" min="0" max="100" step="5" value="${o.volume ?? 60}" data-mudar="opVolume" oninput="document.getElementById('op-vol-v').textContent=this.value+'%'">
+            </label>
+            <label class="campo check"><input type="checkbox" data-mudar="opCenas" ${o.cenas !== false ? 'checked' : ''}> 🎬 Cutscenes (novo clube, títulos, fim de temporada...)</label>
+            <label class="campo check"><input type="checkbox" data-mudar="opAnim" ${o.animacoes !== false ? 'checked' : ''}> ✨ Animações (cliques, gols, transições)</label>
             <label class="campo check"><input type="checkbox" data-mudar="opAutosave" ${o.autosave ? 'checked' : ''}> 💾 Salvamento automático toda semana</label>
         </div>`;
     },
@@ -158,8 +166,43 @@ const Jogo = {
         return html;
     },
 
+    // Completa campos novos em saves de versões antigas
+    migrar(s) {
+        s.cont = s.cont || {};
+        s.conq = s.conq || {};
+        const p = s.pessoa;
+        if (p) {
+            if (p.seg == null) p.seg = Math.pow(10, 2 + (p.fama || 0) * 0.065);
+            p.inv = p.inv || { poup: 0, acoes: 0, cripto: 0 };
+            p.negocios = p.negocios || [];
+        }
+        for (const c of s.copas || []) {
+            if (!c.semanas) { c.semanas = SEMANAS_COPA; c.fases = FASES_COPA; }
+        }
+        const car = s.car;
+        if (car && s.modo === 'tecnico') {
+            if (!car.treinoTime) car.treinoTime = 'equilibrado';
+            if (car.capitao === undefined) car.capitao = null;
+            if (car.obra === undefined) car.obra = null;
+            car.clubesTreinados = car.clubesTreinados || (car.tid >= 0 ? [s.times[car.tid].nome] : []);
+            car.titTemp = car.titTemp || {};
+            if (car.invicto == null) car.invicto = 0;
+        }
+        if (car && s.modo === 'jogador') {
+            car.habs = car.habs || [];
+            if (car.pontos == null) car.pontos = 2;
+            const j = s.jog[car.pid];
+            if (!car.camisa) car.camisa = (j && CAMISA_PADRAO[j.pos]) || 10;
+            if (!car.comemoracao) car.comemoracao = 'Correr para a torcida';
+            if (car.ovrInicioTemp == null && j) car.ovrInicioTemp = j.ovr;
+        }
+        s.versao = 2;
+        return s;
+    },
+
     async carregarEstado(s) {
         if (!s || !s.times || !s.pessoa) return UI.aviso('Erro', 'Esse arquivo de save não é válido.', '⚠️');
+        Jogo.migrar(s);
         UI.fecharModais();
         this.fecharPausa();
         if (TelaPartida.m) { TelaPartida.parar(); TelaPartida.m = null; TelaPartida.fase = 'fora'; TelaPartida.resolve = null; }
@@ -259,19 +302,23 @@ const Jogo = {
         return `<div class="ajuda">
             <p><b>Vida de Craque</b> mistura um <b>Football Manager</b> com o <b>BitLife</b>: você cuida da carreira dentro de campo e da vida fora dele.</p>
             <h4>⏩ O tempo</h4>
-            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Em ${SEMANAS_COPA.length} semanas acontecem as fases das copas (Liga dos Campeões e Libertadores).</p>
+            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...) e as copas continentais (Liga dos Campeões e Libertadores). Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
             <h4>📋 Carreira de técnico</h4>
             <ul><li>Escale o time na aba <b>Tática</b> (clique numa posição do campinho e depois no jogador).</li>
             <li>Compre e venda na aba <b>Mercado</b> durante as janelas (semanas 1–6 e 22–26). Jogadores sem clube podem ser contratados a qualquer momento.</li>
             <li>Fique de olho na <b>confiança da diretoria</b>: se ela zerar, você é demitido.</li>
-            <li>No jogo ao vivo você pode substituir, mudar a postura e falar com o time no intervalo.</li></ul>
+            <li>No jogo ao vivo você pode substituir, mudar a postura e falar com o time no intervalo.</li>
+            <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba Tática. Invista em <b>estádio, CT e base</b> na aba Estrutura.</li>
+            <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li></ul>
             <h4>⚽ Carreira de jogador</h4>
             <ul><li>Escolha o <b>treino</b> da semana: mais intenso = evolui mais rápido, mas cansa e pode lesionar.</li>
             <li>Nas partidas, aparecem <b>lances</b> em que você decide: chutar, driblar, tocar, dar o carrinho...</li>
             <li>Propostas de outros clubes chegam nas janelas. Você também pode pedir para ser negociado.</li>
+            <li>Ganhe <b>pontos de habilidade</b> (subindo de nível, sendo o melhor em campo, fazendo hat-trick) e desbloqueie <b>habilidades especiais</b> na aba Treino.</li>
+            <li>Escolha o número da camisa e a sua <b>comemoração de gol</b> na aba Carreira.</li>
             <li>Quando se aposentar, pode virar técnico com a mesma pessoa!</li></ul>
             <h4>❤️ Vida</h4>
-            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões. Eventos aleatórios vão aparecer — suas escolhas têm consequências.</p>
+            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
             <h4>⌨️ Atalhos</h4>
             <p><b>ESC</b>: abre/fecha o menu de pausa (salvar, carregar, opções, voltar ao menu).</p>
         </div>`;
@@ -284,6 +331,11 @@ const Jogo = {
         if (!this.s || TelaPartida.ativo()) return;
         if (this.s.pessoa.morto) return;
         const s = this.s, modo = this.modo();
+        Conquistas.verificar(s);
+        const trocouAba = this.abaAnterior !== this.aba;
+        this.abaAnterior = this.aba;
+        const dinAntes = this.dinheiroAntes;
+        this.dinheiroAntes = Math.round(s.pessoa.dinheiro);
         const abas = modo.abas(s);
         if (!abas.find(a => a.id === this.aba)) this.aba = abas[0].id;
         const aba = abas.find(a => a.id === this.aba);
@@ -302,7 +354,7 @@ const Jogo = {
                 </div>
             </header>
             <nav class="abas">${abas.map(a => `<button class="aba ${a.id === this.aba ? 'ativa' : ''}" data-acao="aba" data-aba="${a.id}">${a.icone}<span>${a.nome}</span></button>`).join('')}</nav>
-            <main class="conteudo">${aba.render(s)}</main>
+            <main class="conteudo ${trocouAba ? 'entrar' : ''}">${aba.render(s)}</main>
             <footer class="rodape">
                 <div class="rodape-info">${modo.rodape(s)}</div>
                 <div class="rodape-botoes">
@@ -314,6 +366,14 @@ const Jogo = {
         const c = document.querySelector('.conteudo');
         if (c && this.manterRolagem) c.scrollTop = rolagem;
         this.manterRolagem = false;
+        if (dinAntes != null && dinAntes !== this.dinheiroAntes) {
+            const chip = document.querySelector('.chip.dinheiro');
+            const dif = this.dinheiroAntes - dinAntes;
+            if (chip) {
+                chip.classList.add(dif > 0 ? 'pulsa-mais' : 'pulsa-menos');
+                Efeitos.flutuar(chip, `${dif > 0 ? '+' : ''}${U.dinheiro(dif)}`, dif > 0 ? 'mais' : 'menos');
+            }
+        }
     },
 
     // -----------------------------------------------------------------
@@ -368,11 +428,14 @@ const Jogo = {
 
     async fimTemporada() {
         const s = this.s, modo = this.modo();
+        const dados = modo.resumoTemporada ? modo.resumoTemporada(s) : { tid: -1, ehMeu: () => false };
         if (modo.antesFimTemporada) await modo.antesFimTemporada(s);
         const resumo = Mundo.fimDeTemporada(s);
-        await this.mostrarResumoTemporada(resumo);
+        if (Cena.ligada()) await Cena.temporada(s, resumo, dados);
+        else await this.mostrarResumoTemporada(resumo);
         if (modo.depoisFimTemporada) await modo.depoisFimTemporada(s, resumo);
         const morte = Vida.anoNovo(s);
+        Conquistas.verificar(s);
         if (morte) return;
     },
 
@@ -491,8 +554,8 @@ const Comum = {
         if (!ui.liga) ui.liga = meu >= 0 ? s.times[meu].liga : s.ligas[0].id;
         const copa = Mundo.copa(s, ui.liga);
         const seletor = `<div class="seletor-ligas">${DADOS.paises.map(p => `
-            <div class="sl-pais"><span>${p.bandeira}</span>${s.ligas.filter(l => l.pais === p.id).map(l => `<button class="chip-btn ${ui.liga === l.id ? 'ativo' : ''}" data-acao="selLiga" data-liga="${l.id}">${U.esc(l.curto)}</button>`).join('')}</div>`).join('')}
-            <div class="sl-pais"><span>🌍</span>${s.copas.map(c => `<button class="chip-btn ${ui.liga === c.id ? 'ativo' : ''}" data-acao="selLiga" data-liga="${c.id}">${c.icone} ${U.esc(c.nome)}</button>`).join('')}</div>
+            <div class="sl-pais"><span>${p.bandeira}</span>${s.ligas.filter(l => l.pais === p.id).map(l => `<button class="chip-btn ${ui.liga === l.id ? 'ativo' : ''}" data-acao="selLiga" data-liga="${l.id}">${U.esc(l.curto)}</button>`).join('')}${s.copas.filter(c => c.pais === p.id).map(c => `<button class="chip-btn copa ${ui.liga === c.id ? 'ativo' : ''}" data-acao="selLiga" data-liga="${c.id}">${c.icone} ${U.esc(c.nome)}</button>`).join('')}</div>`).join('')}
+            <div class="sl-pais"><span>🌍</span>${s.copas.filter(c => !c.pais).map(c => `<button class="chip-btn ${ui.liga === c.id ? 'ativo' : ''}" data-acao="selLiga" data-liga="${c.id}">${c.icone} ${U.esc(c.nome)}</button>`).join('')}</div>
         </div>`;
         if (copa) return seletor + Comum.copa(s, copa);
         const liga = Mundo.liga(s, ui.liga);
@@ -506,7 +569,7 @@ const Comum = {
         const r = ui.rodada;
         const jogos = liga.rodadas[r].map(([h, a]) => {
             const res = liga.res[r].find(x => x.h === h && x.a === a);
-            return `<div class="jogo-linha ${h === meu || a === meu ? 'destaque' : ''}"><span class="jl-time dir">${UI.time(s, h)}</span><b class="jl-placar">${res ? `${res.gh} x ${res.ga}` : 'x'}</b><span class="jl-time">${UI.time(s, a)}</span></div>`;
+            return `<div class="jogo-linha ${h === meu || a === meu ? 'destaque' : ''}"><span class="jl-time dir">${UI.time(s, h)}</span><b class="jl-placar">${res ? `${res.gh} x ${res.ga}` : 'x'}${Mundo.classico(s, h, a) ? '<small class="selo-mini">🔥</small>' : ''}</b><span class="jl-time">${UI.time(s, a)}</span></div>`;
         }).join('');
         const art = liga.times.flatMap(tid => Mundo.elenco(s, s.times[tid])).filter(p => p.g > 0).sort((a, b) => b.g - a.g || a.j - b.j).slice(0, 10);
         const camp = (s.campeoes[liga.id] || []).slice(-5).reverse();
@@ -534,10 +597,10 @@ const Comum = {
     copa(s, c) {
         const meu = Jogo.modo().meuTime(s);
         const fases = c.jogos.map((jogos, f) => `
-            <div class="cartao"><h3>${FASES_COPA[f]} <small>(semana ${SEMANAS_COPA[f] + 1})</small></h3>
+            <div class="cartao"><h3>${Mundo.fasesCopa(c)[f]} <small>(semana ${Mundo.semanasCopa(c)[f] + 1})</small></h3>
             ${jogos.map(([h, a]) => {
             const res = (c.res[f] || []).find(x => x.h === h && x.a === a);
-            return `<div class="jogo-linha ${h === meu || a === meu ? 'destaque' : ''}"><span class="jl-time dir">${UI.time(s, h)}</span><b class="jl-placar">${res ? `${res.gh} x ${res.ga}${res.pen ? `<small> (${res.pen} pên.)</small>` : ''}` : 'x'}</b><span class="jl-time">${UI.time(s, a)}</span></div>`;
+            return `<div class="jogo-linha ${h === meu || a === meu ? 'destaque' : ''}"><span class="jl-time dir">${UI.time(s, h)}</span><b class="jl-placar">${res ? `${res.gh} x ${res.ga}${res.pen ? `<small> (${res.pen} pên.)</small>` : ''}` : 'x'}${Mundo.classico(s, h, a) ? '<small class="selo-mini">🔥</small>' : ''}</b><span class="jl-time">${UI.time(s, a)}</span></div>`;
         }).join('')}</div>`).join('');
         const camp = (s.campeoes[c.id] || []).slice(-5).reverse();
         return `<div class="cartao"><h3>${c.icone} ${U.esc(c.nome)} ${s.ano}</h3>${c.campeao != null ? `<p class="destaque-bom">🏆 Campeão: ${UI.time(s, c.campeao)}</p>` : '<p class="cinza">Mata-mata em jogo único. Empate vai para os pênaltis.</p>'}</div>
@@ -560,6 +623,7 @@ const Comum = {
             </div>
             <div>
                 <div class="cartao"><h3>🏅 Bola de Ouro</h3>${bolas.length ? bolas.map(b => `<div class="rs-linha">${b.ano}: <b>${U.esc(b.nome)}</b> (${b.tid >= 0 && s.times[b.tid] ? U.esc(s.times[b.tid].nome) : '-'}) — ${b.info}</div>`).join('') : '<p class="cinza">Entregue no fim de cada temporada.</p>'}</div>
+                ${s.premios.some(p => /Revelação|Luva|Técnico do Ano/.test(p.tipo)) ? `<div class="cartao"><h3>🌟 Outros prêmios</h3>${s.premios.filter(p => /Revelação|Luva|Técnico do Ano/.test(p.tipo)).slice(-12).reverse().map(p => `<div class="rs-linha">${p.ano} · ${U.esc(p.tipo)}: <b>${U.esc(p.nome)}</b> ${p.pid != null && p.tid >= 0 && s.times[p.tid] ? `(${U.esc(s.times[p.tid].nome)})` : ''}</div>`).join('')}</div>` : ''}
                 <div class="cartao"><h3>🌱 Joias (até 21 anos)</h3>
                     <table class="tabela"><tbody>${jovens.map(p => `<tr class="${p.user ? 'destaque' : ''}"><td>${UI.pos(p.pos)}</td><td class="esq">${UI.jogador(p)}</td><td class="esq">${UI.time(s, p.tid, true)}</td><td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td></tr>`).join('')}</tbody></table>
                 </div>
@@ -570,7 +634,7 @@ const Comum = {
     // ---------------- Vida (BitLife) ----------------
     vida(s) {
         const p = s.pessoa, sub = Jogo.ui.subVida;
-        const subs = [['atividades', '🎯 Atividades'], ['relacoes', '❤️ Relacionamentos'], ['bens', '🏠 Bens'], ['diario', '📔 Diário']];
+        const subs = [['atividades', '🎯 Atividades'], ['relacoes', '❤️ Relacionamentos'], ['bens', '🏠 Bens'], ['invest', '💹 Investimentos'], ['diario', '📔 Diário']];
         let corpo = '';
         if (sub === 'atividades') {
             corpo = `<p class="cinza">Ações nesta semana: <b>${p.acoes}/${Vida.MAX_ACOES}</b></p>
@@ -595,6 +659,17 @@ const Comum = {
                 <h4>${tipo === 'carro' ? '🚗 Concessionária' : tipo === 'casa' ? '🏠 Imobiliária' : '💎 Luxo'}</h4>
                 <div class="grade-loja">${lista.map((b, i) => `<button class="item-loja" data-acao="comprar" data-tipo="${tipo}" data-i="${i}" ${p.dinheiro < b.valor ? 'disabled' : ''}><b>${b.nome}</b><span>${U.dinheiro(b.valor)}</span></button>`).join('')}</div>`).join('');
             corpo = `<h4>Seus bens</h4>${meus}<p class="cinza pequeno">Manter bens custa ~0,05% do valor por semana.</p>${loja}`;
+        } else if (sub === 'invest') {
+            const inv = p.inv || {};
+            corpo = `<div class="ficha"><div><span>Patrimônio total</span><b class="verde">${U.dinheiro(Vida.patrimonio(s))}</b></div><div><span>Dinheiro em conta</span><b>${U.dinheiro(p.dinheiro)}</b></div></div>
+                <h4>📊 Aplicações</h4>
+                <div class="grade-3">${Object.entries(APLICACOES).map(([k, a]) => `<div class="aplicacao"><div class="infra-icone">${a.icone}</div><b>${a.nome}</b>
+                    <span class="grande">${U.dinheiro(inv[k] || 0)}</span><small class="cinza">${a.desc}</small>
+                    <div class="linha-botoes"><button class="btn btn-pequeno btn-primario" data-acao="invAplicar" data-k="${k}">Aplicar</button><button class="btn btn-pequeno" data-acao="invResgatar" data-k="${k}">Resgatar</button></div></div>`).join('')}</div>
+                <h4>🏪 Seus negócios</h4>
+                ${(p.negocios || []).length ? `<div class="lista-bens">${p.negocios.map(n => `<div class="bem"><span>${n.icone} <b>${U.esc(n.nome)}</b> <small>desde ${n.ano} · já rendeu ${U.dinheiro(n.lucro || 0)}</small></span><button class="btn btn-pequeno" data-acao="negVender" data-id="${n.id}">Vender</button></div>`).join('')}</div>` : '<p class="cinza">Nenhum negócio ainda. Eles dão renda toda semana, mas podem falir.</p>'}
+                <h4>💼 Abrir um negócio</h4>
+                <div class="grade-loja">${NEGOCIOS.map((n, i) => `<button class="item-loja" data-acao="negAbrir" data-i="${i}" ${p.dinheiro < n.custo ? 'disabled' : ''}><b>${n.icone} ${n.nome}</b><span>${U.dinheiro(n.custo)}</span><small class="cinza">~${U.dinheiro(n.custo * 0.0028)}/semana</small></button>`).join('')}</div>`;
         } else {
             corpo = Comum.diario(s, 200);
         }
@@ -618,6 +693,7 @@ const Comum = {
         ${UI.barra('Saúde', p.saude, '❤️')}
         ${UI.barra('Fama', p.fama, '⭐', 'azul')}
         ${UI.barra('Aparência', p.aparencia, '💅', 'roxo')}
+        <div class="perfil-extra"><span>📱 <b>${Vida.numero(p.seg || 0)}</b> seguidores</span><span>💎 Patrimônio <b>${U.dinheiro(Vida.patrimonio(s))}</b></span></div>
         ${patr}
         ${p.trofeus.length ? `<div class="pequeno">🏆 ${p.trofeus.length} título(s)</div>` : ''}`;
     },
@@ -663,6 +739,10 @@ Object.assign(ACOES, {
     opVelocidade: (d, el) => { Jogo.opcoes.velocidade = +el.value; Jogo.gravarOpcoes(); },
     opTema: (d, el) => { Jogo.opcoes.tema = el.value; Jogo.gravarOpcoes(); },
     opAutosave: (d, el) => { Jogo.opcoes.autosave = el.checked; Jogo.gravarOpcoes(); },
+    opSom: (d, el) => { Jogo.opcoes.som = el.checked; Jogo.gravarOpcoes(); Som.tocar('moeda'); },
+    opVolume: (d, el) => { Jogo.opcoes.volume = +el.value; Jogo.gravarOpcoes(); Som.tocar('moeda'); },
+    opCenas: (d, el) => { Jogo.opcoes.cenas = el.checked; Jogo.gravarOpcoes(); },
+    opAnim: (d, el) => { Jogo.opcoes.animacoes = el.checked; Jogo.gravarOpcoes(); },
     opTelaCheia: (d, el) => { Jogo.telaCheia(); setTimeout(() => { el.textContent = document.fullscreenElement ? 'Sair da tela cheia' : 'Entrar em tela cheia'; }, 300); },
 
     // pausa
@@ -722,6 +802,10 @@ Object.assign(ACOES, {
     relAcao: d => { Jogo.manterRolagem = true; Vida.acaoRel(Jogo.s, +d.rid, d.a); },
     comprar: d => { Jogo.manterRolagem = true; Vida.comprar(Jogo.s, d.tipo, +d.i); },
     vender: d => { Jogo.manterRolagem = true; Vida.vender(Jogo.s, +d.id); },
+    invAplicar: d => Vida.aplicar(Jogo.s, d.k, false),
+    invResgatar: d => Vida.aplicar(Jogo.s, d.k, true),
+    negAbrir: d => Vida.abrirNegocio(Jogo.s, +d.i),
+    negVender: d => Vida.venderNegocio(Jogo.s, +d.id),
 });
 
 window.addEventListener('load', () => Jogo.iniciar());
