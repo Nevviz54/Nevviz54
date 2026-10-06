@@ -23,7 +23,7 @@ DADOS.rivais = [
     // Espanha
     ['Real Madrid', 'Barcelona'], ['Real Madrid', 'Atlético de Madrid'], ['Barcelona', 'Espanyol'],
     ['Sevilla', 'Real Betis'], ['Athletic Club', 'Real Sociedad'], ['Valencia', 'Villarreal'],
-    ['Celta de Vigo', 'Deportivo La Coruña'], ['Real Oviedo', 'Sporting Gijón'], ['Real Zaragoza', 'Huesca'],
+    ['Celta de Vigo', 'Deportivo La Coruña'], ['Real Oviedo', 'Sporting Gijón'], 
     // Itália
     ['Inter de Milão', 'Milan'], ['Roma', 'Lazio'], ['Juventus', 'Torino'], ['Juventus', 'Inter de Milão'],
     ['Genoa', 'Sampdoria'], ['Napoli', 'Roma'], ['Fiorentina', 'Juventus'], ['Bologna', 'Fiorentina'],
@@ -42,4 +42,13 @@ DADOS.rivais = [
     ['Estudiantes', 'Gimnasia La Plata'], ['San Lorenzo', 'Huracán'], ['Talleres', 'Belgrano'],
     ['Banfield', 'Lanús'], ['Vélez Sarsfield', 'Ferro Carril Oeste'], ['Godoy Cruz', 'Independiente Rivadavia'],
     ['Atlético Tucumán', 'San Martín de Tucumán'], ['Gimnasia de Mendoza', 'Independiente Rivadavia'],
+    // México
+    ['América', 'Chivas'], ['América', 'Cruz Azul'], ['América', 'Pumas'], ['Cruz Azul', 'Pumas'],
+    ['Monterrey', 'Tigres'], ['Chivas', 'Atlas'], ['Chivas', 'Cruz Azul'], ['Toluca', 'América'], ['Puebla', 'Atlante'],
+    // Estados Unidos e Canadá (MLS)
+    ['LA Galaxy', 'LAFC'], ['Seattle Sounders', 'Portland Timbers'], ['Seattle Sounders', 'Vancouver Whitecaps'],
+    ['Portland Timbers', 'Vancouver Whitecaps'], ['New York Red Bulls', 'New York City FC'], ['Inter Miami', 'Orlando City'],
+    ['Houston Dynamo', 'FC Dallas'], ['Austin FC', 'FC Dallas'], ['Toronto FC', 'CF Montréal'], ['D.C. United', 'New York Red Bulls'],
+    ['Columbus Crew', 'FC Cincinnati'], ['Atlanta United', 'Orlando City'], ['Atlanta United', 'Charlotte FC'],
+    ['Sporting Kansas City', 'St. Louis City'], ['Colorado Rapids', 'Real Salt Lake'], ['LAFC', 'San Diego FC'],
 ];

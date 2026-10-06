@@ -18,7 +18,7 @@ saves ficam na nuvem e funcionam no celular e no PC.
 
 ## 🌍 O mundo
 
-**20 ligas, 414 clubes e cerca de 2.700 jogadores reais** (elencos da temporada 2025/26):
+**22 ligas, 462 clubes e quase 5.000 jogadores reais** (elencos de outubro de 2026):
 
 | País | Divisões |
 |------|----------|
@@ -54,7 +54,7 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
 
 ## 📋 Carreira de Técnico
 
-- Escolha **qualquer clube** das 20 ligas.
+- Escolha **qualquer clube** das 22 ligas.
 - **Elenco**: veja overall, potencial, condição, contrato e valor de cada jogador. Renove, venda ou dispense.
 - **Tática**: 7 formações, 5 estilos de jogo e escalação manual no campinho (clique na posição e depois no jogador).
 - **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. A busca por nome procura em todos os jogadores, com ou sem clube, sem ligar para acento ("nene" acha o Nenê). Outros clubes também fazem propostas pelos seus jogadores.
@@ -134,7 +134,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 
 - Os elencos foram atualizados em **outubro de 2026** (temporada 2026/27 na Europa) com pesquisa na internet. Nos clubes grandes das ligas principais estão as contratações da janela do meio de 2026; em alguns clubes menores a pesquisa não achou dados e o elenco ficou o da temporada anterior.
 - Nos times grandes estão os jogadores reais mais conhecidos. Para completar 24 jogadores por elenco, o jogo gera garotos da base.
-- Nas divisões de baixo (Séries C e D, League One/Two, segundas divisões e Primera Nacional) a maioria dos jogadores tem nome gerado.
+- Nas divisões de baixo (Série D, League One/Two, Eerste Divisie, boa parte da Ligue 2 e Primera Nacional) a maioria dos jogadores tem nome gerado.
 - Simplificações: a Série D tem 20 clubes em pontos corridos; a Liga Profesional Argentina e a MLS (30 clubes cada) são disputadas em turno único; a Liga MX é uma temporada só (sem Apertura/Clausura); as copas são mata-mata de jogo único.
 - Os jogadores ficam em `js/dados/`, no formato `"Nome:POSIÇÃO:idade:overall"`. Dá para editar à vontade!
 
