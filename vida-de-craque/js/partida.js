@@ -444,7 +444,8 @@ const Partida = {
     //  Fim de jogo: notas, estatísticas, cartões, lesões
     // -----------------------------------------------------------------
     finalizar(s, m) {
-        const r = { gh: m.gols[0], ga: m.gols[1], venc: null, pen: null, notas: {}, melhor: null };
+        const r = { gh: m.gols[0], ga: m.gols[1], venc: null, pen: null, notas: {}, melhor: null,
+            tit: Object.entries(m.st).filter(([, st]) => st.entrou === 0).map(([pid]) => +pid) };
         if (m.copa && r.gh === r.ga) {
             const pen = Partida.penaltis(m);
             r.pen = `${pen[0]}-${pen[1]}`;

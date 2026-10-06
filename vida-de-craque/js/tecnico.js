@@ -32,6 +32,7 @@ const Tecnico = {
         return [
             { id: 'inicio', nome: 'Clube', icone: '🏟️', render: Tecnico.inicio },
             { id: 'elenco', nome: 'Elenco', icone: '👥', render: Tecnico.elenco },
+            { id: 'vestiario', nome: 'Vestiário', icone: '💬', render: Mot.tela },
             { id: 'tatica', nome: 'Tática', icone: '📋', render: Tecnico.tatica },
             { id: 'mercado', nome: 'Mercado', icone: '💸', render: Tecnico.mercado },
             { id: 'calendario', nome: 'Jogos', icone: '📅', render: Tecnico.calendario },
@@ -241,11 +242,11 @@ const Tecnico = {
         return `<div class="cartao">
             <div class="cartao-topo"><h3>👥 Elenco do ${U.esc(t.nome)} (${el.length} jogadores)</h3><span class="cinza pequeno">Clique no nome para renovar, vender ou dispensar.</span></div>
             <div class="rolavel"><table class="tabela tabela-elenco">
-            <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th>Pot.</th><th>Cond.</th><th>J</th><th>G</th><th>A</th><th>Nota</th><th>Contrato</th><th>Salário</th><th>Valor</th></tr></thead>
+            <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th>Pot.</th><th>Mot.</th><th>Cond.</th><th>J</th><th>G</th><th>A</th><th>Nota</th><th>Contrato</th><th>Salário</th><th>Valor</th></tr></thead>
             <tbody>${el.map(p => `<tr class="${titulares.has(p.id) ? 'titular' : ''}">
                 <td>${UI.pos(p.pos)}</td>
                 <td class="esq">${UI.jogador(p)} ${titulares.has(p.id) ? '<small class="tag">titular</small>' : ''}${p.les > 0 ? ` 🚑${p.les}` : ''}${p.susp > 0 ? ' 🟥' : ''}${s.car.venda.includes(p.id) ? ' 🏷️' : ''}</td>
-                <td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td><td class="pequeno">${Jogo.potencialTxt(s, p)}</td>
+                <td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td><td class="pequeno">${Jogo.potencialTxt(s, p)}</td><td>${Mot.badge(p, true)}</td>
                 <td>${Math.round(p.cond)}%</td><td>${p.j}</td><td>${p.g}</td><td>${p.a}</td><td>${p.j ? UI.nota(p.ns / p.j) : '-'}</td>
                 <td class="${p.contr <= 1 ? 'vermelho' : ''}">${s.ano + p.contr - 1}</td><td>${U.dinheiro(p.sal)}</td><td>${U.dinheiro(Mundo.valor(p))}</td></tr>`).join('')}</tbody></table></div>
         </div>`;
@@ -289,7 +290,7 @@ const Tecnico = {
             const disp = Escalacao.disponivel(p);
             const ef = slotPos ? Math.round(Escalacao.efetivo(p, slotPos)) : p.ovr;
             return `<button class="jog-escalar ${usados.has(p.id) ? 'em-campo' : ''}" data-acao="tcEscolherJog" data-pid="${p.id}" ${disp ? '' : 'disabled'}>
-                    ${UI.pos(p.pos)} <span class="je-nome">${U.esc(p.nome)}</span> ${!disp ? (p.les > 0 ? '🚑' : '🟥') : ''} <span class="pequeno">${Math.round(p.cond)}%</span> ${UI.ovr(slotPos ? ef : p.ovr)}</button>`;
+                    ${UI.pos(p.pos)} ${Mot.icone(p)}<span class="je-nome">${U.esc(p.nome)}</span> ${!disp ? (p.les > 0 ? '🚑' : '🟥') : ''} <span class="pequeno">${Math.round(p.cond)}%</span> ${UI.ovr(slotPos ? ef : p.ovr)}</button>`;
         }).join('')}</div>
             </div>
         </div>`;
@@ -299,13 +300,20 @@ const Tecnico = {
         const f = Object.assign({ pos: '', liga: '', ovr: 60, idade: 40, preco: 0, nome: '', livres: false }, Jogo.ui.filtro);
         const t = Tecnico.time(s);
         let lista = Object.values(s.jog).filter(p => !p.user && p.tid !== t.id);
+        // Buscando pelo nome, procura em TODOS os jogadores (com ou sem clube): os filtros de
+        // OVR, idade e valor só valem para a busca sem nome.
+        const nome = U.semAcento(f.nome);
         if (f.livres) lista = lista.filter(p => p.tid < 0);
         if (f.pos) lista = lista.filter(p => p.pos === f.pos);
         if (f.liga) lista = lista.filter(p => p.tid >= 0 && s.times[p.tid].liga === f.liga);
-        if (f.ovr) lista = lista.filter(p => p.ovr >= f.ovr);
-        if (f.idade) lista = lista.filter(p => p.idade <= f.idade);
-        if (f.preco) lista = lista.filter(p => Mundo.valor(p) <= f.preco);
-        if (f.nome) { const n = f.nome.toLowerCase(); lista = lista.filter(p => p.nome.toLowerCase().includes(n)); }
+        if (nome) {
+            const partes = nome.split(/\s+/);
+            lista = lista.filter(p => { const n = U.semAcento(p.nome); return partes.every(x => n.includes(x)); });
+        } else {
+            if (f.ovr) lista = lista.filter(p => p.ovr >= f.ovr);
+            if (f.idade) lista = lista.filter(p => p.idade <= f.idade);
+            if (f.preco) lista = lista.filter(p => Mundo.valor(p) <= f.preco);
+        }
         lista.sort((a, b) => b.ovr - a.ovr || a.idade - b.idade);
         const total = lista.length;
         lista = lista.slice(0, 80);
@@ -315,13 +323,13 @@ const Tecnico = {
                 <select class="sel" id="f-pos"><option value="">Todas as posições</option>${POSICOES.map(p => `<option value="${p}" ${f.pos === p ? 'selected' : ''}>${POS_NOME[p]}</option>`).join('')}</select>
                 <select class="sel" id="f-liga"><option value="">Todas as ligas</option>${s.ligas.map(l => `<option value="${l.id}" ${f.liga === l.id ? 'selected' : ''}>${Mundo.pais(l.pais).bandeira} ${U.esc(l.nome)}</option>`).join('')}</select>
                 <label>OVR mín. <input class="inp curto" id="f-ovr" type="number" min="40" max="99" value="${f.ovr}"></label>
-                <label>Idade máx. <input class="inp curto" id="f-idade" type="number" min="16" max="45" value="${f.idade}"></label>
+                <label>Idade máx. <input class="inp curto" id="f-idade" type="number" min="16" max="50" value="${f.idade}"></label>
                 <select class="sel" id="f-preco"><option value="0">Qualquer valor</option>${[5e5, 2e6, 5e6, 1e7, 2e7, 5e7, 1e8].map(v => `<option value="${v}" ${f.preco === v ? 'selected' : ''}>até ${U.dinheiro(v)}</option>`).join('')}</select>
                 <input class="inp" id="f-nome" placeholder="Nome..." value="${U.esc(f.nome)}">
                 <label class="check"><input type="checkbox" id="f-livres" ${f.livres ? 'checked' : ''}> Só sem clube</label>
                 <button class="btn btn-primario" data-acao="tcFiltrar">🔍 Buscar</button>
             </div>
-            <p class="cinza pequeno">${total} jogadores encontrados${total > 80 ? ' (mostrando os 80 melhores)' : ''}.</p>
+            <p class="cinza pequeno">${total} jogadores encontrados${total > 80 ? ' (mostrando os 80 melhores)' : ''}.${nome ? ' Buscando pelo nome em todos os jogadores, com ou sem clube (OVR, idade e valor não contam).' : ''}${nome && !total ? ' Confira a grafia ou tente só o sobrenome.' : ''}</p>
             <div class="rolavel"><table class="tabela tabela-elenco">
                 <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th class="esq">Clube</th><th>Valor</th><th>Salário</th><th></th></tr></thead>
                 <tbody>${lista.map(p => `<tr><td>${UI.pos(p.pos)}</td><td class="esq">${UI.jogador(p)}</td><td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td>
@@ -409,6 +417,8 @@ const Tecnico = {
             }
         }
         if (s.car.treinoTime === 'descanso') t.moral = U.clamp(t.moral + 1, 5, 99);
+        // motivação: promessas, problemas pessoais e cobranças por tempo de jogo
+        await Mot.semana(s, t);
         // obras na estrutura
         if (s.car.obra) {
             s.car.obra.falta--;
@@ -523,7 +533,8 @@ const Tecnico = {
             const E = U.clamp(1.35 + d * 0.9, 0.3, 2.6);
             dc = ((venceu ? 3 : empate ? 1 : 0) - E) * 2.2;
         } else {
-            dc = venceu ? (jogo.r === 3 ? 15 : 3) : (Mundo.forca(s, t) > Mundo.forca(s, adv) ? -6 : -2);
+            const tipo = Conquistas.tipoCopa(Mundo.copa(s, jogo.comp));
+            dc = venceu ? (Mundo.ehFinal(s, jogo) ? (tipo === 'supercopa' ? 6 : 15) : 3) : (Mundo.forca(s, t) > Mundo.forca(s, adv) ? -6 : -2);
         }
         if (classico) dc *= 1.6;
         s.car.conf = U.clamp(s.car.conf + dc, 0, 100);
@@ -536,8 +547,12 @@ const Tecnico = {
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${c.nome} (${t.nome})` });
             s.car.titulos++;
             s.car.titTemp = s.car.titTemp || {};
-            if (c.pais) { Conquistas.contar(s, 'copasNacionais'); s.car.titTemp.nac = true; s.car.rep = U.clamp(s.car.rep + 6, 0, 100); Vida.mudar(s, { felicidade: 18, fama: 8 }); }
-            else { Conquistas.contar(s, 'continentais'); s.car.titTemp.cont = true; s.car.rep = U.clamp(s.car.rep + 15, 0, 100); Vida.mudar(s, { felicidade: 25, fama: 15 }); }
+            const peso = Conquistas.tituloCopa(s, c);
+            const tipo = Conquistas.tipoCopa(c);
+            if (tipo === 'nacional') s.car.titTemp.nac = true;
+            if (tipo === 'continental') s.car.titTemp.cont = true;
+            s.car.rep = U.clamp(s.car.rep + peso.rep, 0, 100);
+            Vida.mudar(s, { felicidade: peso.fel, fama: peso.fama });
             Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
             await Cena.titulo(c.nome, t, `${U.esc(s.pessoa.nome)} leva o ${t.nome} ao título!`);
         }
@@ -755,6 +770,7 @@ const Tecnico = {
         if (!t) return [];
         if (p.tid === t.id) {
             return [
+                { id: 'conversar', txt: '💬 Conversar', classe: 'btn-primario' },
                 { id: 'capitao', txt: s.car.capitao === p.id ? '©️ Já é o capitão' : '©️ Fazer capitão', desativado: s.car.capitao === p.id },
                 { id: 'renovar', txt: '✍️ Renovar contrato', desativado: p.contr > 2 },
                 { id: 'venda', txt: s.car.venda.includes(p.id) ? '🏷️ Tirar da lista de venda' : '🏷️ Colocar à venda' },
@@ -767,6 +783,7 @@ const Tecnico = {
     async acaoJogador(s, p, id) {
         const t = Tecnico.time(s);
         if (id === 'proposta') return Tecnico.proposta(s, p);
+        if (id === 'conversar') return Mot.conversar(s, p);
         if (id === 'capitao') { s.car.capitao = p.id; UI.toast(`©️ ${p.nome} é o novo capitão!`); }
         if (id === 'venda') {
             if (s.car.venda.includes(p.id)) s.car.venda = s.car.venda.filter(x => x !== p.id);
@@ -955,4 +972,9 @@ Object.assign(ACOES, {
         }
         Jogo.atualizar();
     },
+});
+
+// Enter nos filtros do mercado também busca
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target && /^f-/.test(e.target.id || '') && document.querySelector('[data-acao=tcFiltrar]')) ACOES.tcFiltrar();
 });

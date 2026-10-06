@@ -9,9 +9,32 @@ const FASES_COPA = ['Oitavas de final', 'Quartas de final', 'Semifinal', 'Final'
 const JANELAS = [[0, 5], [21, 25]];     // janelas de transferência
 const COMPOSICAO = { GOL: 3, ZAG: 4, LAT: 4, VOL: 3, MEI: 4, PON: 3, ATA: 3 }; // 24 por elenco
 
+// Copas continentais (16 clubes, mata-mata). Vaga: n = os n primeiros; [a, b] = do a-ésimo ao b-ésimo.
+const SEMANAS_COPA2 = [9, 19, 29, 41];
 const COPAS_DEF = [
-    { id: 'UCL', nome: 'Liga dos Campeões', icone: '⭐', vagas: { ENG1: 4, ESP1: 4, ITA1: 3, GER1: 3, FRA1: 1, NED1: 1 } },
-    { id: 'LIB', nome: 'Copa Libertadores', icone: '🏆', vagas: { BRA1: 8, ARG1: 8 } },
+    { id: 'UCL', nome: 'Liga dos Campeões', icone: '⭐', tipo: 'continental', vagas: { ENG1: 4, ESP1: 4, ITA1: 3, GER1: 3, FRA1: 1, NED1: 1 } },
+    { id: 'LIB', nome: 'Copa Libertadores', icone: '🏆', tipo: 'continental', vagas: { BRA1: 8, ARG1: 8 } },
+    { id: 'CON', nome: 'Concachampions', icone: '🦅', tipo: 'continental', vagas: { MEX1: 8, USA1: 8 } },
+    { id: 'UEL', nome: 'Liga Europa', icone: '🟠', tipo: 'secundaria', semanas: SEMANAS_COPA2, vagas: { ENG1: [5, 7], ESP1: [5, 7], ITA1: [4, 6], GER1: [4, 6], FRA1: [2, 3], NED1: [2, 3] } },
+    { id: 'SUD', nome: 'Copa Sul-Americana', icone: '🟡', tipo: 'secundaria', semanas: SEMANAS_COPA2, vagas: { BRA1: [9, 16], ARG1: [9, 16] } },
+];
+
+// Supercopas (jogo único no começo da temporada): campeão da liga x campeão da copa
+const SUPERCOPAS_NAC = [
+    { id: 'SBR', pais: 'BRA', liga: 'BRA1', copa: 'CBR', nome: 'Supercopa do Brasil' },
+    { id: 'CSH', pais: 'ENG', liga: 'ENG1', copa: 'FAC', nome: 'Community Shield' },
+    { id: 'SES', pais: 'ESP', liga: 'ESP1', copa: 'CDR', nome: 'Supercopa de España' },
+    { id: 'SIT', pais: 'ITA', liga: 'ITA1', copa: 'CIT', nome: 'Supercoppa Italiana' },
+    { id: 'SGE', pais: 'GER', liga: 'GER1', copa: 'DFB', nome: 'DFL-Supercup' },
+    { id: 'TDC', pais: 'FRA', liga: 'FRA1', copa: 'CDF', nome: 'Trophée des Champions' },
+    { id: 'JCS', pais: 'NED', liga: 'NED1', copa: 'KNV', nome: 'Johan Cruijff Schaal' },
+    { id: 'SAR', pais: 'ARG', liga: 'ARG1', copa: 'CAR', nome: 'Supercopa Argentina' },
+    { id: 'CDC', pais: 'MEX', liga: 'MEX1', copa: null, nome: 'Campeón de Campeones' },
+];
+// Supercopas continentais: campeão da copa principal x campeão da copa secundária
+const SUPERCOPAS_CONT = [
+    { id: 'USC', nome: 'Supercopa da UEFA', icone: '🛡️', a: 'UCL', b: 'UEL' },
+    { id: 'REC', nome: 'Recopa Sul-Americana', icone: '🏆', a: 'LIB', b: 'SUD' },
 ];
 
 // Copas nacionais: mata-mata com os 32 melhores clubes do país
@@ -26,6 +49,7 @@ const COPAS_NAC = [
     { id: 'CDF', pais: 'FRA', nome: 'Coupe de France' },
     { id: 'KNV', pais: 'NED', nome: 'KNVB Beker' },
     { id: 'CAR', pais: 'ARG', nome: 'Copa Argentina' },
+    { id: 'USO', pais: 'USA', nome: 'US Open Cup', n: 16 },
 ];
 
 // Estrutura do clube (níveis 1 a 5)
@@ -68,6 +92,14 @@ const Mundo = {
                 }
                 s.ligas.push(liga);
                 s.campeoes[liga.id] = [];
+            }
+            // jogadores reais sem clube (aparecem no mercado como "Livre")
+            for (const txt of (pais.livres || '').split(',')) {
+                const [nome, pos, idade, ovr] = txt.trim().split(':');
+                if (!nome || !POS_NOME[pos]) continue;
+                const i = parseInt(idade, 10), o = parseInt(ovr, 10);
+                const p = Mundo.novoJogador(s, { nome, pos, idade: i, ovr: o, pot: Mundo.potencial(i, o), tid: -1, real: true }, 0.6);
+                s.livres.push(p.id);
             }
         }
         Mundo.novaTemporada(s, true);
@@ -233,34 +265,94 @@ const Mundo = {
         Mundo.montarCopas(s, inicial);
     },
 
+    // classificação final da última temporada (ou, no começo do jogo, pela reputação)
+    ordemDaLiga(s, liga, inicial) {
+        return (!inicial && s.classifFinal[liga.id])
+            ? s.classifFinal[liga.id].filter(tid => liga.times.includes(tid))
+            : liga.times.slice().sort((a, b) => s.times[b].rep - s.times[a].rep);
+    },
+
+    // último campeão de uma competição (null se não houver)
+    ultimoCampeao(s, id) {
+        const lista = s.campeoes[id];
+        return lista && lista.length ? lista[lista.length - 1].tid : null;
+    },
+
+    novaCopa(s, d) {
+        const ids = d.times;
+        const jogos = [[]];
+        for (let i = 0; i + 1 < ids.length; i += 2) jogos[0].push([ids[i], ids[i + 1]]);
+        const c = Object.assign({ fase: 0, jogos, res: [[]], campeao: null }, d);
+        s.copas.push(c);
+        s.campeoes[c.id] = s.campeoes[c.id] || [];
+        return c;
+    },
+
     montarCopas(s, inicial) {
+        // campeões da temporada passada, antes de recriar as copas
+        const antes = {};
+        for (const c of s.copas || []) antes[c.id] = c.campeao;
         s.copas = [];
         for (const def of COPAS_DEF) {
             const ids = [];
-            for (const [ligaId, n] of Object.entries(def.vagas)) {
+            for (const [ligaId, v] of Object.entries(def.vagas)) {
                 const liga = Mundo.liga(s, ligaId);
                 if (!liga) continue;
-                const ordem = (!inicial && s.classifFinal[ligaId])
-                    ? s.classifFinal[ligaId].filter(tid => liga.times.includes(tid))
-                    : liga.times.slice().sort((a, b) => s.times[b].rep - s.times[a].rep);
-                ids.push(...ordem.slice(0, n));
+                const ordem = Mundo.ordemDaLiga(s, liga, inicial);
+                ids.push(...(Array.isArray(v) ? ordem.slice(v[0] - 1, v[1]) : ordem.slice(0, v)));
             }
-            U.embaralhar(ids);
-            const jogos = [[]];
-            for (let i = 0; i + 1 < ids.length; i += 2) jogos[0].push([ids[i], ids[i + 1]]);
-            s.copas.push({ id: def.id, nome: def.nome, icone: def.icone, times: ids, fase: 0, jogos, res: [[]], campeao: null, semanas: SEMANAS_COPA, fases: FASES_COPA });
+            if (ids.length < 16) continue;
+            Mundo.novaCopa(s, { id: def.id, nome: def.nome, icone: def.icone, tipo: def.tipo, times: U.embaralhar(ids), semanas: def.semanas || SEMANAS_COPA, fases: FASES_COPA });
         }
         for (const def of COPAS_NAC) {
             const ligas = s.ligas.filter(l => l.pais === def.pais).sort((a, b) => a.nivel - b.nivel);
             if (!ligas.length) continue;
             const ids = [];
             for (const l of ligas) ids.push(...l.times.slice().sort((a, b) => s.times[b].rep - s.times[a].rep));
-            const participantes = U.embaralhar(ids.slice(0, 32));
-            const jogos = [[]];
-            for (let i = 0; i + 1 < participantes.length; i += 2) jogos[0].push([participantes[i], participantes[i + 1]]);
-            s.copas.push({ id: def.id, pais: def.pais, nome: def.nome, icone: '🥇', times: participantes, fase: 0, jogos, res: [[]], campeao: null, semanas: SEMANAS_COPA_NAC, fases: FASES_COPA_NAC });
-            s.campeoes[def.id] = s.campeoes[def.id] || [];
+            const n = def.n || 32;
+            if (ids.length < n) continue;
+            Mundo.novaCopa(s, {
+                id: def.id, pais: def.pais, nome: def.nome, icone: '🥇', tipo: 'nacional', times: U.embaralhar(ids.slice(0, n)),
+                semanas: n === 16 ? SEMANAS_COPA_NAC.slice(1) : SEMANAS_COPA_NAC, fases: n === 16 ? FASES_COPA_NAC.slice(1) : FASES_COPA_NAC,
+            });
         }
+        // supercopas nacionais (semana 1)
+        for (const def of SUPERCOPAS_NAC) {
+            const liga = Mundo.liga(s, def.liga);
+            if (!liga) continue;
+            const ordem = Mundo.ordemDaLiga(s, liga, inicial);
+            const a = ordem[0];
+            let b = def.copa ? (inicial ? null : antes[def.copa] ?? Mundo.ultimoCampeao(s, def.copa)) : null;
+            if (b == null || b === a) b = ordem[1];
+            if (a == null || b == null) continue;
+            Mundo.novaCopa(s, { id: def.id, pais: def.pais, nome: def.nome, icone: '🛡️', tipo: 'supercopa', times: [a, b], semanas: [1], fases: ['Final'] });
+        }
+        // supercopas continentais (semana 2)
+        for (const def of SUPERCOPAS_CONT) {
+            const ca = Mundo.copa(s, def.a), cb = Mundo.copa(s, def.b);
+            if (!ca || !cb) continue;
+            const porRep = c => c.times.slice().sort((x, y) => s.times[y].rep - s.times[x].rep)[0];
+            const a = (!inicial && antes[def.a] != null) ? antes[def.a] : porRep(ca);
+            let b = (!inicial && antes[def.b] != null) ? antes[def.b] : porRep(cb);
+            if (b === a) b = cb.times.find(t => t !== a);
+            Mundo.novaCopa(s, { id: def.id, nome: def.nome, icone: def.icone, tipo: 'supercopa', times: [a, b], semanas: [2], fases: ['Final'] });
+        }
+    },
+
+    // Mundial de Clubes: no fim da temporada, com os campeões continentais.
+    // Libertadores x Concachampions na semifinal; o campeão europeu espera na final.
+    criarMundial(s) {
+        if (Mundo.copa(s, 'MUN')) return;
+        const camp = id => { const c = Mundo.copa(s, id); return c ? c.campeao : undefined; };
+        const ucl = camp('UCL'), lib = camp('LIB'), con = camp('CON');
+        if (ucl == null || lib == null || con === null) return; // alguma ainda não terminou
+        if (con != null) {
+            Mundo.novaCopa(s, { id: 'MUN', nome: 'Mundial de Clubes', icone: '🌍', tipo: 'mundial', times: [lib, con, ucl], semanas: [43, 45], fases: ['Semifinal', 'Final'], byes: { 1: [ucl] } });
+            Mundo.copa(s, 'MUN').jogos = [[[lib, con]]];
+        } else {
+            Mundo.novaCopa(s, { id: 'MUN', nome: 'Mundial de Clubes', icone: '🌍', tipo: 'mundial', times: [lib, ucl], semanas: [45], fases: ['Final'] });
+        }
+        Mundo.noticia(s, `🌍 Definidos os participantes do Mundial de Clubes: ${[lib, con, ucl].filter(x => x != null).map(t => s.times[t].nome).join(', ')}.`, 'geral');
     },
 
     partidasDaSemana(s, semana = s.semana) {
@@ -325,14 +417,17 @@ const Mundo = {
                     s.campeoes[c.id] = s.campeoes[c.id] || [];
                     s.campeoes[c.id].push({ ano: s.ano, tid: venc[0] });
                     Mundo.noticia(s, `${c.icone} ${s.times[venc[0]].nome} conquista ${c.nome} ${s.ano}!`, 'titulo');
+                    if (c.tipo === 'continental') Mundo.criarMundial(s);
                 } else {
                     c.fase = f + 1;
                     c.jogos[f + 1] = [];
                     c.res[f + 1] = [];
-                    for (let i = 0; i + 1 < venc.length; i += 2) c.jogos[f + 1].push([venc[i], venc[i + 1]]);
+                    const prox = venc.concat((c.byes && c.byes[f + 1]) || []);
+                    for (let i = 0; i + 1 < prox.length; i += 2) c.jogos[f + 1].push([prox[i], prox[i + 1]]);
                 }
             }
         }
+        Mot.aposJogo(s, jogo, r);
         // moral do time (clássico pesa mais)
         const peso = Mundo.classico(s, jogo.h, jogo.a) ? 1.6 : 1;
         for (const [tid, gf, gc] of [[jogo.h, r.gh, r.ga], [jogo.a, r.ga, r.gh]]) {
@@ -480,7 +575,7 @@ const Mundo = {
     // -----------------------------------------------------------------
     fimDeTemporada(s) {
         const resumo = { ano: s.ano, campeoes: [], subiram: [], desceram: [], premios: [], copas: [] };
-        for (const c of s.copas) if (c.campeao != null) resumo.copas.push({ id: c.id, nome: c.nome, icone: c.icone, tid: c.campeao });
+        for (const c of s.copas) if (c.campeao != null) resumo.copas.push({ id: c.id, nome: c.nome, icone: c.icone, tid: c.campeao, tipo: c.tipo, pais: c.pais });
 
         // Campeões e classificação final
         for (const liga of s.ligas) {
@@ -612,7 +707,11 @@ const Mundo = {
         // livres antigos demais somem do mercado
         s.livres = s.livres.filter(id => s.jog[id]);
         if (s.livres.length > 600) {
-            for (const id of s.livres.splice(0, s.livres.length - 600)) delete s.jog[id];
+            // some primeiro quem foi gerado pelo jogo; os jogadores reais sem clube ficam
+            const ordem = s.livres.slice().sort((a, b) => (s.jog[a].real ? 1 : 0) - (s.jog[b].real ? 1 : 0));
+            const fora = new Set(ordem.slice(0, s.livres.length - 600));
+            for (const id of fora) delete s.jog[id];
+            s.livres = s.livres.filter(id => !fora.has(id));
         }
 
         // Base: cada time revela jovens, e elencos são ajustados
@@ -667,17 +766,17 @@ const Mundo = {
 //  Escalação automática
 // =====================================================================
 const Escalacao = {
-    disponivel: p => p && p.les <= 0 && p.susp <= 0,
+    disponivel: p => p && p.les <= 0 && p.susp <= 0 && !(p.folga > 0),
 
     efetivo(p, slot) {
-        return p.ovr - penalidadePos(p.pos, slot) - Math.max(0, 75 - p.cond) * 0.25;
+        return p.ovr - penalidadePos(p.pos, slot) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p);
     },
 
     auto(s, t, form = t.form, ruido = 0) {
         const slots = FORMACOES[form];
         const nota = new Map();
         const disp = Mundo.elenco(s, t).filter(Escalacao.disponivel);
-        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) + (p.bonusFixo || 0) - Math.max(0, 75 - p.cond) * 0.25);
+        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) + (p.bonusFixo || 0) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p));
         disp.sort((a, b) => nota.get(b.id) - nota.get(a.id));
         const usados = new Set();
         const res = new Array(slots.length).fill(null);

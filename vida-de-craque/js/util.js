@@ -85,6 +85,9 @@ const U = {
     },
 
     copia: obj => JSON.parse(JSON.stringify(obj)),
+
+    // "Nenê" -> "nene": para buscar nomes sem ligar para acento e maiúscula
+    semAcento: txt => String(txt || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(),
 };
 
 // ---------------------------------------------------------------------

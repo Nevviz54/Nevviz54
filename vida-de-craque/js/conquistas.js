@@ -27,6 +27,9 @@ const CONQUISTAS = [
     { id: 'investidor', icone: '💹', nome: 'Empreendedor', desc: 'Abrir um negócio próprio.', teste: s => (s.pessoa.negocios || []).length >= 1 },
     { id: 'titulo1', icone: '🏆', nome: 'Primeira taça', desc: 'Ganhar o primeiro título.', teste: s => s.pessoa.trofeus.length >= 1 },
     { id: 'titulos10', icone: '👑', nome: 'Galeria cheia', desc: 'Ganhar 10 títulos.', teste: s => s.pessoa.trofeus.length >= 10 },
+    { id: 'supercampeao', icone: '🛡️', nome: 'Supercampeão', desc: 'Ganhar uma supercopa (nacional, Supercopa da UEFA ou Recopa).', teste: s => cont(s, 'supercopas') >= 1 },
+    { id: 'segundaCopa', icone: '🟠', nome: 'Rei das copas', desc: 'Ganhar a Liga Europa ou a Copa Sul-Americana.', teste: s => cont(s, 'secundarias') >= 1 },
+    { id: 'mundialClubes', icone: '🌐', nome: 'Campeão do mundo de clubes', desc: 'Ganhar o Mundial de Clubes.', teste: s => cont(s, 'mundiais') >= 1 },
     { id: 'centenario', icone: '🎂', nome: 'Centenário', desc: 'Viver até os 100 anos.', teste: s => s.pessoa.idade >= 100 },
 
     // ---------------- Técnico ----------------
@@ -38,7 +41,7 @@ const CONQUISTAS = [
     { id: 'acesso', modo: 'tecnico', icone: '⬆️', nome: 'Acesso!', desc: 'Subir de divisão.', teste: s => cont(s, 'acessos') >= 1 },
     { id: 'campeaoNacional', modo: 'tecnico', icone: '🥇', nome: 'Campeão nacional', desc: 'Ganhar uma liga de 1ª divisão.', teste: s => cont(s, 'ligasPrincipais') >= 1 },
     { id: 'copeiro', modo: 'tecnico', icone: '🏆', nome: 'Copeiro', desc: 'Ganhar uma copa nacional.', teste: s => cont(s, 'copasNacionais') >= 1 },
-    { id: 'continental', modo: 'tecnico', icone: '🌍', nome: 'Dono do continente', desc: 'Ganhar a Liga dos Campeões ou a Libertadores.', teste: s => cont(s, 'continentais') >= 1 },
+    { id: 'continental', modo: 'tecnico', icone: '🌍', nome: 'Dono do continente', desc: 'Ganhar a Liga dos Campeões, a Libertadores ou a Concachampions.', teste: s => cont(s, 'continentais') >= 1 },
     { id: 'triplice', modo: 'tecnico', icone: '👑', nome: 'Tríplice coroa', desc: 'Liga, copa nacional e copa continental na mesma temporada.', teste: s => cont(s, 'triplices') >= 1 },
     { id: 'tecnicoAno', modo: 'tecnico', icone: '📋', nome: 'Técnico do Ano', desc: 'Ser eleito o técnico do ano.', teste: s => cont(s, 'tecnicoAno') >= 1 },
     { id: 'demitido', modo: 'tecnico', icone: '🚪', nome: 'Faz parte', desc: 'Ser demitido.', teste: s => cont(s, 'demissoes') >= 1 },
@@ -63,7 +66,25 @@ const CONQUISTAS = [
     { id: 'habilidades', modo: 'jogador', icone: '⚡', nome: 'Jogador completo', desc: 'Ter 5 habilidades especiais.', teste: s => (s.car.habs || []).length >= 5 },
 ];
 
+// Peso de cada tipo de taça: fama, felicidade e reputação do técnico
+const PESO_TACA = {
+    nacional: { fama: 6, fel: 18, rep: 6, cont: 'copasNacionais' },
+    supercopa: { fama: 4, fel: 10, rep: 3, cont: 'supercopas' },
+    secundaria: { fama: 8, fel: 20, rep: 9, cont: 'secundarias' },
+    continental: { fama: 12, fel: 25, rep: 15, cont: 'continentais' },
+    mundial: { fama: 15, fel: 25, rep: 12, cont: 'mundiais' },
+};
+
 const Conquistas = {
+    tipoCopa: c => c.tipo || (c.pais ? 'nacional' : 'continental'),
+
+    // registra uma taça de copa (os dois modos): devolve o peso dela
+    tituloCopa(s, c) {
+        const peso = PESO_TACA[Conquistas.tipoCopa(c)] || PESO_TACA.nacional;
+        Conquistas.contar(s, peso.cont);
+        return peso;
+    },
+
     contar(s, chave, n = 1) {
         s.cont = s.cont || {};
         s.cont[chave] = (s.cont[chave] || 0) + n;

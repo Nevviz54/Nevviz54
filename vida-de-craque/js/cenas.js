@@ -189,6 +189,8 @@ const Cena = {
         const principais = r.campeoes.filter(c => c.nivel === 1);
         const premios = r.premios.filter(p => /Bola de Ouro|Revelação|Luva|Técnico do Ano/.test(p.tipo) || (dados.ligaCurto && p.tipo.includes(dados.ligaCurto)));
         const campeaoMeu = ligaMeu && ligaMeu.tid === meu;
+        // copas internacionais sempre; nacionais e supercopas só do seu país (ou se você ganhou)
+        const copas = r.copas.filter(c => !c.pais || (tMeu && c.pais === tMeu.pais) || c.tid === meu);
         const slides = [
             {
                 fundo: 'linear-gradient(180deg, #ff8a3d 0%, #7a2f6f 45%, #0b1220 100%)', classe: 'cs-fim', som: 'apitoFinal', auto: 2800,
@@ -205,7 +207,7 @@ const Cena = {
                 html: `<div class="cena-mini">🏆 Os campeões de ${r.ano}</div>
                     ${ligaMeu ? `<div class="campeao-destaque">${Cena.escudo(s.times[ligaMeu.tid], 'pulsa')}<div><small>${U.esc(ligaMeu.liga)}</small><b>${U.esc(s.times[ligaMeu.tid].nome)}</b></div></div>` : ''}
                     <div class="grade-campeoes">${principais.filter(c => c !== ligaMeu).map((c, i) => `<div class="gc-item" style="animation-delay:${0.3 + i * 0.08}s">${UI.escudo(s.times[c.tid])}<span><small>${U.esc(c.liga)}</small>${U.esc(s.times[c.tid].nome)}</span></div>`).join('')}
-                    ${r.copas.map((c, i) => `<div class="gc-item copa" style="animation-delay:${0.3 + (principais.length + i) * 0.08}s">${UI.escudo(s.times[c.tid])}<span><small>${c.icone} ${U.esc(c.nome)}</small>${U.esc(s.times[c.tid].nome)}</span></div>`).join('')}</div>`,
+                    ${copas.map((c, i) => `<div class="gc-item copa" style="animation-delay:${0.3 + (principais.length + i) * 0.08}s">${UI.escudo(s.times[c.tid])}<span><small>${c.icone} ${U.esc(c.nome)}</small>${U.esc(s.times[c.tid].nome)}</span></div>`).join('')}</div>`,
             },
             premios.length ? {
                 fundo: 'radial-gradient(circle at 50% 20%, #5a4300 0%, #0b0a05 70%)', classe: 'cs-premios', som: 'conquista',

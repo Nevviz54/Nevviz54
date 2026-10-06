@@ -291,6 +291,7 @@ const Jogo = {
         }
         for (const c of s.copas || []) {
             if (!c.semanas) { c.semanas = SEMANAS_COPA; c.fases = FASES_COPA; }
+            if (!c.tipo) c.tipo = c.pais ? 'nacional' : 'continental';
         }
         const car = s.car;
         if (car && s.modo === 'tecnico') {
@@ -415,7 +416,8 @@ const Jogo = {
         return `<div class="ajuda">
             <p><b>Vida de Craque</b> mistura um <b>Football Manager</b> com o <b>BitLife</b>: você cuida da carreira dentro de campo e da vida fora dele.</p>
             <h4>⏩ O tempo</h4>
-            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...) e as copas continentais (Liga dos Campeões e Libertadores). Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
+            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...), as <b>supercopas</b> no começo da temporada, as copas continentais (Liga dos Campeões, Libertadores, Concachampions, Liga Europa e Sul-Americana), a Supercopa da UEFA, a Recopa e, no fim do ano, o <b>Mundial de Clubes</b>. Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
+            <p><b>💬 Vestiário (técnico)</b>: cada jogador tem uma motivação (🔥 muito motivado, 😀 motivado, 😐 normal, 😕 desmotivado, 😠 muito desmotivado). Ela muda com os resultados, com o tempo de jogo e com as suas conversas, e quanto mais motivado, melhor ele joga. Converse com cada um (uma vez por semana), pergunte por que está desmotivado e cumpra as promessas de tempo de jogo: promessa quebrada pesa muito.</p>
             <h4>📋 Carreira de técnico</h4>
             <ul><li>Escale o time na aba <b>Tática</b> (clique numa posição do campinho e depois no jogador).</li>
             <li>Compre e venda na aba <b>Mercado</b> durante as janelas (semanas 1–6 e 22–26). Jogadores sem clube podem ser contratados a qualquer momento.</li>
@@ -645,6 +647,7 @@ const Jogo = {
                 <div><span>Valor de mercado</span><b>${U.dinheiro(Mundo.valor(p))}</b></div>
                 <div><span>Salário</span><b>${U.dinheiro(p.sal)}/ano</b></div>
                 <div><span>Contrato</span><b>${p.tid >= 0 ? `até ${s.ano + p.contr - 1}` : '—'}</b></div>
+                ${p.user ? '' : `<div><span>Motivação</span><b>${Mot.badge(p)}</b></div>`}
                 <div><span>Condição</span><b>${p.les > 0 ? `🚑 Lesionado (${p.les} sem.)` : p.susp > 0 ? `🟥 Suspenso (${p.susp})` : `${Math.round(p.cond)}%`}</b></div>
             </div>
             <div class="ficha ficha-stats">

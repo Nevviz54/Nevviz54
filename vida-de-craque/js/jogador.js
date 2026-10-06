@@ -481,7 +481,8 @@ const Jogador = {
         if (Mundo.ehFinal(s, jogo) && venceu) {
             const c = Mundo.copa(s, jogo.comp);
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${c.nome} (${t.nome})` });
-            Vida.mudar(s, { felicidade: 20, fama: c.pais ? 6 : 10 });
+            const peso = Conquistas.tituloCopa(s, c);
+            Vida.mudar(s, { felicidade: peso.fel, fama: peso.fama });
             Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
             await Cena.titulo(c.nome, t, `${p.nome} levanta a taça!`);
             return '<div class="rf-linha destaque-bom">🏆 VOCÊ É CAMPEÃO!</div>';

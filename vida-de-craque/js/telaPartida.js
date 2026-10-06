@@ -110,7 +110,7 @@ const TelaPartida = {
                 if (st.saiu != null && !st.vm) ic += '🔽';
             }
             return `<div class="pl-jog ${p.user ? 'eu' : ''} ${st && st.saiu != null ? 'saiu' : ''}">
-                ${UI.pos(slot || p.pos)}<span class="pl-nome">${U.esc(p.nome)}</span>${UI.ovr(p.ovr)}<span class="pl-ic">${ic}</span></div>`;
+                ${UI.pos(slot || p.pos)}${p.user ? '' : Mot.icone(p)}<span class="pl-nome">${U.esc(p.nome)}</span>${UI.ovr(p.ovr)}<span class="pl-ic">${ic}</span></div>`;
         };
         const campo = m.esc[lado].map((pid, i) => pid != null ? linha(pid, m.slots[lado][i]) : `<div class="pl-jog vazio">${UI.pos(m.slots[lado][i])}<span class="pl-nome">— (vago)</span></div>`).join('');
         const sairam = Object.entries(m.st).filter(([pid, st]) => st.lado === lado && st.saiu != null && !m.esc[lado].includes(+pid)).map(([pid]) => linha(+pid)).join('');

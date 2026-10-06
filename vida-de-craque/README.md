@@ -30,13 +30,24 @@ saves ficam na nuvem e funcionam no celular e no PC.
 | 🇫🇷 França | Ligue 1 e Ligue 2 |
 | 🇳🇱 Holanda | Eredivisie e Eerste Divisie |
 | 🇦🇷 Argentina | Liga Profesional e Primera Nacional |
+| 🇲🇽 México | Liga MX |
+| 🇺🇸 Estados Unidos | MLS (30 clubes, com os do Canadá) |
 
-Tem acesso e rebaixamento entre as divisões, **Liga dos Campeões** (os melhores da Europa)
-e **Copa Libertadores** (Brasil + Argentina), Bola de Ouro, artilheiros, jogadores que
-envelhecem, se aposentam e jovens da base que surgem a cada temporada.
+Tem acesso e rebaixamento entre as divisões (Liga MX e MLS não têm rebaixamento), Bola de
+Ouro, artilheiros, jogadores que envelhecem, se aposentam e jovens da base que surgem a cada
+temporada. Jogadores reais **sem clube** também aparecem no mercado.
 
-- **Copas nacionais** (mata-mata com 32 clubes ao longo da temporada): Copa do Brasil, FA Cup,
-  Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, KNVB Beker e Copa Argentina.
+**Taças em disputa** (valem tanto na carreira de técnico quanto na de jogador):
+
+| Tipo | Competições |
+|------|-------------|
+| Continentais | **Liga dos Campeões**, **Copa Libertadores** (Brasil + Argentina), **Concachampions** (México + EUA) |
+| Segunda linha | **Liga Europa** e **Copa Sul-Americana** |
+| Supercopas continentais | **Supercopa da UEFA** (Champions x Liga Europa) e **Recopa Sul-Americana** (Libertadores x Sul-Americana) |
+| Mundial | **Mundial de Clubes** no fim da temporada: Libertadores x Concachampions na semifinal, e o campeão europeu na final |
+| Copas nacionais | Copa do Brasil, FA Cup, Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, KNVB Beker, Copa Argentina e US Open Cup |
+| Supercopas nacionais | Supercopa do Brasil, Community Shield, Supercopa de España, Supercoppa Italiana, DFL-Supercup, Trophée des Champions, Johan Cruijff Schaal, Supercopa Argentina e Campeón de Campeones |
+
 - **Clássicos** 🔥: cerca de 100 rivalidades reais (Fla-Flu, Grenal, El Clásico, Derby della
   Madonnina, Superclásico...). Clima mais quente, mais cartões e moral em dobro para quem vence.
 - **Prêmios** no fim de cada temporada: Bola de Ouro, Prêmio Revelação, Luva de Ouro e Técnico do Ano.
@@ -46,7 +57,7 @@ envelhecem, se aposentam e jovens da base que surgem a cada temporada.
 - Escolha **qualquer clube** das 20 ligas.
 - **Elenco**: veja overall, potencial, condição, contrato e valor de cada jogador. Renove, venda ou dispense.
 - **Tática**: 7 formações, 5 estilos de jogo e escalação manual no campinho (clique na posição e depois no jogador).
-- **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. Outros clubes também fazem propostas pelos seus jogadores.
+- **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. A busca por nome procura em todos os jogadores, com ou sem clube, sem ligar para acento ("nene" acha o Nenê). Outros clubes também fazem propostas pelos seus jogadores.
 - **Finanças**: caixa, receita, folha salarial, premiação.
 - **Diretoria**: a confiança sobe e desce com os resultados. Se zerar, você é demitido — e vai ter que esperar propostas de outros clubes.
 - **Jogo ao vivo**: narração minuto a minuto, substituições, mudança de postura e conversa no intervalo. Também dá para simular direto.
@@ -55,7 +66,18 @@ envelhecem, se aposentam e jovens da base que surgem a cada temporada.
 - **Estrutura do clube**: invista em estádio (mais renda e força em casa), CT (jogadores evoluem mais rápido) e categorias de base (joias melhores), do nível 1 ao 5.
 - **Peneira da base**: no começo de cada temporada aparecem 3 garotos; promova um deles ao profissional.
 - **Departamento médico**: em lesões sérias, decida se paga um tratamento caro para o jogador voltar antes.
-- Coletivas de imprensa, protestos da torcida, jogadores reclamando de banco...
+- **💬 Vestiário e motivação**: cada jogador tem uma motivação — 🔥 muito motivado, 😀 motivado,
+  😐 normal, 😕 desmotivado ou 😠 muito desmotivado — que aparece no elenco e antes de cada partida.
+  Quanto mais motivado, melhor ele joga (de −4 a +3,5 de habilidade em campo). O resultado do
+  último jogo, o tempo de jogo e as suas conversas mexem na motivação.
+- **Conversas individuais**: converse com cada jogador (uma vez por semana). Se ele estiver
+  desmotivado, pergunte o porquê — falta de jogos, promessa quebrada, derrotas, fase ruim, salário,
+  contrato acabando, problema pessoal — e escolha o que responder. Normal? Dá para motivar, desafiar
+  ou prometer titularidade. Cada jogador tem personalidade (profissional, ambicioso, temperamental,
+  vaidoso, tranquilo ou líder), e a mesma frase funciona com um e irrita outro.
+- **Cobranças por tempo de jogo**: quem passa vários jogos sem entrar manda mensagem cobrando.
+  Prometa minutos e ele fica motivado; mas promessa quebrada derruba a motivação dele e a do grupo.
+- Coletivas de imprensa, protestos da torcida...
 
 ## ⚽ Carreira de Jogador (o lado BitLife)
 
@@ -110,10 +132,10 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 
 ## 📝 Observações sobre os dados
 
-- Os elencos foram montados com base na temporada **2025/26**; transferências feitas depois disso podem não estar no jogo.
+- Os elencos foram atualizados em **outubro de 2026** (temporada 2026/27 na Europa) com pesquisa na internet. Nos clubes grandes das ligas principais estão as contratações da janela do meio de 2026; em alguns clubes menores a pesquisa não achou dados e o elenco ficou o da temporada anterior.
 - Nos times grandes estão os jogadores reais mais conhecidos. Para completar 24 jogadores por elenco, o jogo gera garotos da base.
 - Nas divisões de baixo (Séries C e D, League One/Two, segundas divisões e Primera Nacional) a maioria dos jogadores tem nome gerado.
-- Simplificações: a Série D tem 20 clubes em pontos corridos; a Liga Profesional Argentina (30 clubes) é disputada em turno único; as copas são mata-mata de jogo único.
+- Simplificações: a Série D tem 20 clubes em pontos corridos; a Liga Profesional Argentina e a MLS (30 clubes cada) são disputadas em turno único; a Liga MX é uma temporada só (sem Apertura/Clausura); as copas são mata-mata de jogo único.
 - Os jogadores ficam em `js/dados/`, no formato `"Nome:POSIÇÃO:idade:overall"`. Dá para editar à vontade!
 
 ---
