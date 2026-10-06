@@ -52,6 +52,9 @@ const Jogador = {
     // -----------------------------------------------------------------
     //  Começo: a peneira
     // -----------------------------------------------------------------
+    // idade para começar a carreira: de 16 a 35
+    idadeInicial: form => U.clamp(Math.round(form.idade || 17), 16, 35),
+
     telaPeneira(form) {
         UI.render('<div class="carregando">⚽ Montando o mundo do futebol...</div>');
         setTimeout(() => {
@@ -60,7 +63,11 @@ const Jogador = {
             const ligas = s.ligas.filter(l => l.pais === form.pais).sort((a, b) => a.nivel - b.nivel);
             const cands = [];
             const seg = ligas[1] || ligas[0];
-            const porNivel = ligas.length >= 3 ? [ligas[1], ligas[2], ligas[ligas.length - 1], ligas[0]] : [seg, seg, seg, ligas[0]];
+            // quem começa mais velho (e já mais pronto) recebe propostas de clubes um pouco maiores
+            const idade = Jogador.idadeInicial(form);
+            const porNivel = ligas.length >= 3
+                ? (idade >= 22 ? [ligas[0], ligas[1], ligas[1], ligas[2]] : [ligas[1], ligas[2], ligas[ligas.length - 1], ligas[0]])
+                : [seg, seg, seg, ligas[0]];
             porNivel.forEach((liga, i) => {
                 let opcoes = liga.times.filter(id => !cands.includes(id));
                 if (i === 3) opcoes = opcoes.sort((a, b) => s.times[a].rep - s.times[b].rep).slice(0, 6);
@@ -68,7 +75,7 @@ const Jogador = {
             });
             Jogo.ui.peneira = cands;
             Jogo.telaSimples('⚽ A peneira', `
-                <p>Você tem <b>17 anos</b> e fez peneira em vários clubes. Estes gostaram do seu futebol e oferecem um contrato de base:</p>
+                <p>Você tem <b>${idade} anos</b> e fez ${idade <= 19 ? 'peneira' : 'testes'} em vários clubes. Estes gostaram do seu futebol e oferecem ${idade <= 19 ? 'um contrato de base' : 'o primeiro contrato profissional'}:</p>
                 <div class="grade-clubes grande">${cands.map(tid => {
                 const t = s.times[tid];
                 const liga = Mundo.liga(s, t.liga);
@@ -82,22 +89,26 @@ const Jogador = {
         const s = Jogo.sTmp;
         Jogo.sTmp = null;
         s.modo = 'jogador';
-        s.pessoa = Vida.criarPessoa({ nome: form.nome, idade: 17, pais: form.pais });
+        const idade = Jogador.idadeInicial(form);
+        const extra = idade - 17; // anos a mais (ou a menos) que a idade padrão
+        s.pessoa = Vida.criarPessoa({ nome: form.nome, idade, pais: form.pais });
         const t = s.times[tid];
-        const pot = U.clamp(Math.round(70 + Math.abs(U.normal(0, 9)) + U.int(0, 6)), 70, 97);
-        const ovr = U.clamp(Math.round(t.rep) - U.int(5, 9), 48, 66);
-        const p = Mundo.novoJogador(s, { nome: form.nome, pos: form.pos, idade: 17, ovr, pot: Math.max(pot, ovr + 12), tid, real: false }, Mundo.liga(s, t.liga).riqueza);
+        // mais novo = mais potencial; mais velho = mais pronto, com menos espaço para crescer
+        const potBase = U.clamp(Math.round(70 + Math.abs(U.normal(0, 9)) + U.int(0, 6) - Math.max(0, extra - 4) * 1.5 + (idade === 16 ? 2 : 0)), 62, 97);
+        const ovr = U.clamp(Math.round(t.rep) - U.int(5, 9) + Math.round(Math.min(Math.max(extra, -1), 8) * 1.6), 46, 74);
+        const folga = Math.max(1, Math.round(12 - Math.max(0, extra) * 1.3));
+        const p = Mundo.novoJogador(s, { nome: form.nome, pos: form.pos, idade, ovr, pot: Math.max(potBase, ovr + folga), tid, real: false }, Mundo.liga(s, t.liga).riqueza);
         p.user = true;
         p.contr = 3;
-        p.sal = U.redondo(Math.max(6000, p.sal * 0.6));
+        p.sal = U.redondo(Math.max(6000, p.sal * (idade <= 19 ? 0.6 : 0.85)));
         s.car = {
             tipo: 'jogador', pid: p.id, treino: 'normal', hist: [], prog: 0, selecao: { jogos: 0, gols: 0 }, pedirTransf: false, aumentoAno: -1, estudo: 0, clubes: [t.id],
-            habs: [], pontos: 2, camisa: CAMISA_PADRAO[form.pos] || 10, comemoracao: 'Correr para a torcida',
+            habs: [], pontos: 2 + Math.max(0, Math.floor(extra / 3)), camisa: CAMISA_PADRAO[form.pos] || 10, comemoracao: 'Correr para a torcida',
         };
         Jogo.migrar(s);
         Vida.log(s, `👶 Você nasceu ${Jogador.noPais(form.pais)}. Desde pequeno, só pensava em bola.`, '');
-        Vida.log(s, `✍️ Aos 17 anos, você assinou seu primeiro contrato com o ${t.nome}! Salário: ${U.dinheiro(p.sal)}/ano.`, 'bom');
-        Mundo.noticia(s, `🌱 ${t.nome} contrata o jovem ${form.nome}, de 17 anos.`, 'clube');
+        Vida.log(s, `✍️ Aos ${idade} anos, você assinou seu primeiro contrato com o ${t.nome}! Salário: ${U.dinheiro(p.sal)}/ano.`, 'bom');
+        Mundo.noticia(s, `🌱 ${t.nome} contrata ${idade <= 21 ? 'o jovem ' : ''}${form.nome}, de ${idade} anos.`, 'clube');
         Jogo.s = s;
         Jogo.aba = 'inicio';
         Jogo.atualizar();

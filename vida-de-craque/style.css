@@ -809,3 +809,13 @@ body[data-tema="claro"] .mot-1 { color: #b91c1c; }
 .lista-prom { display: grid; gap: 4px; margin-bottom: 10px; font-size: .85rem; }
 .conversa-cab { line-height: 1.7; }
 @media (max-width: 600px) { .mot-resumo { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---------------- Chance de cada opção nos lances ---------------- */
+.btn-opcao:has(.chance) { flex-wrap: wrap; row-gap: 2px; }
+.chance { display: block; flex-basis: 100%; margin-top: 1px; font-size: .78rem; font-weight: 600; opacity: .95; }
+.chance-alta { color: #4ade80; }
+.chance-media { color: #fde047; }
+.chance-baixa { color: #fb923c; }
+body[data-tema="claro"] .chance-alta { color: #15803d; }
+body[data-tema="claro"] .chance-media { color: #a16207; }
+body[data-tema="claro"] .chance-baixa { color: #c2410c; }

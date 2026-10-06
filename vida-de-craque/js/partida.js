@@ -354,8 +354,31 @@ const Partida = {
     // -----------------------------------------------------------------
     sortearLance(m) {
         const slot = Partida.slotDe(m, Partida.ladoDoUsuario(m), m.usuario);
-        const lista = LANCES[POS_GRUPO[slot]];
+        const lista = LANCES[POS_GRUPO[slot]].concat(LANCES_POS[slot] || []);
         return U.pesado(lista, l => l.peso || 1);
+    },
+
+    // chance real de cada opção (é a mesma conta usada para decidir o lance)
+    chanceOpcao(m, lance, o) {
+        const p = m.s.jog[m.usuario];
+        const f = Partida.fatorHabilidade(p) * Partida.multHab(m, lance, o, p);
+        if (lance.defesa) {
+            return { tipo: 'def', p: U.clamp(o.def * f, 0.05, 0.95), cartao: o.cartao ? o.cartao * (Partida.hab(m, 'xerife') ? 0.5 : 1) : 0, perigo: o.perigo };
+        }
+        if (o.gol) return { tipo: 'gol', p: U.clamp(o.gol * f, 0.03, 0.9), perigo: o.perigo };
+        if (o.ass) return { tipo: 'ass', p: U.clamp(o.ass * f, 0.03, 0.9), perigo: o.perigo };
+        return { tipo: 'seg', p: U.clamp((o.seg ?? 0.93) + (f - 1) * 0.25, 0.4, 0.99), perigo: o.perigo };
+    },
+
+    // texto curto da chance, para mostrar no botão
+    textoChance(ch) {
+        const pct = x => Math.round(x * 100) + '%';
+        const nivel = ch.p >= 0.6 ? 'alta' : ch.p >= 0.3 ? 'media' : 'baixa';
+        const rot = { gol: `⚽ ${pct(ch.p)} de gol`, ass: `🎯 ${pct(ch.p)} de assistência`, def: `🛡️ ${pct(ch.p)} de sucesso`, seg: `✅ ${pct(ch.p)} de acerto` }[ch.tipo];
+        let extra = '';
+        if (ch.cartao) extra += ` · 🟨 ${pct(Math.min(1, ch.cartao))} de cartão`;
+        if (ch.perigo >= 0.3) extra += ' · ⚠️ se der errado, risco de gol contra';
+        return `<span class="chance chance-${nivel}">${rot}${extra}</span>`;
     },
 
     fatorHabilidade(p) {
@@ -384,43 +407,46 @@ const Partida = {
         const p = m.s.jog[m.usuario];
         if (op < 0) op = U.int(0, lance.ops.length - 1);
         const o = lance.ops[op];
-        const f = Partida.fatorHabilidade(p) * Partida.multHab(m, lance, o, p);
+        const ch = Partida.chanceOpcao(m, lance, o);
         m.bonus[p.id] = m.bonus[p.id] || 0;
         const res = { txt: '', bom: false, eventos: [] };
+        // jogada que deu errado pode virar gol do adversário
+        const contraGol = (prob, txtGol, txtSalvo) => {
+            if (prob && U.chance(prob)) {
+                const autor = Partida.sortearAutor(m, 1 - lado);
+                if (autor) res.eventos.push(...Partida.gol(m, 1 - lado, autor, !lance.penalti));
+                return txtGol;
+            }
+            return txtSalvo;
+        };
 
         if (lance.defesa) {
-            const ok = U.chance(U.clamp(o.def * f, 0.05, 0.95));
-            if (o.cartao && U.chance(o.cartao * (Partida.hab(m, 'xerife') ? 0.5 : 1))) {
+            const ok = U.chance(ch.p);
+            if (ch.cartao && U.chance(ch.cartao)) {
                 res.eventos.push(...Partida.cartao(m, lado, p, U.chance(o.vermelho || 0)));
             }
             if (ok) {
                 res.bom = true;
                 m.bonus[p.id] += lance.penalti ? 1.2 : 0.5;
-                res.txt = lance.penalti ? '🧤 DEFENDEU O PÊNALTI! A torcida grita seu nome!' : U.escolha(['🛡️ Você trava o lance com perfeição!', '🛡️ Desarme limpo, a torcida aplaude!', '🧤 Que defesa! Você salvou o time!']);
+                res.txt = lance.penalti ? '🧤 DEFENDEU O PÊNALTI! A torcida grita seu nome!' : (o.ok || U.escolha(['🛡️ Você trava o lance com perfeição!', '🛡️ Desarme limpo, a torcida aplaude!', '🧤 Que defesa! Você salvou o time!']));
                 if (lance.penalti && m.s.cont) m.s.cont.penaltisDefendidos = (m.s.cont.penaltisDefendidos || 0) + 1;
             } else {
                 m.bonus[p.id] -= 0.4;
-                const golAdv = lance.penalti ? U.chance(0.85) : U.chance(0.28);
-                if (golAdv) {
-                    const autor = Partida.sortearAutor(m, 1 - lado);
-                    if (autor) res.eventos.push(...Partida.gol(m, 1 - lado, autor, !lance.penalti));
-                    res.txt = lance.penalti ? '😩 Você pulou, mas a bola entrou.' : '😩 O adversário passou e marcou...';
-                } else {
-                    res.txt = '😅 Você não chegou, mas o adversário desperdiçou.';
-                }
+                const perigo = o.perigo ?? (lance.penalti ? 0.85 : 0.28);
+                res.txt = contraGol(perigo, o.erroGol || (lance.penalti ? '😩 Você pulou, mas a bola entrou.' : '😩 O adversário passou e marcou...'), '😅 Você não chegou, mas o adversário desperdiçou.');
             }
         } else if (o.gol) {
-            if (U.chance(U.clamp(o.gol * f, 0.03, 0.9))) {
+            if (U.chance(ch.p)) {
                 res.bom = true;
                 res.eventos.push(...Partida.gol(m, lado, p, false));
                 res.txt = '⚽ GOOOOL! VOCÊ MARCOU!';
                 if (o.estilo) m.bonus[p.id] += 0.3;
             } else {
                 m.bonus[p.id] -= 0.15;
-                res.txt = U.escolha(['😬 Pra fora! Não foi dessa vez.', '🧤 O goleiro defendeu.', '😫 Na trave!', '😬 O zagueiro bloqueou.']);
+                res.txt = contraGol(o.perigo, '😱 Você perdeu a bola e o adversário puxou o contra-ataque... gol deles!', U.escolha(['😬 Pra fora! Não foi dessa vez.', '🧤 O goleiro defendeu.', '😫 Na trave!', '😬 O zagueiro bloqueou.']));
             }
         } else if (o.ass) {
-            if (U.chance(U.clamp(o.ass * f, 0.03, 0.9))) {
+            if (U.chance(ch.p)) {
                 const autor = Partida.sortearAutor(m, lado, p.id);
                 if (autor) {
                     res.bom = true;
@@ -429,12 +455,17 @@ const Partida = {
                 } else res.txt = 'A jogada não deu em nada.';
             } else {
                 m.bonus[p.id] -= 0.1;
-                res.txt = U.escolha(['😕 O passe foi interceptado.', '😕 Seu companheiro furou.', '😕 A bola saiu longa demais.']);
+                res.txt = contraGol(o.perigo, '😱 O passe foi interceptado e o adversário saiu no contra-ataque... gol deles!', U.escolha(['😕 O passe foi interceptado.', '😕 Seu companheiro furou.', '😕 A bola saiu longa demais.']));
             }
         } else {
-            m.bonus[p.id] += o.nota || 0.15;
-            res.bom = true;
-            res.txt = '👍 Jogada segura, o time mantém a posse.';
+            if (U.chance(ch.p)) {
+                m.bonus[p.id] += o.nota || 0.15;
+                res.bom = true;
+                res.txt = o.ok || '👍 Jogada segura, o time mantém a posse.';
+            } else {
+                m.bonus[p.id] -= 0.25;
+                res.txt = contraGol(o.perigo, o.erroGol || '😱 Você perdeu a bola num lugar perigoso... e o adversário marcou!', o.erro || '😕 Você perdeu a bola, mas o time conseguiu recompor.');
+            }
         }
         Partida.evento(m, { tipo: 'lance', lado, pid: p.id, txt: `⭐ ${p.nome}: ${o.txt.replace(/^\S+\s/, '')} — ${res.txt}` });
         return res;
@@ -544,7 +575,7 @@ const LANCES = {
                 { txt: '🎯 Enfiar a bola em profundidade', ass: 0.21 },
                 { txt: '💥 Arriscar de fora da área', gol: 0.09 },
                 { txt: '🌈 Lançamento longo para o ponta', ass: 0.16 },
-                { txt: '🛟 Tocar de lado e manter a posse', nota: 0.15 },
+                { txt: '🛟 Tocar de lado e manter a posse', seg: 0.95, nota: 0.15 },
             ]
         },
         {
@@ -558,7 +589,7 @@ const LANCES = {
             txt: 'Você rouba a bola no meio-campo e tem espaço pra correr!', ops: [
                 { txt: '🏃 Conduzir até a área e chutar', gol: 0.14 },
                 { txt: '🎯 Achar o atacante na corrida', ass: 0.23 },
-                { txt: '🛟 Segurar e esperar o time', nota: 0.2 },
+                { txt: '🛟 Segurar e esperar o time', seg: 0.9, nota: 0.2 },
             ]
         },
     ],
@@ -574,19 +605,6 @@ const LANCES = {
             txt: 'Cruzamento perigoso na sua área!', defesa: true, ops: [
                 { txt: '🤕 Subir de cabeça para afastar', def: 0.65 },
                 { txt: '🦶 Tentar dominar e sair jogando', def: 0.45 },
-            ]
-        },
-        {
-            txt: 'Escanteio a favor! Você sobe para a área adversária.', ops: [
-                { txt: '🤕 Cabecear firme para o gol', gol: 0.13 },
-                { txt: '🔄 Escorar para o meio da área', ass: 0.13 },
-            ]
-        },
-        {
-            txt: 'Espaço pela lateral! Você pode apoiar o ataque.', ops: [
-                { txt: '📦 Cruzar na área', ass: 0.17 },
-                { txt: '🏃 Avançar e chutar', gol: 0.07 },
-                { txt: '🛟 Recuar para o zagueiro', nota: 0.1 },
             ]
         },
     ],
@@ -609,6 +627,166 @@ const LANCES = {
                 { txt: '🏃 Sair abafando', def: 0.55 },
                 { txt: '🧍 Fechar o ângulo e esperar', def: 0.48 },
                 { txt: '🦵 Dar o bote no pé dele', def: 0.6, cartao: 0.3, vermelho: 0.35 },
+            ]
+        },
+    ],
+};
+
+// Lances de cada posição (somam-se aos do setor acima).
+// gol/ass/def = chance base · seg = chance de acerto de jogada segura ou arriscada
+// perigo = chance do adversário marcar se der errado · estilo = jogada de efeito
+const LANCES_POS = {
+    ATA: [
+        {
+            txt: 'Você recebe de costas para o gol, dentro da área, com o zagueiro colado.', ops: [
+                { txt: '🔄 Girar em cima do zagueiro e chutar', gol: 0.17, estilo: true },
+                { txt: '👠 Tocar de calcanhar para o meia', ass: 0.2, estilo: true },
+                { txt: '🛡️ Proteger a bola e esperar o time', seg: 0.85, nota: 0.2, ok: '💪 Você segurou a bola e o time chegou.' },
+            ]
+        },
+        {
+            txt: 'A bola espirra na pequena área e sobra limpa pra você!', ops: [
+                { txt: '⚡ Empurrar de primeira', gol: 0.5 },
+                { txt: '🎯 Dominar e escolher o canto', gol: 0.42, estilo: true },
+            ]
+        },
+    ],
+    PON: [
+        {
+            txt: 'Você está no 1 contra 1 com o lateral, na ponta.', ops: [
+                { txt: '🕺 Cortar para dentro e chutar', gol: 0.15, estilo: true },
+                { txt: '🏁 Ir até a linha de fundo e cruzar', ass: 0.22 },
+                { txt: '🔁 Tocar para o lateral que passa por fora', ass: 0.14 },
+                { txt: '🛟 Recuar para o volante', seg: 0.95, nota: 0.1 },
+            ]
+        },
+        {
+            txt: 'Contra-ataque! Você puxa pela ponta com dois companheiros chegando.', ops: [
+                { txt: '🏃 Ir sozinho até o gol', gol: 0.2, estilo: true },
+                { txt: '🎯 Tocar no meio para o centroavante', ass: 0.3 },
+                { txt: '🌈 Inverter para o outro lado', ass: 0.18 },
+            ]
+        },
+    ],
+    MEI: [
+        {
+            txt: 'Tabela na entrada da área: a bola volta pra você!', ops: [
+                { txt: '🎯 Bater colocado de primeira', gol: 0.2 },
+                { txt: '🤝 Devolver de primeira para o atacante', ass: 0.26 },
+                { txt: '🪄 Dar um toque por cima da zaga', ass: 0.2, estilo: true },
+            ]
+        },
+        {
+            txt: 'Escanteio a favor! Você vai cobrar.', ops: [
+                { txt: '1️⃣ Cobrar fechado no primeiro pau', ass: 0.12 },
+                { txt: '2️⃣ Cobrar aberto no segundo pau', ass: 0.14 },
+                { txt: '🤏 Cobrar curto e tabelar', seg: 0.9, nota: 0.1 },
+                { txt: '🌀 Tentar o gol olímpico', gol: 0.03, estilo: true },
+            ]
+        },
+    ],
+    VOL: [
+        {
+            txt: 'O meia adversário gira e parte em velocidade pela intermediária!', defesa: true, ops: [
+                { txt: '🦵 Dar o bote', def: 0.58, cartao: 0.2, vermelho: 0.05 },
+                { txt: '🏃 Acompanhar e fechar a linha de passe', def: 0.5 },
+                { txt: '✋ Fazer falta tática', def: 0.95, cartao: 0.8, perigo: 0.1 },
+            ]
+        },
+        {
+            txt: 'Saída de bola pressionada: dois adversários vêm em cima de você.', ops: [
+                { txt: '🎯 Passe vertical entre as linhas', ass: 0.1, perigo: 0.2 },
+                { txt: '🌀 Girar e sair driblando', seg: 0.6, nota: 0.45, estilo: true, perigo: 0.35, ok: '🌀 Que giro! Você deixou os dois para trás.' },
+                { txt: '🛟 Devolver para o zagueiro', seg: 0.95, nota: 0.05 },
+            ]
+        },
+        {
+            txt: 'A bola sobra na entrada da área depois de um corte da zaga.', ops: [
+                { txt: '💥 Bater de primeira', gol: 0.1 },
+                { txt: '🎯 Ajeitar e chutar colocado', gol: 0.08, estilo: true },
+                { txt: '🔁 Abrir para o lateral', ass: 0.12 },
+            ]
+        },
+    ],
+    LAT: [
+        {
+            txt: 'Espaço pela lateral! Você pode apoiar o ataque.', ops: [
+                { txt: '📦 Cruzar na área', ass: 0.17 },
+                { txt: '🏃 Avançar e chutar', gol: 0.07 },
+                { txt: '🛟 Recuar para o zagueiro', seg: 0.95, nota: 0.1 },
+            ]
+        },
+        {
+            txt: 'O ponta adversário parte em velocidade pra cima de você!', defesa: true, ops: [
+                { txt: '🦵 Dar o carrinho', def: 0.58, cartao: 0.25, vermelho: 0.08 },
+                { txt: '🏃 Correr junto e bloquear o cruzamento', def: 0.55 },
+                { txt: '👕 Puxar a camisa', def: 0.9, cartao: 0.8, perigo: 0.1 },
+            ]
+        },
+        {
+            txt: 'Tabela com o ponta: você passa por fora em velocidade!', ops: [
+                { txt: '📦 Cruzar rasteiro para trás', ass: 0.22 },
+                { txt: '💥 Chutar cruzado', gol: 0.09 },
+                { txt: '🛟 Segurar e esperar o time', seg: 0.92, nota: 0.1 },
+            ]
+        },
+    ],
+    ZAG: [
+        {
+            txt: 'Escanteio a favor! Você sobe para a área adversária.', ops: [
+                { txt: '🤕 Cabecear firme para o gol', gol: 0.13 },
+                { txt: '🔄 Escorar para o meio da área', ass: 0.13 },
+            ]
+        },
+        {
+            txt: 'Bola longa nas costas da defesa! Você e o atacante correm lado a lado.', defesa: true, ops: [
+                { txt: '🦵 Carrinho para desviar', def: 0.55, cartao: 0.25, vermelho: 0.2 },
+                { txt: '🏃 Correr e proteger com o corpo', def: 0.5 },
+                { txt: '🧤 Deixar para o goleiro sair', def: 0.45, perigo: 0.4 },
+            ]
+        },
+        {
+            txt: 'O centroavante adversário recebe de costas dentro da sua área.', defesa: true, ops: [
+                { txt: '⚡ Antecipar a jogada', def: 0.5, perigo: 0.4 },
+                { txt: '🧱 Marcar firme sem fazer falta', def: 0.55 },
+                { txt: '🤼 Empurrar por trás', def: 0.75, cartao: 0.35, perigo: 0.8, erroGol: '😱 O juiz marcou pênalti... e eles converteram.' },
+            ]
+        },
+        {
+            txt: 'Saída de bola: o adversário pressiona alto.', ops: [
+                { txt: '🦶 Dar um chutão', seg: 0.97, nota: 0.05, ok: '🦶 Bola pro mato que o jogo é de campeonato!' },
+                { txt: '🎯 Lançar longo para o atacante', ass: 0.08 },
+                { txt: '🔁 Passe curto para o volante', seg: 0.82, nota: 0.25, perigo: 0.35 },
+            ]
+        },
+    ],
+    GOL: [
+        {
+            txt: 'Cruzamento alto na sua pequena área, com atacantes subindo!', defesa: true, ops: [
+                { txt: '👊 Sair e socar a bola', def: 0.62 },
+                { txt: '🤲 Sair para encaixar', def: 0.55, ok: '🤲 Encaixou firme! Que segurança!' },
+                { txt: '🧍 Ficar na linha', def: 0.45 },
+            ]
+        },
+        {
+            txt: 'Recuo de bola e o atacante vem pressionando você!', ops: [
+                { txt: '🦶 Dar um chutão', seg: 0.97, nota: 0.05 },
+                { txt: '🕺 Driblar o atacante', seg: 0.6, nota: 0.5, estilo: true, perigo: 0.65, ok: '🕺 Você driblou o atacante! A torcida foi à loucura.', erroGol: '😱 O atacante roubou a bola e tocou para o gol vazio...' },
+                { txt: '🎯 Passe curto para o zagueiro', seg: 0.85, nota: 0.2, perigo: 0.4 },
+            ]
+        },
+        {
+            txt: 'Falta perigosa contra o seu time, na entrada da área.', defesa: true, ops: [
+                { txt: '🧱 Barreira com 5 e você no canto aberto', def: 0.62 },
+                { txt: '🧱 Barreira com 3 e você no meio do gol', def: 0.55 },
+                { txt: '🏃 Adiantar-se para cortar o cruzamento', def: 0.5 },
+            ]
+        },
+        {
+            txt: 'Você agarrou a bola e o seu time está todo no ataque!', ops: [
+                { txt: '🚀 Repor rápido com a mão para o contra-ataque', ass: 0.07 },
+                { txt: '🦶 Lançamento longo para o centroavante', ass: 0.06 },
+                { txt: '🐢 Segurar e esfriar o jogo', seg: 0.99, nota: 0.05 },
             ]
         },
     ],

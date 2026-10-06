@@ -360,7 +360,9 @@ const Jogo = {
                 <label class="campo">Nome de jogador<input id="nv-nome" class="inp" maxlength="30" placeholder="Ex.: Davi Felippe"></label>
                 <label class="campo">Nacionalidade<select id="nv-pais" class="sel">${paises}</select></label>
                 <label class="campo">Posição<select id="nv-pos" class="sel">${POSICOES.map(p => `<option value="${p}" ${p === 'ATA' ? 'selected' : ''}>${POS_NOME[p]}</option>`).join('')}</select></label>
+                <label class="campo">Idade para começar<select id="nv-idade" class="sel">${Array.from({ length: 20 }, (_, k) => 16 + k).map(i => `<option value="${i}" ${i === 17 ? 'selected' : ''}>${i} anos${i === 16 ? ' (mais potencial)' : i >= 26 ? ' (mais pronto, menos potencial)' : ''}</option>`).join('')}</select></label>
             </div>
+            <p class="cinza pequeno">Começar mais novo dá mais tempo para evoluir e mais potencial. Começar mais velho já te deixa mais pronto, mas sobra menos tempo de carreira.</p>
             <div class="linha-botoes"><button class="btn btn-primario btn-grande" data-acao="novoJogadorPeneira">Ir para a peneira ▶</button></div>`;
         this.telaSimples(modo === 'tecnico' ? '📋 Novo técnico' : '⚽ Novo jogador', html, 'menuNovo');
     },

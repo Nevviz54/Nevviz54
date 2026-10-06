@@ -271,7 +271,8 @@ const TelaPartida = {
     async lance() {
         const m = this.m;
         const lance = Partida.sortearLance(m);
-        const i = await UI.perguntar(`Seu lance! ${m.min}'`, lance.txt, lance.ops.map(o => o.txt), '⭐');
+        const ops = lance.ops.map(o => o.txt + Partida.textoChance(Partida.chanceOpcao(m, lance, o)));
+        const i = await UI.perguntar(`Seu lance! ${m.min}'`, `${lance.txt}<br><small class="cinza">As chances já levam em conta a sua habilidade e as suas habilidades especiais.</small>`, ops, '⭐');
         const r = Partida.resolverLance(m, lance, i);
         this.atualizar();
         const gol = r.eventos.find(e => e.tipo === 'gol');

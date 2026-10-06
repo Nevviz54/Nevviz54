@@ -81,9 +81,15 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
 
 ## ⚽ Carreira de Jogador (o lado BitLife)
 
-- Comece aos **17 anos** escolhendo um dos clubes que te aprovaram na peneira.
+- Escolha a **idade para começar** (de 16 a 35 anos): mais novo tem mais potencial; mais velho já começa mais pronto e recebe propostas de clubes maiores.
 - Escolha o **treino** da semana (leve, normal ou intenso).
-- Nas partidas aparecem **lances em que você decide**: chutar colocado, encher o pé, driblar, tocar, dar o carrinho, defender o pênalti...
+- Nas partidas aparecem **lances em que você decide**, com a **chance de cada opção** na tela
+  (ex.: "Driblar o goleiro — ⚽ 33% de gol", "Passe curto — ✅ 84% de acerto · ⚠️ risco de gol contra").
+  A chance já leva em conta a sua habilidade e as habilidades especiais.
+- **Lances de cada posição**: centroavante (pivô, rebote na pequena área), ponta (1 contra 1, contra-ataque),
+  meia (tabela, escanteio, falta), volante (bote, saída de bola pressionada), lateral (apoio, marcar o ponta),
+  zagueiro (bola nas costas, marcação na área, saída de bola) e goleiro (pênalti, cruzamento, recuo
+  pressionado, falta, reposição). Jogada arriscada que dá errado pode virar gol do adversário.
 - **Habilidades especiais** ⚡ (12): Finalizador, Cabeça de ouro, Garçom, Batedor oficial, Driblador, Paredão, Xerife, Decisivo, Motorzinho, Corpo blindado, Líder e Estrela da mídia. Você ganha pontos quando evolui, quando é o melhor em campo e quando faz hat-trick.
 - **Identidade**: escolha o número da camisa e a sua comemoração de gol (Siuuu, robozinho, dancinha... ou tirar a camisa e levar amarelo 😅).
 - **Lesões com decisão**: tratamento caro para voltar antes ou recuperação normal.
