@@ -37,6 +37,51 @@ const NOMES = {
         p: 'Santiago Mateo Juan Thiago Lautaro Facundo Nicolás Agustín Franco Matías Gonzalo Joaquín Tomás Lucas Ignacio Federico Maximiliano Ezequiel Leandro Emiliano Cristian Brian Gastón Lisandro Rodrigo Valentín Bruno Alan Exequiel Kevin'.split(' '),
         s: 'González Rodríguez Gómez Fernández López Díaz Martínez Pérez Romero Sosa Álvarez Torres Ruiz Ramírez Flores Benítez Acosta Medina Herrera Suárez Aguirre Giménez Gutiérrez Pereyra Molina Castro Ortiz Silva Núñez Luna Juárez Cabrera Ríos Morales Godoy Ledesma Vega Correa Paz Barrios'.split(' '),
     },
+    // usados nas seleções e pelos olheiros da base
+    pt: {
+        p: 'João Rodrigo Tiago Diogo Gonçalo Rúben Francisco Duarte Tomás Rafael Miguel Bernardo Afonso Martim Pedro Nuno Ricardo Hugo Vasco Henrique'.split(' '),
+        s: 'Silva Santos Ferreira Pereira Oliveira Costa Rodrigues Martins Sousa Fernandes Gonçalves Gomes Lopes Marques Alves Almeida Ribeiro Pinto Carvalho Teixeira Moreira Correia Mendes Nunes Vieira'.split(' '),
+    },
+    bal: {
+        p: 'Luka Ivan Marko Josip Mateo Nikola Stefan Filip Petar Dušan Lovro Ante Bruno Toni Mislav Aleksandar Strahinja Lazar Miloš Vuk'.split(' '),
+        s: 'Horvat Kovačević Babić Marić Jurić Novak Knežević Vuković Petrović Jovanović Nikolić Marković Đorđević Stojanović Ilić Pavlović Popović Mitrović Kostić Perić'.split(' '),
+    },
+    nor: {
+        p: 'Mathias Oliver Emil Jonas Magnus Kasper Rasmus Andreas Kristoffer Sander Viktor Jesper Mikkel Anders Elias Isak Lucas Oskar Felix Johan'.split(' '),
+        s: 'Hansen Johansen Olsen Larsen Andersen Pedersen Nielsen Jensen Berg Lund Karlsson Nilsson Eriksson Lindqvist Halvorsen Strand Haugen Dahl Bakke Holm'.split(' '),
+    },
+    tr: {
+        p: 'Emre Arda Kerem Mert Can Burak Yusuf Eren Ozan Kaan Berkay Efe Ahmet Mehmet Semih Barış Ferdi Hakan Oğuz Umut'.split(' '),
+        s: 'Yılmaz Kaya Demir Şahin Çelik Yıldız Yıldırım Öztürk Aydın Özdemir Arslan Doğan Kılıç Aslan Çetin Kara Koç Kurt Özkan Şimşek'.split(' '),
+    },
+    pl: {
+        p: 'Jakub Kacper Szymon Filip Mateusz Bartosz Kamil Michał Paweł Piotr Krzysztof Łukasz Adrian Dawid Wojciech Przemysław Oskar Igor Maciej Tomasz'.split(' '),
+        s: 'Nowak Kowalski Wiśniewski Wójcik Kowalczyk Kamiński Lewandowski Zieliński Szymański Woźniak Dąbrowski Kozłowski Jankowski Mazur Kwiatkowski Krawczyk Piotrowski Grabowski Nowakowski Pawłowski'.split(' '),
+    },
+    arab: {
+        p: 'Mohamed Ahmed Youssef Omar Ali Hamza Karim Amine Ayoub Bilal Ismail Mahmoud Yassine Anas Hassan Adel Nabil Sofiane Ilyes Abdallah'.split(' '),
+        s: 'El Amrani Benali Haddad Mansour Saleh Khalil Nasser Bouzid Hamdi Ziani Belkacem Al-Harbi Al-Qahtani Al-Shehri El Idrissi Fathi Rahmani Toumi Sayed Gharbi'.split(' '),
+    },
+    afr: {
+        p: 'Moussa Ibrahima Mamadou Cheikh Samuel Emmanuel Victor Kelechi Kwame Kofi Ousmane Abdoulaye Yaw Chidi Joseph Daniel Seydou Amadou Bakary Isaac'.split(' '),
+        s: 'Diallo Traoré Koné Sow Ndiaye Mensah Okafor Adeyemi Boateng Asante Camara Touré Diop Eze Nwosu Owusu Keita Sylla Bamba Ogunleye'.split(' '),
+    },
+    jp: {
+        p: 'Haruto Yuto Sota Ren Riku Kaito Takumi Daichi Kenta Shota Yuki Hiroki Ryo Kazuki Takefusa Kaoru Ao Ritsu Koki Sho'.split(' '),
+        s: 'Sato Suzuki Takahashi Tanaka Watanabe Ito Yamamoto Nakamura Kobayashi Kato Yoshida Yamada Sasaki Matsumoto Inoue Kimura Hayashi Shimizu Mori Ikeda'.split(' '),
+    },
+    kr: {
+        p: 'Min-jae Ji-sung Hee-chan Kang-in Jun-ho Seung-ho Hyun-woo Dong-hyun Jae-sung In-beom Tae-hwan Yong-woo Sang-ho Jin-su Young-gwon'.split(' '),
+        s: 'Kim Lee Park Choi Jung Kang Cho Yoon Jang Lim Han Oh Seo Shin Kwon Hwang Ahn Song Hong Jeon'.split(' '),
+    },
+    ir: {
+        p: 'Ali Mehdi Reza Amir Hossein Mohammad Saeid Sardar Alireza Milad Morteza Ehsan Karim Arash Omid'.split(' '),
+        s: 'Rezaei Mohammadi Hosseini Karimi Ahmadi Jafari Rahimi Moradi Hashemi Ghasemi Sadeghi Azizi Nouri Kazemi Taheri'.split(' '),
+    },
+    ch: {
+        p: 'Wei Hao Jun Lei Yang Chen Zhe Tao Bin Kai Long Ming Yu Xin Feng'.split(' '),
+        s: 'Wang Li Zhang Liu Chen Yang Zhao Huang Zhou Wu Xu Sun Hu Zhu Gao'.split(' '),
+    },
 };
 
 // Nomes para pessoas da vida (namorada, filhos etc.)
@@ -45,10 +90,14 @@ const NOMES_PESSOAS = {
     m: 'Miguel Arthur Heitor Theo Davi Gabriel Bernardo Samuel Pedro Lorenzo Benjamin Matheus Lucas Nicolas Joaquim Gael Rafael Enzo Henrique Murilo Bento Vicente Isaac Leonardo Antônio'.split(' '),
 };
 
+// nacionalidades das ligas do jogo (os "estrangeiros" das ligas saem daqui)
+const NOMES_LIGAS = ['br', 'de', 'en', 'fr', 'es', 'it', 'nl', 'ar'];
+
 const Nomes = {
-    gerar(cod = 'br') {
+    // puro = sem sortear estrangeiro (seleções e garotos achados pelos olheiros)
+    gerar(cod = 'br', puro = false) {
         // Em ligas grandes aparecem estrangeiros de vez em quando
-        if (Math.random() < 0.12) cod = U.escolha(Object.keys(NOMES));
+        if (!puro && Math.random() < 0.12) cod = U.escolha(NOMES_LIGAS);
         const pool = NOMES[cod] || NOMES.br;
         // No Brasil é comum jogador ser conhecido por um nome só
         if (cod === 'br' && Math.random() < 0.18) {

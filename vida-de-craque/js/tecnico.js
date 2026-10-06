@@ -24,6 +24,7 @@ const Tecnico = {
                 { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
                 { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
                 { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
+                { id: 'selecao', nome: 'Seleção', icone: '🌎', render: Selecoes.tela },
                 { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
                 { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
                 { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
@@ -41,6 +42,7 @@ const Tecnico = {
             { id: 'estrutura', nome: 'Estrutura', icone: '🏗️', render: Tecnico.estrutura },
             { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
             { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
+            { id: 'selecao', nome: 'Seleção', icone: '🌎', render: Selecoes.tela },
             { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
             { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
             { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
@@ -299,7 +301,7 @@ const Tecnico = {
     mercado(s) {
         const f = Object.assign({ pos: '', liga: '', ovr: 60, idade: 40, preco: 0, nome: '', livres: false }, Jogo.ui.filtro);
         const t = Tecnico.time(s);
-        let lista = Object.values(s.jog).filter(p => !p.user && p.tid !== t.id);
+        let lista = Object.values(s.jog).filter(p => !p.user && p.tid !== t.id && p.tid >= -1);
         // Buscando pelo nome, procura em TODOS os jogadores (com ou sem clube): os filtros de
         // OVR, idade e valor só valem para a busca sem nome.
         const nome = U.semAcento(f.nome);
@@ -398,6 +400,9 @@ const Tecnico = {
     //  Semana
     // -----------------------------------------------------------------
     async semana(s) {
+        // seleção: jogos nas Datas FIFA e convites (mesmo sem clube)
+        await Selecoes.dataFifa(s);
+        if (s.semana === 24) await Selecoes.convite(s, 0.25);
         const t = Tecnico.time(s);
         if (!t) {
             s.car.ofertas = s.car.ofertas.filter(o => o.ate > s.semana || o.ano > s.ano);

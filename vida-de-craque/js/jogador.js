@@ -9,7 +9,6 @@ const TREINOS = {
     intenso: { nome: 'Intenso', icone: '🔥', mult: 1.5, cond: -8, les: 0.022, desc: 'Evolui rápido, cansa e pode lesionar.' },
 };
 
-const FORCA_SELECAO = { BRA: 88, ARG: 89, FRA: 89, ESP: 90, ENG: 87, GER: 85, ITA: 83, NED: 84 };
 
 // Habilidades especiais: compradas com pontos de habilidade
 const HABILIDADES = {
@@ -198,7 +197,7 @@ const Jogador = {
                     <button class="btn btn-perigo" data-acao="jgAposentar">👴 Aposentar</button>
                 </div>
                 <h3>🇺🇳 Seleção</h3>
-                <p>${s.car.selecao.jogos ? `${s.car.selecao.jogos} jogos e ${s.car.selecao.gols} gols pela seleção ${Mundo.pais(s.pessoa.pais).bandeira}.` : 'Ainda não foi convocado. Continue evoluindo!'}</p>
+                ${Selecoes.cardJogador(s)}
                 <h3>👕 Sua identidade</h3>
                 <div class="identidade">
                     ${t ? Cena.camisa(t, p.nome, s.car.camisa) : ''}
@@ -334,7 +333,7 @@ const Jogador = {
         }
 
         // seleção
-        if ((s.semana === 10 || s.semana === 32) && p.tid >= 0 && p.les <= 0) await Jogador.convocacao(s);
+        if (p.les <= 0) await Selecoes.dataFifa(s);
         // renovação
         if (s.semana === 30 && p.tid >= 0 && p.contr === 1) await Jogador.renovacao(s);
         // propostas
@@ -354,31 +353,6 @@ const Jogador = {
         if (p.les < 3) return;
         const custo = U.redondo(Math.max(5000, p.sal * 0.06));
         await Vida.decisaoLesao(s, p, { custo, pagar: v => { s.pessoa.dinheiro -= v; }, quem: 'você', proprio: true });
-    },
-
-    async convocacao(s) {
-        const p = Jogador.p(s);
-        const forte = FORCA_SELECAO[s.pessoa.pais] || 80;
-        const corte = forte - 12;
-        if (p.ovr < corte) return;
-        const ch = U.clamp((p.ovr - corte) * 0.09 + s.pessoa.fama / 300, 0, 0.95);
-        if (!U.chance(ch)) return;
-        const i = await UI.perguntar('Convocado para a seleção!', `O técnico da seleção ${Mundo.pais(s.pessoa.pais).bandeira} te convocou para os jogos das Eliminatórias!`, ['🙌 Aceitar com orgulho', '🙅 Pedir dispensa (cansaço)'], '📞');
-        if (i === 1) {
-            Vida.log(s, '🙅 Você pediu dispensa da seleção.', '');
-            Vida.mudar(s, { fama: -2 });
-            return;
-        }
-        const jogos = 2;
-        let gols = 0;
-        for (let k = 0; k < jogos; k++) gols += U.chance({ G: 0, D: 0.05, M: 0.15, A: 0.35 }[POS_GRUPO[p.pos]] * (p.ovr / 80)) ? 1 : 0;
-        s.car.selecao.jogos += jogos;
-        s.car.selecao.gols += gols;
-        p.cond = Math.max(40, p.cond - 10);
-        const txt = `🇺🇳 Você defendeu a seleção em ${jogos} jogos${gols ? ` e marcou ${gols} gol(s)!` : '.'}`;
-        Vida.log(s, txt, 'bom');
-        Vida.mudar(s, { fama: 3 + gols * 2, felicidade: 6 });
-        await UI.aviso('Seleção', txt, '🇺🇳');
     },
 
     async renovacao(s) {
@@ -545,8 +519,6 @@ const Jogador = {
             s.car.pontos = (s.car.pontos || 0) + 2;
             await Cena.simples(pr.tipo === 'Bola de Ouro' ? '⚽' : '🏅', U.esc(pr.tipo).toUpperCase(), `${U.esc(p.nome)} — ${U.esc(pr.info || '')} (+2 pontos de habilidade)`, 'radial-gradient(circle at 50% 35%, #6b5200 0%, #05070c 70%)', 'titulo', ['#ffd700', '#fff3b0', '#ffffff']);
         }
-        // torneio de seleções
-        if (s.car.selecao.jogos > 0 && (resumo.ano % 2 === 0)) await Jogador.torneioSelecoes(s, resumo.ano);
         // envelhecimento (a pessoa faz aniversário logo depois, em Vida.anoNovo)
         p.idade++;
         if (p.idade >= 31) {
@@ -570,38 +542,6 @@ const Jogador = {
             const i = await UI.perguntar('Fim da linha?', `Você tem ${p.idade} anos e seu corpo já não responde como antes. Pensa em se aposentar?`, ['👴 Sim, pendurar as chuteiras', '💪 Ainda tenho lenha pra queimar'], '🤔');
             if (i === 0) await Jogador.aposentar(s, false, true);
         }
-    },
-
-    async torneioSelecoes(s, ano) {
-        const p = Jogador.p(s);
-        const pais = s.pessoa.pais;
-        const forte = FORCA_SELECAO[pais] || 80;
-        if (p.ovr < forte - 10) return;
-        const nome = ano % 4 === 2 ? 'Copa do Mundo' : (pais === 'BRA' || pais === 'ARG') ? 'Copa América' : 'Eurocopa';
-        const fases = ['fase de grupos', 'oitavas de final', 'quartas de final', 'semifinal', 'final'];
-        let f = 0;
-        if (U.chance(0.85)) {
-            f = 1;
-            while (f < 5) {
-                const pv = U.clamp(0.5 + (forte - 86) * 0.04 + (p.ovr - 80) * 0.01, 0.2, 0.8);
-                if (!U.chance(pv)) break;
-                f++;
-            }
-        }
-        const gols = U.int(0, { G: 0, D: 1, M: 2, A: 4 }[POS_GRUPO[p.pos]]);
-        s.car.selecao.jogos += 3 + f;
-        s.car.selecao.gols += gols;
-        let txt;
-        if (f === 5) {
-            txt = `🏆 VOCÊ É CAMPEÃO DA ${nome.toUpperCase()} ${ano}! ${gols} gol(s) no torneio.`;
-            s.pessoa.trofeus.push({ ano, txt: `${nome} (seleção)` });
-            Vida.mudar(s, { fama: nome === 'Copa do Mundo' ? 25 : 12, felicidade: 25 });
-        } else {
-            txt = `🇺🇳 Na ${nome} ${ano}, sua seleção caiu na ${fases[f]}. Você marcou ${gols} gol(s).`;
-            Vida.mudar(s, { fama: 3 + f, felicidade: f >= 3 ? 0 : -5 });
-        }
-        Vida.log(s, txt, f === 5 ? 'titulo' : '');
-        await UI.aviso(nome, txt, f === 5 ? '🏆' : '🇺🇳');
     },
 
     async aposentar(s, forcado, jaDecidiu) {

@@ -30,6 +30,7 @@ const CONQUISTAS = [
     { id: 'supercampeao', icone: '🛡️', nome: 'Supercampeão', desc: 'Ganhar uma supercopa (nacional, Supercopa da UEFA ou Recopa).', teste: s => cont(s, 'supercopas') >= 1 },
     { id: 'segundaCopa', icone: '🟠', nome: 'Rei das copas', desc: 'Ganhar a Liga Europa ou a Copa Sul-Americana.', teste: s => cont(s, 'secundarias') >= 1 },
     { id: 'mundialClubes', icone: '🌐', nome: 'Campeão do mundo de clubes', desc: 'Ganhar o Mundial de Clubes.', teste: s => cont(s, 'mundiais') >= 1 },
+    { id: 'campeaoSelecao', icone: '🎖️', nome: 'Glória pela seleção', desc: 'Ganhar um torneio com a seleção (jogador ou técnico).', teste: s => s.pessoa.trofeus.some(t => /\(seleção\)/.test(t.txt)) || cont(s, 'titulosSelecao') >= 1 },
     { id: 'centenario', icone: '🎂', nome: 'Centenário', desc: 'Viver até os 100 anos.', teste: s => s.pessoa.idade >= 100 },
 
     // ---------------- Técnico ----------------
@@ -47,6 +48,7 @@ const CONQUISTAS = [
     { id: 'demitido', modo: 'tecnico', icone: '🚪', nome: 'Faz parte', desc: 'Ser demitido.', teste: s => cont(s, 'demissoes') >= 1 },
     { id: 'rodado', modo: 'tecnico', icone: '🧳', nome: 'Rodado', desc: 'Treinar 5 clubes diferentes.', teste: s => (s.car.clubesTreinados || []).length >= 5 },
     { id: 'construtor', modo: 'tecnico', icone: '🏗️', nome: 'Construtor', desc: 'Levar uma estrutura do clube ao nível 5.', teste: s => cont(s, 'obras5') >= 1 },
+    { id: 'tecnicoSelecao', modo: 'tecnico', icone: '🌎', nome: 'Professor da seleção', desc: 'Ser técnico de uma seleção.', teste: s => cont(s, 'selecoesTreinadas') >= 1 },
     { id: 'joia', modo: 'tecnico', icone: '💎', nome: 'Olho clínico', desc: 'Contratar 3 joias na peneira da base.', teste: s => cont(s, 'joias') >= 3 },
 
     // ---------------- Jogador ----------------

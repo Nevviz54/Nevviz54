@@ -511,7 +511,8 @@ const Mundo = {
     },
 
     transferenciasIA(s, qtd) {
-        const todos = Object.values(s.jog);
+        // só jogadores de clube ou livres (fora: base do usuário e jogadores que só existem na seleção)
+        const todos = Object.values(s.jog).filter(p => p.tid >= -1);
         for (let k = 0; k < qtd; k++) {
             const comprador = U.escolha(s.times);
             if (Mundo.timeDoUsuario(s, comprador.id)) continue;
@@ -677,6 +678,7 @@ const Mundo = {
         for (const p of Object.values(s.jog)) {
             if (p.user) continue;
             p.idade++;
+            if (p.base != null) continue; // garotos da base evoluem com o treino semanal
             Mundo.evoluir(p, p.tid >= 0 && Mundo.timeDoUsuario(s, p.tid) ? 0.8 + Mundo.infra(s.times[p.tid]).ct * 0.12 : 1);
             const vaiParar = (p.idade >= 40) || (p.idade >= 35 && U.chance((p.idade - 33) * 0.22)) || (p.idade >= 31 && p.ovr < 50 && U.chance(0.5));
             if (vaiParar) {

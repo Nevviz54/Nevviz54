@@ -27,11 +27,11 @@ const Partida = {
             s, jogo, h: jogo.h, a: jogo.a, min: 0, gols: [0, 0], fin: [0, 0], posse: [1, 1],
             eventos: [], esc: [], banco: [], subs: [0, 0], estilo: [th.estilo, ta.estilo],
             slots: [FORMACOES[th.form].map(x => x[0]), FORMACOES[ta.form].map(x => x[0])],
-            st: {}, bonus: {}, copa: jogo.tipo === 'copa', terminou: false,
+            st: {}, bonus: {}, copa: jogo.tipo === 'copa' || !!jogo.mataMata, terminou: false, ladoUsuario: jogo.ladoUsuario ?? null,
             usuario: opts.usuario ?? null, controle: opts.controle ?? -1, lancesMin: [],
             subsIA: [U.int(55, 64), U.int(66, 74), U.int(76, 84)],
-            classico: Mundo.classico(s, jogo.h, jogo.a), final: Mundo.ehFinal(s, jogo),
-            fatorCasa: jogo.tipo === 'copa' ? 1 : 1.06 + Mundo.infra(th).estadio * 0.015,
+            classico: Mundo.classico(s, jogo.h, jogo.a), final: Mundo.ehFinal(s, jogo) || !!jogo.final,
+            fatorCasa: (jogo.tipo === 'copa' || jogo.neutro) ? 1 : 1.06 + Mundo.infra(th).estadio * 0.015,
         };
         if (m.classico) Partida.evento(m, { tipo: 'apito', txt: `🔥 É CLÁSSICO! ${th.nome} x ${ta.nome}, estádio pegando fogo!` });
         if (m.final) Partida.evento(m, { tipo: 'apito', txt: `🏆 É a GRANDE FINAL! Quem vencer leva a taça!` });
@@ -42,7 +42,7 @@ const Partida = {
             const banco = Escalacao.banco(s, t, esc);
             // a jovem promessa do usuário costuma ser relacionada
             const u = m.usuario != null ? s.jog[m.usuario] : null;
-            if (u && u.tid === t.id && !esc.includes(u.id) && !banco.includes(u.id) && Escalacao.disponivel(u)) {
+            if (u && (u.tid === t.id || (jogo.tipo === 'selecao' && t.elenco.includes(u.id))) && !esc.includes(u.id) && !banco.includes(u.id) && Escalacao.disponivel(u)) {
                 const dif = t.rep - u.ovr;
                 if (U.chance(U.clamp(0.95 - dif * 0.05, 0.35, 0.95))) {
                     if (banco.length >= 9) banco.pop();
@@ -82,6 +82,7 @@ const Partida = {
 
     ladoDoUsuario(m) {
         if (m.usuario == null) return -1;
+        if (m.ladoUsuario != null) return m.ladoUsuario;
         const p = m.s.jog[m.usuario];
         return p.tid === m.h ? 0 : 1;
     },

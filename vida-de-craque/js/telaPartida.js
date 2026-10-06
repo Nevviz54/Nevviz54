@@ -27,7 +27,11 @@ const TelaPartida = {
     criarPartida(s) {
         const jogo = this.jogo;
         const opts = {};
-        if (s.modo === 'tecnico') opts.controle = jogo.h === s.car.tid ? 0 : 1;
+        if (jogo.controle != null || jogo.usuario != null) {
+            // jogo de seleção: quem o usuário controla vem no próprio jogo
+            if (jogo.controle != null) opts.controle = jogo.controle;
+            if (jogo.usuario != null) opts.usuario = jogo.usuario;
+        } else if (s.modo === 'tecnico') opts.controle = jogo.h === s.car.tid ? 0 : 1;
         else opts.usuario = s.car.pid;
         this.m = Partida.criar(s, jogo, opts);
     },
@@ -48,7 +52,7 @@ const TelaPartida = {
     render() {
         const m = this.m, s = m.s;
         const th = s.times[m.h], ta = s.times[m.a];
-        const comp = Mundo.nomeCompeticao(s, this.jogo.comp) + (this.jogo.tipo === 'copa' ? ` · ${Mundo.fasesCopa(Mundo.copa(s, this.jogo.comp))[this.jogo.r]}` : ` · Rodada ${this.jogo.r + 1}`);
+        const comp = this.jogo.rotulo || Mundo.nomeCompeticao(s, this.jogo.comp) + (this.jogo.tipo === 'copa' ? ` · ${Mundo.fasesCopa(Mundo.copa(s, this.jogo.comp))[this.jogo.r]}` : ` · Rodada ${this.jogo.r + 1}`);
         const selo = m.final ? '<div class="selo-jogo final">🏆 FINAL</div>' : m.classico ? '<div class="selo-jogo classico">🔥 CLÁSSICO</div>' : '';
         UI.render(`
         <div class="tela-partida">
@@ -155,7 +159,7 @@ const TelaPartida = {
             const lado = m.controle;
             const adv = s.times[lado === 0 ? m.a : m.h];
             const rel = Math.round((m.R[lado].ata + m.R[lado].def) / 2) - Math.round((m.R[1 - lado].ata + m.R[1 - lado].def) / 2);
-            txt = `📋 Seu time vai a campo no <b>${s.times[s.car.tid].form}</b>, estilo <b>${ESTILOS[m.estilo[lado]].nome}</b>.<br>
+            txt = `📋 Seu time vai a campo no <b>${s.times[lado === 0 ? m.h : m.a].form}</b>, estilo <b>${ESTILOS[m.estilo[lado]].nome}</b>.<br>
                 ${rel > 3 ? '💪 Seu time é favorito.' : rel < -3 ? `⚠️ O ${U.esc(adv.nome)} é favorito.` : '⚖️ Jogo equilibrado.'}`;
         }
         return `<div class="pre-jogo">${txt}</div>`;
@@ -251,7 +255,7 @@ const TelaPartida = {
         const m = this.m, s = m.s;
         if (m.controle >= 0) {
             const lado = m.controle;
-            const t = s.times[s.car.tid];
+            const t = s.times[lado === 0 ? m.h : m.a];
             const dif = m.gols[lado] - m.gols[1 - lado];
             const i = await UI.perguntar('Intervalo — vestiário', `Placar: <b>${Partida.placarTxt(m)}</b>.<br>O que você fala para o time?`, ['👏 Elogiar o time', '😡 Dar uma bronca', '🧘 Pedir calma e foco'], '🗣️');
             let txt;
@@ -288,11 +292,12 @@ const TelaPartida = {
         this.parar();
         const r = Partida.finalizar(s, m);
         this.resultado = r;
-        Mundo.registrar(s, this.jogo, r);
+        if (this.jogo.tipo !== 'selecao') Mundo.registrar(s, this.jogo, r);
         this.fase = 'fim';
         this.atualizar();
         const modo = Jogo.modo();
-        if (modo.posJogo) this.extraFim = (await modo.posJogo(s, this.jogo, m, r)) || '';
+        if (this.jogo.aoFim) this.extraFim = (await this.jogo.aoFim(m, r)) || '';
+        else if (modo.posJogo) this.extraFim = (await modo.posJogo(s, this.jogo, m, r)) || '';
         this.atualizar();
     },
 
@@ -330,7 +335,7 @@ ACOES.plVel = d => {
 ACOES.plEstilo = (d, el) => {
     const m = TelaPartida.m;
     m.estilo[m.controle] = el.value;
-    m.s.times[m.s.car.tid].estilo = el.value;
+    m.s.times[m.controle === 0 ? m.h : m.a].estilo = el.value;
     Partida.recalcular(m);
     Partida.evento(m, { tipo: 'apito', txt: `📋 Você mudou a postura do time para "${ESTILOS[el.value].nome}".` });
     TelaPartida.atualizar();
@@ -355,7 +360,7 @@ ACOES.plSub = async () => {
 };
 ACOES.plTatica = async () => {
     const m = TelaPartida.m, s = m.s;
-    const t = s.times[s.car.tid];
+    const t = s.times[m.controle === 0 ? m.h : m.a];
     let esc = null;
     const r = await UI.modal({
         titulo: '📋 Tática para o jogo',

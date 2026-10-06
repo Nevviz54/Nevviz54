@@ -51,4 +51,8 @@ DADOS.rivais = [
     ['Houston Dynamo', 'FC Dallas'], ['Austin FC', 'FC Dallas'], ['Toronto FC', 'CF Montréal'], ['D.C. United', 'New York Red Bulls'],
     ['Columbus Crew', 'FC Cincinnati'], ['Atlanta United', 'Orlando City'], ['Atlanta United', 'Charlotte FC'],
     ['Sporting Kansas City', 'St. Louis City'], ['Colorado Rapids', 'Real Salt Lake'], ['LAFC', 'San Diego FC'],
+    // Seleções
+    ['Brasil', 'Argentina'], ['Brasil', 'Uruguai'], ['Argentina', 'Uruguai'], ['Argentina', 'Inglaterra'], ['Inglaterra', 'Alemanha'],
+    ['Alemanha', 'Holanda'], ['Inglaterra', 'Escócia'], ['Espanha', 'Portugal'], ['França', 'Itália'], ['México', 'Estados Unidos'],
+    ['Japão', 'Coreia do Sul'], ['Marrocos', 'Argélia'], ['Egito', 'Argélia'], ['Croácia', 'Sérvia'], ['Brasil', 'França'],
 ];

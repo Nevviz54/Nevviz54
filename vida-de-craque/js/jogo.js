@@ -558,6 +558,7 @@ const Jogo = {
         if (Cena.ligada()) await Cena.temporada(s, resumo, dados);
         else await this.mostrarResumoTemporada(resumo);
         if (modo.depoisFimTemporada) await modo.depoisFimTemporada(s, resumo);
+        if (!s.pessoa.morto) await Selecoes.fimTemporada(s, resumo.ano);
         const morte = Vida.anoNovo(s);
         Conquistas.verificar(s);
         if (morte) return;
