@@ -717,12 +717,12 @@ const Mundo = {
         }
 
         // Base: cada time revela jovens, e elencos são ajustados
+        // (o clube do técnico-usuário tem a própria categoria de base: js/base.js)
         for (const t of s.times) {
             const liga = Mundo.liga(s, t.liga);
-            const nJovens = U.int(1, 2);
-            const bonusBase = Mundo.timeDoUsuario(s, t.id) ? (Mundo.infra(t).base - 3) * 3 : 0;
+            const nJovens = Mundo.timeDoUsuario(s, t.id) ? 0 : U.int(1, 2);
             for (let i = 0; i < nJovens; i++) {
-                Mundo.gerarJogador(s, t, U.escolha(POSICOES.concat(['MEI', 'ATA', 'ZAG'])), Mundo.pais(t.pais).nomes, t.rep + bonusBase, liga.riqueza, true);
+                Mundo.gerarJogador(s, t, U.escolha(POSICOES.concat(['MEI', 'ATA', 'ZAG'])), Mundo.pais(t.pais).nomes, t.rep, liga.riqueza, true);
             }
             if (Mundo.timeDoUsuario(s, t.id)) {
                 if (t.elenco.length < 18) Mundo.reforcarElenco(s, t, 18);

@@ -52,6 +52,18 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
   Madonnina, Superclásico...). Clima mais quente, mais cartões e moral em dobro para quem vence.
 - **Prêmios** no fim de cada temporada: Bola de Ouro, Prêmio Revelação, Luva de Ouro e Técnico do Ano.
 
+### 🌎 Seleções
+
+**50 seleções** com convocações feitas a partir dos jogadores reais (inclusive os que jogam fora
+das ligas do jogo, como Ederson e Bento). Os jogos de seleção são **jogáveis**, tanto na carreira
+de jogador quanto na de técnico:
+
+- **Datas FIFA** (semanas 11, 21 e 33): dois jogos de eliminatórias ou amistosos.
+- **Torneios no fim da temporada**: **Copa do Mundo** (48 seleções, a cada 4 anos), **Eurocopa** e
+  **Copa América** (no ano anterior à Copa), e **Copa Ouro**, **Copa Africana de Nações** e
+  **Copa da Ásia** nos anos ímpares. Fase de grupos + mata-mata, com pênaltis.
+- Cada jogo pode ser jogado **ao vivo** (com os seus lances, se você for o jogador) ou simulado.
+
 ## 📋 Carreira de Técnico
 
 - Escolha **qualquer clube** das 22 ligas.
@@ -64,7 +76,27 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
 - **Treino do time**: equilibrado, ataque, defesa, tático, físico ou descanso — cada um dá um bônus diferente nos jogos.
 - **Capitão**: escolha o líder do elenco — com ele em campo o time joga melhor (mais ainda se for experiente).
 - **Estrutura do clube**: invista em estádio (mais renda e força em casa), CT (jogadores evoluem mais rápido) e categorias de base (joias melhores), do nível 1 ao 5.
-- **Peneira da base**: no começo de cada temporada aparecem 3 garotos; promova um deles ao profissional.
+- **🌱 Categoria de base**: cada clube já começa com a base formada (nos ~70 maiores clubes, com
+  garotos reais do sub-17 e do sub-20). Na aba **Base** você vê o OVR de cada garoto e a faixa de
+  **potencial**: o mínimo e o **teto** (que pode chegar a 99). A faixa fica mais precisa com o tempo.
+  - **Treino individual**: técnico, físico, tático, finalização, defensivo, goleiros ou mental. Cada
+    garoto rende muito mais em um tipo de treino (🔥) e pouco em outro (🐢) — é sorteado para cada um
+    e você descobre depois de 3 semanas.
+  - Com **17 anos ou mais**, quem fica muito tempo na base pode mandar **mensagem** pedindo uma chance
+    no profissional. Suba, prometa uma chance até o fim da temporada, peça paciência ou libere — se
+    você não cumprir, ele vai embora. Aos 20 anos é preciso decidir: sobe ou sai.
+  - **Subir** ou **liberar** garotos a qualquer momento; todo ano chegam meninos do sub-15.
+  - **Peneira**: no fim de cada temporada aparecem 3 garotos; leve um deles para a base.
+- **🔭 Olheiros**: contrate até **3 olheiros**, de 1 a 5 estrelas de **competência**. Aparecem
+  aleatoriamente para contratar (a lista muda a cada 6 semanas), incluindo nomes reais como Juni
+  Calafat, Piet de Visser, Monchi, Luís Campos e Ramón Maddoni. Mande cada um para um país da
+  **América do Sul, do Norte, Central, Europa, África, Ásia ou Oceania**, escolhendo a posição
+  (**goleiro, zagueiro, lateral, meio ou ataque**). Ele volta com **5 garotos** e você decide quem vai
+  para a base. Cada olheiro ganha estrelas de **resultado** conforme a qualidade do que acha, e há
+  um ranking de olheiros.
+- **🌎 Técnico de seleção**: técnicos bem avaliados recebem convites de seleções — quanto maior a
+  sua reputação, maior a seleção. Você comanda a seleção nas Datas FIFA e nos torneios (pode
+  acumular com o clube) e pode ser demitido se o aproveitamento for ruim.
 - **Departamento médico**: em lesões sérias, decida se paga um tratamento caro para o jogador voltar antes.
 - **💬 Vestiário e motivação**: cada jogador tem uma motivação — 🔥 muito motivado, 😀 motivado,
   😐 normal, 😕 desmotivado ou 😠 muito desmotivado — que aparece no elenco e antes de cada partida.
@@ -93,7 +125,9 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
 - **Habilidades especiais** ⚡ (12): Finalizador, Cabeça de ouro, Garçom, Batedor oficial, Driblador, Paredão, Xerife, Decisivo, Motorzinho, Corpo blindado, Líder e Estrela da mídia. Você ganha pontos quando evolui, quando é o melhor em campo e quando faz hat-trick.
 - **Identidade**: escolha o número da camisa e a sua comemoração de gol (Siuuu, robozinho, dancinha... ou tirar a camisa e levar amarelo 😅).
 - **Lesões com decisão**: tratamento caro para voltar antes ou recuperação normal.
-- Propostas de outros clubes, renovação de contrato, pedido de aumento, convocação para a **seleção**, Copa do Mundo, Copa América e Eurocopa.
+- Propostas de outros clubes, renovação de contrato e pedido de aumento.
+- **Seleção**: jogando bem, você é convocado e **joga** as Datas FIFA, a Copa do Mundo, a Eurocopa,
+  a Copa América e os outros torneios de seleções — ao vivo, com os seus lances.
 - Quando se aposentar, você pode **virar técnico** com a mesma pessoa (mesmo dinheiro, fama e família).
 
 ## ❤️ Vida
@@ -110,8 +144,9 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 
 ## 🏅 Conquistas
 
-Mais de 40 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
-tríplice coroa, invencível, rei do clássico, acesso, milionário, casamento, dono de uma ilha,
+Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
+tríplice coroa, invencível, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
+seleção, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 
 ## 🎬 Animações e cutscenes
@@ -142,6 +177,9 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - Nos times grandes estão os jogadores reais mais conhecidos. Para completar 24 jogadores por elenco, o jogo gera garotos da base.
 - Nas divisões de baixo (Série D, League One/Two, Eerste Divisie, boa parte da Ligue 2 e Primera Nacional) a maioria dos jogadores tem nome gerado.
 - Simplificações: a Série D tem 20 clubes em pontos corridos; a Liga Profesional Argentina e a MLS (30 clubes cada) são disputadas em turno único; a Liga MX é uma temporada só (sem Apertura/Clausura); as copas são mata-mata de jogo único.
+- As categorias de base reais (`js/dados/base.js`) vieram de convocações de base, da Copinha, da
+  UEFA Youth League e de listas dos clubes; em alguns clubes a pesquisa achou poucos nomes e o
+  resto da base é gerado. Os olheiros reais e as estrelas deles são uma brincadeira do jogo.
 - Os jogadores ficam em `js/dados/`, no formato `"Nome:POSIÇÃO:idade:overall"`. Dá para editar à vontade!
 
 ---

@@ -49,7 +49,10 @@ const CONQUISTAS = [
     { id: 'rodado', modo: 'tecnico', icone: '🧳', nome: 'Rodado', desc: 'Treinar 5 clubes diferentes.', teste: s => (s.car.clubesTreinados || []).length >= 5 },
     { id: 'construtor', modo: 'tecnico', icone: '🏗️', nome: 'Construtor', desc: 'Levar uma estrutura do clube ao nível 5.', teste: s => cont(s, 'obras5') >= 1 },
     { id: 'tecnicoSelecao', modo: 'tecnico', icone: '🌎', nome: 'Professor da seleção', desc: 'Ser técnico de uma seleção.', teste: s => cont(s, 'selecoesTreinadas') >= 1 },
-    { id: 'joia', modo: 'tecnico', icone: '💎', nome: 'Olho clínico', desc: 'Contratar 3 joias na peneira da base.', teste: s => cont(s, 'joias') >= 3 },
+    { id: 'joia', modo: 'tecnico', icone: '💎', nome: 'Olho clínico', desc: 'Aprovar 3 garotos na peneira da base.', teste: s => cont(s, 'joias') >= 3 },
+    { id: 'crias', modo: 'tecnico', icone: '🌱', nome: 'Cria da casa', desc: 'Subir 5 garotos da base para o profissional.', teste: s => cont(s, 'crias') >= 5 },
+    { id: 'olheiro5', modo: 'tecnico', icone: '🔭', nome: 'Rede de olheiros', desc: 'Contratar um olheiro 5 estrelas.', teste: s => cont(s, 'olheiro5') >= 1 },
+    { id: 'garimpo', modo: 'tecnico', icone: '⛏️', nome: 'Garimpeiro', desc: 'Levar para a base um garoto com teto 95+ achado por um olheiro.', teste: s => cont(s, 'garimpo') >= 1 },
 
     // ---------------- Jogador ----------------
     { id: 'estreia', modo: 'jogador', icone: '👟', nome: 'Estreia', desc: 'Jogar a primeira partida profissional.', teste: s => { const p = jogU(s); return p && p.cj + p.j >= 1; } },

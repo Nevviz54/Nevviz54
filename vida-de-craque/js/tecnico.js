@@ -33,6 +33,7 @@ const Tecnico = {
         return [
             { id: 'inicio', nome: 'Clube', icone: '🏟️', render: Tecnico.inicio },
             { id: 'elenco', nome: 'Elenco', icone: '👥', render: Tecnico.elenco },
+            { id: 'base', nome: 'Base', icone: '🌱', render: Base.tela },
             { id: 'vestiario', nome: 'Vestiário', icone: '💬', render: Mot.tela },
             { id: 'tatica', nome: 'Tática', icone: '📋', render: Tecnico.tatica },
             { id: 'mercado', nome: 'Mercado', icone: '💸', render: Tecnico.mercado },
@@ -116,6 +117,7 @@ const Tecnico = {
 
     contratar(s, tid) {
         const t = s.times[tid];
+        if (s.car.tid >= 0 && s.car.tid !== tid) Base.deixar(s, s.times[s.car.tid]);
         const liga = Mundo.liga(s, t.liga);
         s.car.tid = tid;
         s.car.conf = 55;
@@ -133,6 +135,7 @@ const Tecnico = {
         s.car.clubesTreinados = s.car.clubesTreinados || [];
         if (!s.car.clubesTreinados.includes(t.nome)) s.car.clubesTreinados.push(t.nome);
         t.tit = null;
+        Base.garantir(s, t);
         Mundo.noticia(s, `📋 ${s.pessoa.nome} é o novo técnico do ${t.nome}.`, 'clube');
         Vida.log(s, `🤝 Você assinou com o ${t.nome} por 2 temporadas. Salário: ${U.dinheiro(s.car.sal)}/ano.`, 'bom');
     },
@@ -424,6 +427,8 @@ const Tecnico = {
         if (s.car.treinoTime === 'descanso') t.moral = U.clamp(t.moral + 1, 5, 99);
         // motivação: promessas, problemas pessoais e cobranças por tempo de jogo
         await Mot.semana(s, t);
+        // categoria de base e olheiros
+        await Base.semana(s, t);
         // obras na estrutura
         if (s.car.obra) {
             s.car.obra.falta--;
@@ -492,6 +497,7 @@ const Tecnico = {
         s.car.tid = -1;
         s.car.venda = [];
         t.tit = null;
+        Base.deixar(s, t);
         s.car.ofertas = Tecnico.gerarOfertas(s, U.int(0, 2));
         await Cena.simples('🚪', 'DEMITIDO', `O ${U.esc(t.nome)} encerrou seu trabalho. ${motivo}`, 'radial-gradient(circle at 50% 40%, #4a0f0f 0%, #05070c 70%)', 'triste');
         await UI.aviso('Demitido!', `A diretoria do <b>${U.esc(t.nome)}</b> decidiu te demitir. ${motivo}<br>Você recebeu ${U.dinheiro(multa)} de multa rescisória.<br><br>Fique de olho nas propostas de outros clubes.`, '🚪');
@@ -687,11 +693,12 @@ const Tecnico = {
             if (ofs.length) UI.toast('📨 Você recebeu propostas de outros clubes! Veja na aba Clube.');
         }
         s.car.conf = U.clamp(50 + (s.car.conf - 50) * 0.5, 0, 100);
+        await Base.fimTemporada(s);
         await Tecnico.peneiraBase(s);
     },
 
     // -----------------------------------------------------------------
-    //  Peneira anual da base: escolha 1 de 3 joias
+    //  Peneira anual: escolha 1 de 3 garotos para a categoria de base
     // -----------------------------------------------------------------
     async peneiraBase(s) {
         const t = Tecnico.time(s);
@@ -703,21 +710,22 @@ const Tecnico = {
             p.pot = U.clamp(p.ovr + U.int(10, 16 + base * 3), p.ovr, 96);
             return p;
         });
-        const html = `<p>Os olheiros da base (nível ${base} ${'⭐'.repeat(base)}) selecionaram 3 garotos. Você pode promover <b>um</b> ao profissional.</p>
-            <div class="grade-base">${cands.map(p => `<div class="cand-base">${UI.pos(p.pos)}<b>${U.esc(p.nome)}</b><small>${p.idade} anos · ${POS_NOME[p.pos]}</small>
-                <div>Habilidade ${UI.ovr(p.ovr)}</div><div class="estrelas-pot">Potencial ${U.estrelas((p.pot - 55) / 8)}</div></div>`).join('')}</div>`;
+        cands.forEach(p => Base.faixa(p, 4 + (5 - base) * 3));
+        const html = `<p>A peneira do clube (base nível ${base} ${'⭐'.repeat(base)}) aprovou 3 garotos. Você pode levar <b>um</b> para a categoria de base.</p>
+            <div class="grade-base">${cands.map(p => Base.cardProspecto(Object.assign({ bnd: Mundo.pais(t.pais).bandeira }, p))).join('')}</div>`;
         const i = await UI.modal({
             titulo: '🌱 Peneira da base', html, largo: true, fechavel: false,
-            botoes: cands.map((p, k) => ({ txt: `Promover ${p.nome.split(' ')[0]}`, valor: k, classe: 'btn-opcao' })).concat([{ txt: 'Nenhum', valor: -1, classe: 'btn-fantasma' }]),
+            botoes: cands.map((p, k) => ({ txt: `Levar ${p.nome.split(' ')[0]}`, valor: k, classe: 'btn-opcao' })).concat([{ txt: 'Nenhum', valor: -1, classe: 'btn-fantasma' }]),
         });
+        Base.garantir(s, t);
         cands.forEach((p, k) => {
             if (k === i) {
-                Mundo.transferir(s, p, t, 0);
-                p.contr = 4;
-                p.sal = U.redondo(Mundo.salarioPedido(p, liga.riqueza) * 0.5);
+                const { pmin, pmax } = p;
+                Base.matricular(s, t, p, { nac: t.pais });
+                Object.assign(p, { pmin, pmax });
                 Conquistas.contar(s, 'joias');
-                Vida.log(s, `🌱 Você promoveu ${p.nome} (${p.pos}, ${p.idade} anos) da base para o profissional.`, 'bom');
-                Mundo.noticia(s, `🌱 ${t.nome} promove a joia ${p.nome} ao time principal.`, 'clube');
+                Vida.log(s, `🌱 ${p.nome} (${p.pos}, ${p.idade} anos) passou na peneira e entrou na base.`, 'bom');
+                Mundo.noticia(s, `🌱 ${t.nome} aprova ${p.nome} na peneira da base.`, 'clube');
             } else delete s.jog[p.id];
         });
     },
@@ -763,6 +771,7 @@ const Tecnico = {
         s.car.tid = -1;
         s.car.venda = [];
         t.tit = null;
+        Base.deixar(s, t);
         s.car.ofertas = Tecnico.gerarOfertas(s, U.int(1, 3));
         Jogo.aba = 'inicio';
     },
