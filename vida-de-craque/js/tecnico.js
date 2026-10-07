@@ -892,7 +892,7 @@ const Tecnico = {
 //  Ações
 // =====================================================================
 Object.assign(ACOES, {
-    tcPais: d => { Jogo.ui.paisClube = d.pais; Tecnico.telaEscolherClube(Jogo.formTmp || {}, !!Jogo.formTmp?.existente); },
+    tcPais: d => { Jogo.ui.paisClube = d.pais; Tecnico.telaEscolherClube(Jogo.formTmp || {}, !!(Jogo.formTmp && Jogo.formTmp.existente)); },
     async tcEscolher(d) {
         if (Jogo.formTmp && Jogo.formTmp.aposentado) {
             return;

@@ -27,8 +27,8 @@ const Partida = {
             s, jogo, h: jogo.h, a: jogo.a, min: 0, gols: [0, 0], fin: [0, 0], posse: [1, 1],
             eventos: [], esc: [], banco: [], subs: [0, 0], estilo: [th.estilo, ta.estilo],
             slots: [FORMACOES[th.form].map(x => x[0]), FORMACOES[ta.form].map(x => x[0])],
-            st: {}, bonus: {}, copa: jogo.tipo === 'copa' || !!jogo.mataMata, terminou: false, ladoUsuario: jogo.ladoUsuario ?? null,
-            usuario: opts.usuario ?? null, controle: opts.controle ?? -1, lancesMin: [],
+            st: {}, bonus: {}, copa: jogo.tipo === 'copa' || !!jogo.mataMata, terminou: false, ladoUsuario: jogo.ladoUsuario != null ? jogo.ladoUsuario : null,
+            usuario: opts.usuario != null ? opts.usuario : null, controle: opts.controle != null ? opts.controle : -1, lancesMin: [],
             subsIA: [U.int(55, 64), U.int(66, 74), U.int(76, 84)],
             classico: Mundo.classico(s, jogo.h, jogo.a), final: Mundo.ehFinal(s, jogo) || !!jogo.final,
             fatorCasa: (jogo.tipo === 'copa' || jogo.neutro) ? 1 : 1.06 + Mundo.infra(th).estadio * 0.015,
@@ -368,7 +368,7 @@ const Partida = {
         }
         if (o.gol) return { tipo: 'gol', p: U.clamp(o.gol * f, 0.03, 0.9), perigo: o.perigo };
         if (o.ass) return { tipo: 'ass', p: U.clamp(o.ass * f, 0.03, 0.9), perigo: o.perigo };
-        return { tipo: 'seg', p: U.clamp((o.seg ?? 0.93) + (f - 1) * 0.25, 0.4, 0.99), perigo: o.perigo };
+        return { tipo: 'seg', p: U.clamp((o.seg != null ? o.seg : 0.93) + (f - 1) * 0.25, 0.4, 0.99), perigo: o.perigo };
     },
 
     // texto curto da chance, para mostrar no botão
@@ -433,7 +433,7 @@ const Partida = {
                 if (lance.penalti && m.s.cont) m.s.cont.penaltisDefendidos = (m.s.cont.penaltisDefendidos || 0) + 1;
             } else {
                 m.bonus[p.id] -= 0.4;
-                const perigo = o.perigo ?? (lance.penalti ? 0.85 : 0.28);
+                const perigo = o.perigo != null ? o.perigo : (lance.penalti ? 0.85 : 0.28);
                 res.txt = contraGol(perigo, o.erroGol || (lance.penalti ? '😩 Você pulou, mas a bola entrou.' : '😩 O adversário passou e marcou...'), '😅 Você não chegou, mas o adversário desperdiçou.');
             }
         } else if (o.gol) {
@@ -498,7 +498,7 @@ const Partida = {
             if (!p) continue;
             const meus = m.gols[st.lado], deles = m.gols[1 - st.lado];
             const slot = POS_GRUPO[p.pos];
-            const minutos = (st.saiu ?? 90) - st.entrou;
+            const minutos = (st.saiu != null ? st.saiu : 90) - st.entrou;
             let n = 6.2 + U.normal(0, 0.45) + st.g * 1.0 + st.a * 0.6 - st.am * 0.2;
             if (slot === 'G') n += deles === 0 ? 0.9 : -0.35 * deles + 0.3;
             if (slot === 'D') n += deles === 0 ? 0.5 : -0.15 * deles;

@@ -1,3 +1,4 @@
+<!-- VIDA DE CRAQUE: se você está vendo este código em vez do jogo, baixe o arquivo e abra no Chrome, Edge, Firefox ou Safari. -->
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -6,21 +7,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b1220">
     <title>Vida de Craque</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body data-tema="escuro">
     <div id="jogo">
-        <div id="app"><div class="carregando">⚽ Carregando...</div></div>
+        <div id="app">
+            <!-- Tela de carregamento. O jogo troca tudo isto pelo menu quando abre.
+                 A ajuda aparece sozinha (só com CSS) se o jogo não abrir: é o que
+                 acontece em visualizadores de arquivo que não rodam JavaScript. -->
+            <div class="boot" id="boot">
+                <div class="boot-bola" id="boot-bola">⚽ Carregando...</div>
+                <div class="boot-ajuda" id="boot-ajuda">
+                    <b>O jogo não abriu?</b>
+                    <p>O arquivo provavelmente foi aberto num <b>visualizador</b> (WhatsApp, Telegram, app Arquivos, Drive, e-mail), que não roda jogos.</p>
+                    <ul>
+                        <li>📱 <b>Android:</b> no WhatsApp/Telegram toque em <b>⋮ → Abrir com → Chrome</b>. Não use “HTML Viewer” nem “Leitor de HTML”.</li>
+                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Abra o <b>link</b> do jogo no Safari.</li>
+                        <li>💻 <b>Computador:</b> baixe o arquivo e abra com dois cliques no Chrome, Edge, Firefox ou Safari.</li>
+                    </ul>
+                </div>
+            </div>
+            <noscript>
+                <div class="boot-semjs">
+                    <div class="boot-ajuda">
+                        <b>⚠️ Este visualizador não roda o jogo (o JavaScript está desligado aqui).</b>
+                        <ul>
+                        <li>📱 <b>Android:</b> no WhatsApp/Telegram toque em <b>⋮ → Abrir com → Chrome</b>. Não use “HTML Viewer” nem “Leitor de HTML”.</li>
+                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Abra o <b>link</b> do jogo no Safari.</li>
+                        <li>💻 <b>Computador:</b> baixe o arquivo e abra com dois cliques no Chrome, Edge, Firefox ou Safari.</li>
+                    </ul>
+                    </div>
+                </div>
+            </noscript>
+        </div>
         <div id="overlay"></div>
         <div id="modais"></div>
         <div id="cena"></div>
         <div id="conquistas"></div>
         <div id="toasts"></div>
     </div>
+
+    <!-- Vigia da inicialização. Fica em ES5 de propósito, para rodar até em
+         navegador muito antigo: guarda os erros e, se o jogo não abrir, troca o
+         "Carregando..." por uma explicação em vez de carregar para sempre. -->
+    <script>
+    (function () {
+        var erros = [];
+        function guardar(msg) { if (msg && erros.length < 4) erros.push(String(msg)); }
+        window.addEventListener('error', function (e) {
+            guardar((e && e.message ? e.message : 'erro desconhecido') + (e && e.lineno ? ' (linha ' + e.lineno + ')' : ''));
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+            var r = e && e.reason;
+            guardar(r && r.message ? r.message : r);
+        });
+        function esc(t) {
+            return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+        }
+        window.__vdcFalha = function (erro) {
+            if (erro) guardar(erro.message || erro);
+            var boot = document.getElementById('boot');
+            var ajuda = document.getElementById('boot-ajuda');
+            if (!boot || !ajuda) return;   // o jogo já abriu
+            boot.className = 'boot boot-falhou';
+            document.getElementById('boot-bola').innerHTML = '⚠️ O jogo não conseguiu abrir';
+            var lista = ajuda.querySelector('ul');
+            ajuda.innerHTML = '<p>Toque em <b>Tentar de novo</b>. Se continuar assim, o navegador pode estar desatualizado ou o arquivo foi aberto num visualizador que não roda jogos:</p>' +
+                (lista ? lista.outerHTML : '') +
+                (erros.length ? '<p class="boot-erro">Detalhe técnico: ' + esc(erros.join(' · ')) + '</p>' : '') +
+                '<button class="btn btn-primario" id="boot-recarregar">🔄 Tentar de novo</button>';
+            document.getElementById('boot-recarregar').addEventListener('click', function () { location.reload(); });
+        };
+        setTimeout(function () { if (!window.__vdcOk) window.__vdcFalha(); }, 10000);
+        // o que falta em navegadores antigos (iPhone com iOS 11, Android antigo)
+        if (!Array.prototype.flatMap) {
+            Array.prototype.flatMap = function (fn, ctx) {
+                var r = [];
+                for (var i = 0; i < this.length; i++) r = r.concat(fn.call(ctx, this[i], i, this));
+                return r;
+            };
+        }
+    })();
+    </script>
 
     <!-- Motor -->
     <script src="js/util.js"></script>

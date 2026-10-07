@@ -11,7 +11,7 @@ const Som = {
     },
 
     volume() {
-        const v = typeof Jogo === 'undefined' ? 60 : (Jogo.opcoes.volume ?? 60);
+        const v = typeof Jogo === 'undefined' ? 60 : (Jogo.opcoes.volume != null ? Jogo.opcoes.volume : 60);
         return U.clamp(v, 0, 100) / 100;
     },
 

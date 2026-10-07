@@ -252,8 +252,8 @@ const Mot = {
                 fala: `Professor, faz ${p.sj} jogos que eu não entro em campo. Eu treino forte todo dia e sinto que não tenho chance.`,
                 op: [
                     { txt: '✅ "Você vai ter chances nos próximos jogos, eu prometo."', d: pers === 'ambicioso' ? 18 : 15, prometer: 'jogar', resp: 'Valeu, professor! Não vou te decepcionar.' },
-                    { txt: '🏋️ "Continue treinando forte que a sua hora vai chegar."', d: { profissional: 7, tranquilo: 6, lider: 4 }[pers] ?? (pers === 'temperamental' ? -3 : 2), resp: 'Tá bom... vou continuar trabalhando.' },
-                    { txt: '📏 "Hoje você não está no nível dos titulares."', d: { profissional: 3, tranquilo: -2 }[pers] ?? (pers === 'temperamental' ? -12 : pers === 'ambicioso' ? -8 : -4), resp: 'Isso dói de ouvir...' },
+                    { txt: '🏋️ "Continue treinando forte que a sua hora vai chegar."', d: U.def({ profissional: 7, tranquilo: 6, lider: 4 }[pers], pers === 'temperamental' ? -3 : 2), resp: 'Tá bom... vou continuar trabalhando.' },
+                    { txt: '📏 "Hoje você não está no nível dos titulares."', d: U.def({ profissional: 3, tranquilo: -2 }[pers], pers === 'temperamental' ? -12 : pers === 'ambicioso' ? -8 : -4), resp: 'Isso dói de ouvir...' },
                     { txt: '🏷️ "Se não está feliz, posso te liberar para outro clube."', d: -6, vender: true, resp: 'Então acho melhor eu procurar outro lugar.' },
                 ],
             },
@@ -269,7 +269,7 @@ const Mot = {
                 fala: 'Não gostei de ser cobrado daquele jeito na frente de todo mundo.',
                 op: [
                     { txt: '🙏 "Exagerei, peço desculpas."', d: 10, limpa: 'br', resp: 'Tudo certo, professor. Bola para frente.' },
-                    { txt: '💪 "Cobrei porque acredito no seu potencial."', d: { profissional: 8, vaidoso: 3 }[pers] ?? 5, limpa: 'br', resp: 'Entendi. Vou mostrar em campo.' },
+                    { txt: '💪 "Cobrei porque acredito no seu potencial."', d: U.def({ profissional: 8, vaidoso: 3 }[pers], 5), limpa: 'br', resp: 'Entendi. Vou mostrar em campo.' },
                     { txt: '📢 "Vou continuar cobrando. Aqui é assim."', d: pers === 'profissional' ? 2 : -6, resp: 'Beleza, então.' },
                 ],
             },
@@ -381,7 +381,7 @@ const Mot = {
             r = await Mot.aplicar(s, p, ops[k] || ops[2]);
         } else if (escolha.id === 'cobrar') {
             const merecia = (p.fm != null && p.fm < 6.4) || Mot.valor(p) >= 75;
-            const d = merecia ? ({ profissional: 5, lider: 4, tranquilo: 2, ambicioso: 2, vaidoso: -5, temperamental: -10 }[pers]) : ({ profissional: -1, tranquilo: -2 }[pers] ?? -7);
+            const d = merecia ? ({ profissional: 5, lider: 4, tranquilo: 2, ambicioso: 2, vaidoso: -5, temperamental: -10 }[pers]) : U.def({ profissional: -1, tranquilo: -2 }[pers], -7);
             if (d < 0) p.br = 3;
             r = await Mot.aplicar(s, p, { d, resp: d >= 0 ? 'Recado entendido. Vou dar mais.' : 'Não sei por que isso agora...' });
         }

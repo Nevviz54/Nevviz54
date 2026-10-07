@@ -36,10 +36,10 @@ const ArmIdb = {
             try { r = indexedDB.open('vida-de-craque', 1); } catch (e) { clearTimeout(tempo); return reject(e); }
             r.onupgradeneeded = () => r.result.createObjectStore('saves');
             r.onsuccess = () => {
-                clearTimeout(tempo);
                 ArmIdb.db = r.result;
                 // gravação de teste: alguns navegadores abrem mas não deixam gravar
-                ArmIdb.gravar('teste', '1').then(() => resolve(true), reject);
+                // (ou nunca terminam a gravação; por isso o tempo-limite continua valendo)
+                ArmIdb.gravar('teste', '1').then(() => { clearTimeout(tempo); resolve(true); }, e => { clearTimeout(tempo); reject(e); });
             };
             r.onerror = () => { clearTimeout(tempo); reject(r.error || new Error('IndexedDB falhou')); };
             r.onblocked = () => { clearTimeout(tempo); reject(new Error('IndexedDB bloqueado')); };
@@ -164,13 +164,17 @@ const Salvar = {
         }
         if (Salvar.nav === ArmIdb) await Salvar.migrarLocal();
         await Salvar.lerMetas('nav');
-        // a nuvem chega depois (só existe quando o jogo é aberto pelo link)
-        ArmNuvem.iniciar().then(async ok => {
+        // a nuvem chega depois (só existe quando o jogo é aberto pelo link).
+        // O jogo começa antes do 'load'; se o Claude ainda não preparou a página,
+        // a nuvem é procurada de novo quando ela terminar de carregar.
+        const ligarNuvem = () => ArmNuvem.iniciar().then(async ok => {
             if (!ok) return;
             Salvar.nuvem = true;
             await Salvar.lerMetas('nuvem');
             if (Salvar.aoMudar) Salvar.aoMudar();
         }).catch(e => console.warn('nuvem indisponível', e));
+        if (window.claude || document.readyState === 'complete') ligarNuvem();
+        else window.addEventListener('load', ligarNuvem, { once: true });
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'hidden') Salvar.enviarNuvemPendente();
         });

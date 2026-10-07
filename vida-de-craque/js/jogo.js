@@ -28,7 +28,11 @@ const Jogo = {
 
     async iniciar(retomar = {}) {
         this.aplicarOpcoes();
-        await Salvar.iniciar();
+        // o armazenamento nunca pode prender o jogo na tela de carregamento:
+        // se demorar, o menu abre e os saves aparecem quando ele responder
+        try {
+            await Promise.race([Salvar.iniciar(), new Promise(r => setTimeout(r, 6000))]);
+        } catch (e) { console.warn('saves indisponíveis', e); }
         Salvar.aoMudar = () => this.atualizarSaves();
         window.addEventListener('resize', () => this.aplicarOpcoes());
         document.addEventListener('keydown', e => {
@@ -41,7 +45,20 @@ const Jogo = {
             }
         });
         this.menu();
+        window.__vdcOk = true;
+        Jogo.carregarFontes();
         if (retomar.continuar && Salvar.ultimo()) ACOES.menuContinuar();
+    },
+
+    // As fontes do Google entram depois que o jogo já abriu: assim uma rede
+    // lenta ou bloqueada nunca segura o carregamento (sem elas, fonte do sistema).
+    carregarFontes() {
+        if (document.querySelector('link[data-fontes]')) return;
+        const l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600;800&display=swap';
+        l.setAttribute('data-fontes', '1');
+        document.head.appendChild(l);
     },
 
     // -----------------------------------------------------------------
@@ -68,8 +85,17 @@ const Jogo = {
     },
 
     telaCheia() {
-        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => UI.toast('Seu navegador bloqueou a tela cheia.', 'erro'));
-        else document.exitFullscreen?.();
+        // navegadores antigos (Safari) só têm as versões com prefixo webkit
+        const el = document.documentElement;
+        if (!(document.fullscreenElement || document.webkitFullscreenElement)) {
+            const pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+            const r = pedir ? pedir.call(el) : null;
+            if (!pedir) UI.toast('Seu navegador não tem tela cheia.', 'erro');
+            else if (r && r.catch) r.catch(() => UI.toast('Seu navegador bloqueou a tela cheia.', 'erro'));
+        } else {
+            const sair = document.exitFullscreen || document.webkitExitFullscreen;
+            if (sair) sair.call(document);
+        }
     },
 
     htmlOpcoes() {
@@ -79,7 +105,7 @@ const Jogo = {
             <label class="campo">🖥️ Resolução
                 <select class="sel" data-mudar="opResolucao">${RESOLUCOES.map(([v, n]) => `<option value="${v}" ${o.resolucao === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
             </label>
-            <div class="campo">⛶ Tela cheia <button class="btn btn-pequeno" data-acao="opTelaCheia">${document.fullscreenElement ? 'Sair da tela cheia' : 'Entrar em tela cheia'}</button></div>
+            <div class="campo">⛶ Tela cheia <button class="btn btn-pequeno" data-acao="opTelaCheia">${document.fullscreenElement || document.webkitFullscreenElement ? 'Sair da tela cheia' : 'Entrar em tela cheia'}</button></div>
             <label class="campo">🔠 Tamanho da interface: <b id="op-escala-v">${o.escala}%</b>
                 <input type="range" min="70" max="150" step="5" value="${o.escala}" data-mudar="opEscala" oninput="document.getElementById('op-escala-v').textContent=this.value+'%'">
             </label>
@@ -90,8 +116,8 @@ const Jogo = {
                 <select class="sel" data-mudar="opTema"><option value="escuro" ${o.tema === 'escuro' ? 'selected' : ''}>Escuro</option><option value="claro" ${o.tema === 'claro' ? 'selected' : ''}>Claro</option></select>
             </label>
             <label class="campo check"><input type="checkbox" data-mudar="opSom" ${o.som !== false ? 'checked' : ''}> 🔊 Efeitos sonoros</label>
-            <label class="campo">🔉 Volume: <b id="op-vol-v">${o.volume ?? 60}%</b>
-                <input type="range" min="0" max="100" step="5" value="${o.volume ?? 60}" data-mudar="opVolume" oninput="document.getElementById('op-vol-v').textContent=this.value+'%'">
+            <label class="campo">🔉 Volume: <b id="op-vol-v">${o.volume != null ? o.volume : 60}%</b>
+                <input type="range" min="0" max="100" step="5" value="${o.volume != null ? o.volume : 60}" data-mudar="opVolume" oninput="document.getElementById('op-vol-v').textContent=this.value+'%'">
             </label>
             <label class="campo check"><input type="checkbox" data-mudar="opCenas" ${o.cenas !== false ? 'checked' : ''}> 🎬 Cutscenes (novo clube, títulos, fim de temporada...)</label>
             <label class="campo check"><input type="checkbox" data-mudar="opAnim" ${o.animacoes !== false ? 'checked' : ''}> ✨ Animações (cliques, gols, transições)</label>
@@ -457,7 +483,8 @@ const Jogo = {
         const abas = modo.abas(s);
         if (!abas.find(a => a.id === this.aba)) this.aba = abas[0].id;
         const aba = abas.find(a => a.id === this.aba);
-        const rolagem = document.querySelector('.conteudo')?.scrollTop || 0;
+        const cont = document.querySelector('.conteudo');
+        const rolagem = (cont && cont.scrollTop) || 0;
         UI.render(`
         <div class="shell">
             <header class="topo">
@@ -868,7 +895,7 @@ Object.assign(ACOES, {
     opVolume: (d, el) => { Jogo.opcoes.volume = +el.value; Jogo.gravarOpcoes(); Som.tocar('moeda'); },
     opCenas: (d, el) => { Jogo.opcoes.cenas = el.checked; Jogo.gravarOpcoes(); },
     opAnim: (d, el) => { Jogo.opcoes.animacoes = el.checked; Jogo.gravarOpcoes(); },
-    opTelaCheia: (d, el) => { Jogo.telaCheia(); setTimeout(() => { el.textContent = document.fullscreenElement ? 'Sair da tela cheia' : 'Entrar em tela cheia'; }, 300); },
+    opTelaCheia: (d, el) => { Jogo.telaCheia(); setTimeout(() => { el.textContent = document.fullscreenElement || document.webkitFullscreenElement ? 'Sair da tela cheia' : 'Entrar em tela cheia'; }, 300); },
 
     // pausa
     pausaAbrir: () => Jogo.abrirPausa(),
@@ -916,7 +943,7 @@ Object.assign(ACOES, {
     saveImportar: () => Jogo.telaImportar(),
 
     // casca
-    aba: d => { Jogo.aba = d.aba; Jogo.atualizar(); document.querySelector('.conteudo')?.scrollTo(0, 0); },
+    aba: d => { Jogo.aba = d.aba; Jogo.atualizar(); const c = document.querySelector('.conteudo'); if (c) c.scrollTop = 0; },
     avancar: () => Jogo.avancar(false),
     avancarRapido: () => Jogo.avancarVarias(4),
     verTime: d => Jogo.verTime(+d.tid),
@@ -934,11 +961,28 @@ Object.assign(ACOES, {
     negVender: d => Vida.venderNegocio(Jogo.s, +d.id),
 });
 
-// Na página publicada no Claude, uma atualização do jogo recarrega a página:
-// o "hot" guarda se havia um jogo aberto para continuar dele automaticamente.
-window.addEventListener('load', () => {
-    const hot = window.claude && window.claude.hot;
-    if (hot && hot.snapshot) hot.snapshot(() => ({ continuar: !!(Jogo.s && !Jogo.s.pessoa.morto) }));
-    if (hot && hot.ready) hot.ready(dados => Jogo.iniciar(dados || {}));
-    else Jogo.iniciar((hot && hot.data) || {});
-});
+// Começa assim que este script roda (é o último da página, então a tela já
+// existe). Não espera o evento 'load': ele fica preso quando algum recurso
+// externo não responde. Na página publicada no Claude, o "hot" guarda se
+// havia um jogo aberto para continuar dele depois de uma atualização.
+(function () {
+    let iniciado = false;
+    const comecar = dados => {
+        if (iniciado) return;
+        iniciado = true;
+        Jogo.iniciar(dados || {}).catch(e => {
+            console.error(e);
+            if (window.__vdcFalha) window.__vdcFalha(e);
+        });
+    };
+    try {
+        const hot = window.claude && window.claude.hot;
+        if (hot && hot.snapshot) hot.snapshot(() => ({ continuar: !!(Jogo.s && !Jogo.s.pessoa.morto) }));
+        if (hot && hot.ready) {
+            hot.ready(comecar);
+            setTimeout(() => comecar(hot.data), 2500);   // se o "ready" nunca responder
+        } else comecar(hot && hot.data);
+    } catch (e) {
+        comecar({});
+    }
+})();

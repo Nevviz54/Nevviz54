@@ -9,6 +9,8 @@ const U = {
     chance: p => Math.random() < p,
     escolha: arr => arr[Math.floor(Math.random() * arr.length)],
     clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
+    // valor padrão quando v é null/undefined (o mesmo que v ?? padrao, que celulares antigos não entendem)
+    def: (v, padrao) => (v === null || v === undefined ? padrao : v),
 
     normal(media = 0, desvio = 1) {
         let u = 0, v = 0;
@@ -42,7 +44,7 @@ const U = {
     media: (arr, fn = x => x) => arr.length ? U.soma(arr, fn) / arr.length : 0,
 
     esc(s) {
-        return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     },
 
     dinheiro(v) {

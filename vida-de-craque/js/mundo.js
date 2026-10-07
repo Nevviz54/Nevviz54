@@ -322,7 +322,7 @@ const Mundo = {
             if (!liga) continue;
             const ordem = Mundo.ordemDaLiga(s, liga, inicial);
             const a = ordem[0];
-            let b = def.copa ? (inicial ? null : antes[def.copa] ?? Mundo.ultimoCampeao(s, def.copa)) : null;
+            let b = def.copa ? (inicial ? null : (antes[def.copa] != null ? antes[def.copa] : Mundo.ultimoCampeao(s, def.copa))) : null;
             if (b == null || b === a) b = ordem[1];
             if (a == null || b == null) continue;
             Mundo.novaCopa(s, { id: def.id, pais: def.pais, nome: def.nome, icone: '🛡️', tipo: 'supercopa', times: [a, b], semanas: [1], fases: ['Final'] });
@@ -845,7 +845,7 @@ const Escalacao = {
                     .sort((a, b) => Escalacao.efetivo(b, slot) - Escalacao.efetivo(a, slot))[0];
                 if (cand) { res[i] = cand.id; usados.add(cand.id); }
             }
-            return res.map((id, i) => id ?? auto[i]);
+            return res.map((id, i) => id != null ? id : auto[i]);
         }
         return Escalacao.auto(s, t, t.form, ruido);
     },

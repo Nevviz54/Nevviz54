@@ -673,7 +673,7 @@ const Vida = {
         const texto = typeof ev.texto === 'function' ? ev.texto(s) : ev.texto;
         const ctx = {};
         if (ev.prep) ev.prep(s, ctx);
-        const t = texto.replace(/\{(\w+)\}/g, (_, k) => ctx[k] ?? '');
+        const t = texto.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] != null ? ctx[k] : ''));
         const i = await UI.perguntar(ev.titulo, t, ev.ops.map(o => o.txt), ev.icone);
         const res = ev.ops[i].fn(s, ctx) || '';
         if (res) {

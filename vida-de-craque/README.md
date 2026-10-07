@@ -16,6 +16,22 @@ saves ficam na nuvem e funcionam no celular e no PC.
 > salvamento e os downloads. O jogo avisa quando isso acontece; nesse caso use
 > **Exportar → Copiar código** ou abra pelo link online / direto no navegador.
 
+### 📤 Mandando o jogo para um amigo
+
+Gere o arquivo único com `python3 ferramentas/build.py` (sai em `dist/vida-de-craque.html`)
+e mande para o amigo. O jogo roda em navegadores de 2017 para cá (iPhone com iOS 11+, Chrome 58+)
+e não depende de internet para abrir. O que pode dar errado é **onde** o arquivo é aberto:
+
+- **Android**: o WhatsApp/Telegram/Arquivos às vezes abre o `.html` no “HTML Viewer” /
+  “Leitor de HTML”, que não roda jogos. Toque em **⋮ → Abrir com → Chrome**.
+- **iPhone**: o iPhone não roda arquivos `.html` baixados (a pré-visualização não executa o
+  jogo). Mande um **link**: a página publicada no Claude com o compartilhamento ligado
+  (Compartilhar → qualquer pessoa com o link) ou o jogo hospedado no GitHub Pages.
+- **Computador**: baixe o arquivo e abra com dois cliques no Chrome, Edge, Firefox ou Safari.
+
+Se o jogo não abrir em alguns segundos, a própria tela de carregamento mostra essas instruções
+(e, se for erro do navegador, o detalhe técnico e um botão **Tentar de novo**).
+
 ## 🌍 O mundo
 
 **22 ligas, 462 clubes e quase 5.000 jogadores reais** (elencos de outubro de 2026):
