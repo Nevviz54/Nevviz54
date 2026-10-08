@@ -36,10 +36,13 @@ const ArmIdb = {
             try { r = indexedDB.open('vida-de-craque', 1); } catch (e) { clearTimeout(tempo); return reject(e); }
             r.onupgradeneeded = () => r.result.createObjectStore('saves');
             r.onsuccess = () => {
+                clearTimeout(tempo);
                 ArmIdb.db = r.result;
-                // gravação de teste: alguns navegadores abrem mas não deixam gravar
-                // (ou nunca terminam a gravação; por isso o tempo-limite continua valendo)
-                ArmIdb.gravar('teste', '1').then(() => { clearTimeout(tempo); resolve(true); }, e => { clearTimeout(tempo); reject(e); });
+                // gravação de teste: alguns navegadores abrem mas não deixam gravar (ou
+                // nunca terminam). Um IndexedDB só lento continua valendo: o menu abre
+                // antes (Jogo.iniciar não espera mais que 6s) e os saves aparecem depois.
+                const tempoTeste = setTimeout(() => reject(new Error('IndexedDB não grava')), 15000);
+                ArmIdb.gravar('teste', '1').then(() => { clearTimeout(tempoTeste); resolve(true); }, e => { clearTimeout(tempoTeste); reject(e); });
             };
             r.onerror = () => { clearTimeout(tempo); reject(r.error || new Error('IndexedDB falhou')); };
             r.onblocked = () => { clearTimeout(tempo); reject(new Error('IndexedDB bloqueado')); };
@@ -164,6 +167,8 @@ const Salvar = {
         }
         if (Salvar.nav === ArmIdb) await Salvar.migrarLocal();
         await Salvar.lerMetas('nav');
+        // se o menu já abriu sem os saves (armazenamento lento), redesenha
+        if (Salvar.aoMudar) Salvar.aoMudar();
         // a nuvem chega depois (só existe quando o jogo é aberto pelo link).
         // O jogo começa antes do 'load'; se o Claude ainda não preparou a página,
         // a nuvem é procurada de novo quando ela terminar de carregar.
@@ -180,21 +185,53 @@ const Salvar = {
         });
     },
 
-    // saves antigos (localStorage) passam para o IndexedDB, que tem muito mais espaço
+    // Saves do localStorage passam para o IndexedDB, que tem muito mais espaço.
+    // Eles aparecem quando o IndexedDB falhou numa sessão (o jogo usou o
+    // localStorage). Nada é apagado sem antes estar copiado: se o mesmo slot
+    // existe nos dois, o mais novo fica no slot e o outro vai para um slot livre.
     async migrarLocal() {
-        try {
-            for (const slot of Salvar.SLOTS) {
-                const save = localStorage.getItem(PREFIXO_SAVE + 'save_' + slot);
-                if (!save) continue;
-                const meta = localStorage.getItem(PREFIXO_SAVE + 'meta_' + slot);
-                if (!(await ArmIdb.ler('save_' + slot))) {
-                    await ArmIdb.gravar('save_' + slot, save);
-                    if (meta) await ArmIdb.gravar('meta_' + slot, meta);
-                }
-                localStorage.removeItem(PREFIXO_SAVE + 'save_' + slot);
-                localStorage.removeItem(PREFIXO_SAVE + 'meta_' + slot);
+        let L;
+        try { L = window.localStorage; if (!L) return; } catch (e) { return; }
+        const data = m => {
+            try { return ((typeof m === 'string' ? JSON.parse(m) : m) || {}).data || 0; } catch (e) { return 0; }
+        };
+        const livre = async () => {
+            for (const s of Salvar.SLOTS) {
+                if (s === 'auto') continue;
+                if (!(await ArmIdb.ler('save_' + s)) && !L.getItem(PREFIXO_SAVE + 'save_' + s)) return s;
             }
-        } catch (e) { /* sem localStorage: nada para migrar */ }
+            return null;
+        };
+        const gravarIdb = async (slot, save, meta) => {
+            await ArmIdb.gravar('save_' + slot, save);
+            if (meta) await ArmIdb.gravar('meta_' + slot, meta);
+        };
+        for (const slot of Salvar.SLOTS) {
+            try {
+                const save = L.getItem(PREFIXO_SAVE + 'save_' + slot);
+                if (!save) continue;
+                const meta = L.getItem(PREFIXO_SAVE + 'meta_' + slot);
+                const saveIdb = await ArmIdb.ler('save_' + slot);
+                if (!saveIdb) {
+                    await gravarIdb(slot, save, meta);
+                } else if (saveIdb !== save) {
+                    const metaIdb = await ArmIdb.ler('meta_' + slot);
+                    const outro = await livre();
+                    if (data(meta) > data(metaIdb)) {
+                        // o do navegador é mais novo: fica no slot; o antigo vai para um livre
+                        if (outro) await gravarIdb(outro, saveIdb, metaIdb);
+                        else if (slot !== 'auto') continue;   // sem espaço: tenta de novo depois
+                        await gravarIdb(slot, save, meta);
+                    } else {
+                        // o do IndexedDB é mais novo: o do navegador vai para um slot livre
+                        if (!outro) continue;
+                        await gravarIdb(outro, save, meta);
+                    }
+                }
+                L.removeItem(PREFIXO_SAVE + 'save_' + slot);
+                L.removeItem(PREFIXO_SAVE + 'meta_' + slot);
+            } catch (e) { /* fica no localStorage e tenta de novo na próxima vez */ }
+        }
     },
 
     async lerMetas(origem) {

@@ -1,4 +1,4 @@
-<!-- VIDA DE CRAQUE: se você está vendo este código em vez do jogo, baixe o arquivo e abra no Chrome, Edge, Firefox ou Safari. -->
+<!-- VIDA DE CRAQUE: se você está vendo este código em vez do jogo, baixe o arquivo e abra no Chrome, Edge, Firefox ou Safari do computador, ou no Chrome do Android. No iPhone, peça o link do jogo. -->
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -23,7 +23,7 @@
                     <p>O arquivo provavelmente foi aberto num <b>visualizador</b> (WhatsApp, Telegram, app Arquivos, Drive, e-mail), que não roda jogos.</p>
                     <ul>
                         <li>📱 <b>Android:</b> no WhatsApp/Telegram toque em <b>⋮ → Abrir com → Chrome</b>. Não use “HTML Viewer” nem “Leitor de HTML”.</li>
-                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Abra o <b>link</b> do jogo no Safari.</li>
+                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Peça a quem te mandou o <b>link</b> do jogo e abra no Safari.</li>
                         <li>💻 <b>Computador:</b> baixe o arquivo e abra com dois cliques no Chrome, Edge, Firefox ou Safari.</li>
                     </ul>
                 </div>
@@ -34,7 +34,7 @@
                         <b>⚠️ Este visualizador não roda o jogo (o JavaScript está desligado aqui).</b>
                         <ul>
                         <li>📱 <b>Android:</b> no WhatsApp/Telegram toque em <b>⋮ → Abrir com → Chrome</b>. Não use “HTML Viewer” nem “Leitor de HTML”.</li>
-                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Abra o <b>link</b> do jogo no Safari.</li>
+                        <li>🍎 <b>iPhone:</b> o iPhone não roda arquivos .html baixados. Peça a quem te mandou o <b>link</b> do jogo e abra no Safari.</li>
                         <li>💻 <b>Computador:</b> baixe o arquivo e abra com dois cliques no Chrome, Edge, Firefox ou Safari.</li>
                     </ul>
                     </div>
@@ -73,20 +73,47 @@
             boot.className = 'boot boot-falhou';
             document.getElementById('boot-bola').innerHTML = '⚠️ O jogo não conseguiu abrir';
             var lista = ajuda.querySelector('ul');
-            ajuda.innerHTML = '<p>Toque em <b>Tentar de novo</b>. Se continuar assim, o navegador pode estar desatualizado ou o arquivo foi aberto num visualizador que não roda jogos:</p>' +
+            ajuda.innerHTML = '<p>Toque em <b>Tentar de novo</b>. Se continuar assim, o navegador pode estar desatualizado ou o arquivo foi aberto num visualizador que não roda jogos.</p>' +
+                '<button class="btn btn-primario" id="boot-recarregar">🔄 Tentar de novo</button>' +
                 (lista ? lista.outerHTML : '') +
-                (erros.length ? '<p class="boot-erro">Detalhe técnico: ' + esc(erros.join(' · ')) + '</p>' : '') +
-                '<button class="btn btn-primario" id="boot-recarregar">🔄 Tentar de novo</button>';
+                (erros.length ? '<p class="boot-erro">Detalhe técnico: ' + esc(erros.join(' · ')) + '</p>' : '');
             document.getElementById('boot-recarregar').addEventListener('click', function () { location.reload(); });
         };
-        setTimeout(function () { if (!window.__vdcOk) window.__vdcFalha(); }, 10000);
+        // Com JavaScript funcionando, quem decide se mostra a ajuda é este vigia
+        // (a ajuda só de CSS fica para os visualizadores sem JavaScript).
+        var boot = document.getElementById('boot');
+        if (boot) boot.className += ' boot-js';
+        // Os 10 segundos contam a partir do fim do download da página: numa
+        // internet lenta o resto do jogo ainda está chegando, e isso não é erro.
+        function vigiar(ms) { setTimeout(function () { if (!window.__vdcOk) window.__vdcFalha(); }, ms); }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { vigiar(10000); });
+            setTimeout(function () {
+                var bola = document.getElementById('boot-bola');
+                if (bola && document.readyState === 'loading') bola.innerHTML = '⚽ Carregando...<br><small>a internet está lenta, aguarde</small>';
+            }, 8000);
+            vigiar(90000);   // o download travou de vez
+        } else vigiar(10000);
+        // navegador sem "gap" em flexbox (Chrome < 84, Safari < 14.1): o CSS usa margens
+        try {
+            var t = document.createElement('div');
+            t.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden';
+            t.appendChild(document.createElement('div'));
+            t.appendChild(document.createElement('div'));
+            document.body.appendChild(t);
+            if (t.scrollHeight !== 1) document.documentElement.className += ' sem-gap';
+            document.body.removeChild(t);
+        } catch (e) { /* sem teste: fica como está */ }
         // o que falta em navegadores antigos (iPhone com iOS 11, Android antigo)
         if (!Array.prototype.flatMap) {
-            Array.prototype.flatMap = function (fn, ctx) {
-                var r = [];
-                for (var i = 0; i < this.length; i++) r = r.concat(fn.call(ctx, this[i], i, this));
-                return r;
-            };
+            Object.defineProperty(Array.prototype, 'flatMap', {
+                configurable: true, writable: true,
+                value: function (fn, ctx) {
+                    var r = [];
+                    for (var i = 0; i < this.length; i++) r = r.concat(fn.call(ctx, this[i], i, this));
+                    return r;
+                },
+            });
         }
     })();
     </script>

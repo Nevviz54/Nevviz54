@@ -30,10 +30,10 @@ const Jogo = {
         this.aplicarOpcoes();
         // o armazenamento nunca pode prender o jogo na tela de carregamento:
         // se demorar, o menu abre e os saves aparecem quando ele responder
+        Salvar.aoMudar = () => this.atualizarSaves();
         try {
             await Promise.race([Salvar.iniciar(), new Promise(r => setTimeout(r, 6000))]);
         } catch (e) { console.warn('saves indisponíveis', e); }
-        Salvar.aoMudar = () => this.atualizarSaves();
         window.addEventListener('resize', () => this.aplicarOpcoes());
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -298,7 +298,15 @@ const Jogo = {
             const f = inp.files[0];
             if (!f) return;
             let txt = '';
-            try { txt = await f.text(); } catch (e) { status.textContent = '⚠️ Não deu para ler esse arquivo.'; return; }
+            try {
+                // File.text() só existe a partir do Chrome 76 / Safari 14
+                txt = f.text ? await f.text() : await new Promise((ok, erro) => {
+                    const r = new FileReader();
+                    r.onload = () => ok(String(r.result || ''));
+                    r.onerror = () => erro(r.error);
+                    r.readAsText(f);
+                });
+            } catch (e) { status.textContent = '⚠️ Não deu para ler esse arquivo.'; return; }
             inp.value = '';
             abrir(txt, 'o arquivo');
         });

@@ -20,7 +20,8 @@ saves ficam na nuvem e funcionam no celular e no PC.
 
 Gere o arquivo único com `python3 ferramentas/build.py` (sai em `dist/vida-de-craque.html`)
 e mande para o amigo. O jogo roda em navegadores de 2017 para cá (iPhone com iOS 11+, Chrome 58+)
-e não depende de internet para abrir. O que pode dar errado é **onde** o arquivo é aberto:
+e não depende de internet para abrir. (Só importar um save feito em outro aparelho pede um
+navegador mais novo: iOS 16.4+ ou Chrome 80+.) O que pode dar errado é **onde** o arquivo é aberto:
 
 - **Android**: o WhatsApp/Telegram/Arquivos às vezes abre o `.html` no “HTML Viewer” /
   “Leitor de HTML”, que não roda jogos. Toque em **⋮ → Abrir com → Chrome**.

@@ -38,7 +38,9 @@ def conferir(itens):
     except FileNotFoundError:
         print('aviso: node não encontrado, sintaxe não conferida')
         return
-    r = json.loads(p.stdout or '{}')
+    if p.returncode != 0 or not p.stdout.strip():
+        sys.exit('ERRO: não deu para conferir a sintaxe dos scripts:\n' + (p.stderr or '(sem saída)'))
+    r = json.loads(p.stdout)
     if r.get('semAcorn'):
         print('aviso: acorn não encontrado, sintaxe não conferida')
     elif r.get('erros'):
