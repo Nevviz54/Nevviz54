@@ -92,16 +92,28 @@
                 var bola = document.getElementById('boot-bola');
                 if (bola && document.readyState === 'loading') bola.innerHTML = '⚽ Carregando...<br><small>a internet está lenta, aguarde</small>';
             }, 8000);
-            vigiar(90000);   // o download travou de vez
+            // download travado de vez: nenhuma parte nova do jogo chegou em 45s
+            var nScripts = -1, parado = 0;
+            var travou = setInterval(function () {
+                if (window.__vdcOk || document.readyState !== 'loading') { clearInterval(travou); return; }
+                var n = document.getElementsByTagName('script').length;
+                if (n !== nScripts) { nScripts = n; parado = 0; return; }
+                parado += 15000;
+                if (parado >= 45000) { clearInterval(travou); window.__vdcFalha(); }
+            }, 15000);
         } else vigiar(10000);
         // navegador sem "gap" em flexbox (Chrome < 84, Safari < 14.1): o CSS usa margens
         try {
+            // dois filhos de 1px: com gap a altura é 3, sem gap é 2 (0 = página escondida, não testa)
             var t = document.createElement('div');
             t.style.cssText = 'display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden';
-            t.appendChild(document.createElement('div'));
-            t.appendChild(document.createElement('div'));
+            for (var k = 0; k < 2; k++) {
+                var c = document.createElement('div');
+                c.style.height = '1px';
+                t.appendChild(c);
+            }
             document.body.appendChild(t);
-            if (t.scrollHeight !== 1) document.documentElement.className += ' sem-gap';
+            if (t.scrollHeight === 2) document.documentElement.className += ' sem-gap';
             document.body.removeChild(t);
         } catch (e) { /* sem teste: fica como está */ }
         // o que falta em navegadores antigos (iPhone com iOS 11, Android antigo)

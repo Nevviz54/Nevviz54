@@ -47,7 +47,11 @@ const Jogo = {
         this.menu();
         window.__vdcOk = true;
         Jogo.carregarFontes();
-        if (retomar.continuar && Salvar.ultimo()) ACOES.menuContinuar();
+        if (retomar.continuar) {
+            // com o armazenamento lento, continua quando os saves chegarem
+            if (Salvar.ultimo()) ACOES.menuContinuar();
+            else if (!Salvar.pronto) this.retomarPendente = true;
+        }
     },
 
     // As fontes do Google entram depois que o jogo já abriu: assim uma rede
@@ -201,6 +205,7 @@ const Jogo = {
         const onde = Salvar.onde();
         if (onde === 'nuvem') return '☁️ Seus jogos ficam salvos na nuvem (na sua conta Claude) e também neste aparelho: dá para continuar no celular ou no PC. Use "Exportar" para guardar uma cópia extra.';
         if (onde === 'navegador') return '💾 Os jogos ficam salvos neste navegador. Use "Exportar" para guardar uma cópia ou levar para outro aparelho.';
+        if (onde === 'carregando') return '⏳ Procurando seus jogos salvos...';
         return '⚠️ <b>Este visualizador está bloqueando o salvamento</b> — os saves só duram até você fechar a página. '
             + 'Para não perder nada, use <b>📤 Exportar</b> (baixar arquivo ou copiar o código) e depois <b>📥 Importar</b>. '
             + 'Ou abra o jogo pelo link online ou direto no navegador (Chrome, Edge, Safari) em vez do visualizador de arquivos.';
@@ -210,7 +215,13 @@ const Jogo = {
     atualizarSaves() {
         if (document.querySelector('#overlay .lista-saves')) return this.abrirPausa(this.subPausa);
         if (document.querySelector('#app .lista-saves')) return ACOES.menuCarregar();
-        if (!this.s && document.querySelector('#app .menu-titulo')) this.menu();
+        if (!this.s && document.querySelector('#app .menu-titulo')) {
+            if (this.retomarPendente && Salvar.pronto) {
+                this.retomarPendente = false;
+                if (Salvar.ultimo()) return ACOES.menuContinuar();
+            }
+            this.menu();
+        }
     },
 
     // Exportar: baixar arquivo, compartilhar (celular) ou copiar o código do save
@@ -922,6 +933,7 @@ Object.assign(ACOES, {
         const s = Jogo.s;
         if (!s) return;
         if (TelaPartida.ativo()) return UI.toast('Termine a partida antes de salvar.', 'erro');
+        await Salvar.esperarPronto();
         const meta = Salvar.metaDe(d.slot);
         if (meta && !(await UI.confirmar(`Sobrescrever o ${Salvar.nomeSlot(d.slot)}?`, 'Sobrescrever'))) return;
         UI.toast('💾 Salvando...');
