@@ -450,6 +450,9 @@ body[data-tema="claro"] .menu-painel { background: rgba(255, 255, 255, .95); }
 .grade-tatica { display: grid; grid-template-columns: minmax(20rem, 1.3fr) minmax(18rem, 1fr); gap: 1rem; align-items: start; }
 .tatica-controles { display: flex; gap: .7rem; flex-wrap: wrap; align-items: center; margin-bottom: .8rem; }
 .tatica-controles label { display: inline-flex; gap: .4rem; align-items: center; }
+.escala-auto { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; margin: -.3rem 0 .8rem; }
+.lista-grupo { margin-top: .6rem; max-height: 40vh; overflow-y: auto; text-align: left; display: flex; flex-direction: column; gap: .2rem; font-size: .9rem; }
+.linha-grupo { margin: .4rem 0 .8rem; justify-content: flex-start; }
 .campinho {
     position: relative; width: 100%; aspect-ratio: 68 / 90; max-height: 62vh; margin: 0 auto;
     background: repeating-linear-gradient(0deg, #1f7a3a 0 10%, #23863f 10% 20%);
@@ -925,5 +928,5 @@ body[data-tema="claro"] .chance-baixa { color: #c2410c; }
 .sem-gap .linha-jogo > :last-child, .sem-gap .cabecalho-clube > :last-child { margin-right: 0; }
 .sem-gap .linha-botoes { margin-left: -.3rem; margin-right: -.3rem; }
 .sem-gap .linha-botoes > * { margin: 0 .3rem .6rem; }
-.sem-gap .abas > * + * { margin-left: .25rem; }
+.sem-gap .abas > * + *, .sem-gap .escala-auto > * + * { margin-left: .25rem; }
 .sem-gap .aba > span { margin-left: .35rem; }

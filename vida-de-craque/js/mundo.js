@@ -767,8 +767,22 @@ const Mundo = {
 // =====================================================================
 //  Escalação automática
 // =====================================================================
+// Critérios da escalação automática (o técnico escolhe na aba Tática ou antes do jogo)
+const CRITERIOS_ESCALA = {
+    ovr: { nome: 'Melhores', icone: '⭐', desc: 'Os melhores pelo overall e pela forma física.' },
+    motivacao: { nome: 'Mais motivados', icone: '🔥', desc: 'Quem está mais motivado ganha a vaga, mesmo com overall um pouco menor.' },
+    rodizio: { nome: 'Rodízio', icone: '🔄', desc: 'Quem está há 2 jogos ou mais sem entrar ganha a vaga.' },
+};
+
 const Escalacao = {
     disponivel: p => p && p.les <= 0 && p.susp <= 0 && !(p.folga > 0),
+
+    // quanto o critério da escalação automática soma na nota do jogador
+    bonusCriterio(p, criterio) {
+        if (criterio === 'motivacao') return (Mot.valor(p) - 55) * 0.6;
+        if (criterio === 'rodizio') return (p.sj || 0) >= 2 ? 18 + Math.min(p.sj, 6) : 0;
+        return 0;
+    },
 
     efetivo(p, slot) {
         return p.ovr - penalidadePos(p.pos, slot) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p);
@@ -778,7 +792,7 @@ const Escalacao = {
         const slots = FORMACOES[form];
         const nota = new Map();
         const disp = Mundo.elenco(s, t).filter(Escalacao.disponivel);
-        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) + (p.bonusFixo || 0) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p));
+        for (const p of disp) nota.set(p.id, p.ovr + (ruido ? U.normal(0, ruido) : 0) + (p.bonusEscala || 0) + (p.bonusFixo || 0) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p) + Escalacao.bonusCriterio(p, t.criterio));
         disp.sort((a, b) => nota.get(b.id) - nota.get(a.id));
         const usados = new Set();
         const res = new Array(slots.length).fill(null);
@@ -815,7 +829,8 @@ const Escalacao = {
 
     banco(s, t, titulares, n = 9) {
         const usados = new Set(titulares);
-        const disp = Mundo.elenco(s, t).filter(p => Escalacao.disponivel(p) && !usados.has(p.id)).sort((a, b) => b.ovr - a.ovr);
+        const nota = p => p.ovr + Escalacao.bonusCriterio(p, t.criterio);
+        const disp = Mundo.elenco(s, t).filter(p => Escalacao.disponivel(p) && !usados.has(p.id)).sort((a, b) => nota(b) - nota(a));
         const banco = [];
         const gol = disp.find(p => p.pos === 'GOL');
         if (gol) banco.push(gol.id);

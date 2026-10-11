@@ -366,11 +366,16 @@ ACOES.plTatica = async () => {
         titulo: '📋 Tática para o jogo',
         html: `<label class="campo">Formação:<select id="tt-form" class="sel">${Object.keys(FORMACOES).map(f => `<option ${t.form === f ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
             <label class="campo">Estilo:<select id="tt-est" class="sel">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${t.estilo === k ? 'selected' : ''}>${e.nome}</option>`).join('')}</select></label>
+            <label class="campo">Escalação:<select id="tt-crit" class="sel">
+                <option value="">${t.tit ? 'Manter a escalação manual' : `Manter (automática: ${CRITERIOS_ESCALA[t.criterio || 'ovr'].nome})`}</option>
+                ${Object.entries(CRITERIOS_ESCALA).map(([k, c]) => `<option value="${k}">🤖 Automática: ${c.icone} ${c.nome}</option>`).join('')}
+            </select></label>
             <p class="cinza">Mudar a formação refaz a escalação automaticamente. Para escolher os titulares um por um, use a aba <b>Tática</b> antes do jogo.</p>`,
-        botoes: [{ txt: 'Aplicar', valor: 'ok', antes: f => { esc = [f.querySelector('#tt-form').value, f.querySelector('#tt-est').value]; } }, { txt: 'Cancelar', valor: false, classe: 'btn-fantasma' }],
+        botoes: [{ txt: 'Aplicar', valor: 'ok', antes: f => { esc = [f.querySelector('#tt-form').value, f.querySelector('#tt-est').value, f.querySelector('#tt-crit').value]; } }, { txt: 'Cancelar', valor: false, classe: 'btn-fantasma' }],
     });
     if (r !== 'ok') return;
     if (esc[0] !== t.form) { t.form = esc[0]; t.tit = null; }
+    if (esc[2] && CRITERIOS_ESCALA[esc[2]]) { t.criterio = esc[2]; t.tit = null; }
     t.estilo = esc[1];
     TelaPartida.criarPartida(s);
     TelaPartida.render();

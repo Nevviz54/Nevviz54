@@ -86,6 +86,8 @@ de jogador quanto na de técnico:
 - Escolha **qualquer clube** das 22 ligas.
 - **Elenco**: veja overall, potencial, condição, contrato e valor de cada jogador. Renove, venda ou dispense.
 - **Tática**: 7 formações, 5 estilos de jogo e escalação manual no campinho (clique na posição e depois no jogador).
+- **Escalação automática por critério** (na aba Tática ou em "Alterar tática" antes do jogo): ⭐ **Melhores** (overall),
+  🔥 **Mais motivados** ou 🔄 **Rodízio** (quem está há 2 jogos ou mais sem entrar ganha a vaga). Vale para todos os jogos seguintes.
 - **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. A busca por nome procura em todos os jogadores, com ou sem clube, sem ligar para acento ("nene" acha o Nenê). Outros clubes também fazem propostas pelos seus jogadores.
 - **Finanças**: caixa, receita, folha salarial, premiação.
 - **Diretoria**: a confiança sobe e desce com os resultados. Se zerar, você é demitido — e vai ter que esperar propostas de outros clubes.
@@ -119,6 +121,8 @@ de jogador quanto na de técnico:
   😐 normal, 😕 desmotivado ou 😠 muito desmotivado — que aparece no elenco e antes de cada partida.
   Quanto mais motivado, melhor ele joga (de −4 a +3,5 de habilidade em campo). O resultado do
   último jogo, o tempo de jogo e as suas conversas mexem na motivação.
+- **📣 Conversa com o grupo** (uma vez por semana): motivar todos de uma vez (uma conversa rápida com cada jogador),
+  elogiar o grupo (melhor quando o time vem bem) ou cobrar o grupo (melhor quando vem mal). Repetir toda semana perde efeito.
 - **Conversas individuais**: converse com cada jogador (uma vez por semana). Se ele estiver
   desmotivado, pergunte o porquê — falta de jogos, promessa quebrada, derrotas, fase ruim, salário,
   contrato acabando, problema pessoal — e escolha o que responder. Normal? Dá para motivar, desafiar
@@ -185,7 +189,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - **Carregar** um jogo salvo
 - **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
 - **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
-- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, tema claro/escuro, salvamento automático, sons e volume, cutscenes e animações (dá para desligar)
+- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), sons e volume, cutscenes e animações (dá para desligar)
 - **Voltar ao menu principal**
 
 ## 📝 Observações sobre os dados

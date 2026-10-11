@@ -423,6 +423,79 @@ const Mot = {
     },
 
     // ---------------------------------------------------------------
+    //  Conversa com o grupo inteiro (uma vez por semana)
+    // ---------------------------------------------------------------
+    async conversarGrupo(s) {
+        const t = Tecnico.time(s);
+        const agora = Mot.agora(s);
+        s.car.conversas = s.car.conversas || {};
+        if (s.car.grupo === agora) return UI.aviso('Já conversaram', 'Você já falou com o grupo nesta semana. Tente de novo na próxima.', '📣');
+        const el = Mundo.elenco(s, t);
+        const liga = Mundo.liga(s, t.liga);
+        const ult = (liga && liga.tab && liga.tab[t.id] ? liga.tab[t.id].ult : []).slice(-3);
+        const vit = ult.filter(x => x === 'V').length, der = ult.filter(x => x === 'D').length;
+        const fase = vit >= 2 ? 'boa' : der >= 2 ? 'ruim' : 'normal';
+        // falar com o grupo toda semana perde força
+        const desde = s.car.grupoUlt == null ? 99 : agora - s.car.grupoUlt;
+        const fator = desde >= 3 ? 1 : desde === 2 ? 0.7 : 0.45;
+        const pendentes = el.filter(p => s.car.conversas[p.id] !== agora);
+        const ops = [
+            { id: 'cada', txt: `🔥 Motivar todos: uma conversa rápida com cada jogador (${pendentes.length})` },
+            { id: 'elogiar', txt: '👏 Elogiar o grupo' + (fase === 'boa' ? ' (o time vem bem)' : '') },
+            { id: 'cobrar', txt: '📈 Cobrar o grupo' + (fase === 'ruim' ? ' (o time vem mal)' : '') },
+            { id: 'sair', txt: '↩️ Deixar para depois' },
+        ];
+        const icones = { V: '✅', E: '➖', D: '❌' };
+        const texto = `Últimos jogos: ${ult.length ? ult.map(x => icones[x]).join(' ') : 'nenhum ainda'} · motivação média <b>${Math.round(U.media(el, p => Mot.valor(p)))}</b>/100<br>
+            <small class="cinza">${fator < 1 ? '⚠️ Você falou com o grupo há pouco tempo: agora o efeito é menor.' : 'Falar com o grupo toda semana faz o efeito cair.'}
+            Elogiar funciona melhor quando o time vem bem; cobrar, quando vem mal.</small>`;
+        const i = await UI.perguntar('📣 Conversa com o grupo', texto, ops.map(o => o.txt), '📣');
+        const op = ops[i];
+        if (!op || op.id === 'sair') return;
+        if (op.id === 'cada' && !pendentes.length) return UI.aviso('Já conversaram', 'Você já conversou com todos os jogadores nesta semana.', '💬');
+        s.car.grupo = agora;
+        s.car.grupoUlt = agora;
+        const alvos = op.id === 'cada' ? pendentes : el;
+        const antes = new Map(alvos.map(p => [p.id, Mot.nivel(p)]));
+        const efeito = p => {
+            const pers = Mot.pers(p), nv = Mot.nivel(p).id;
+            if (op.id === 'cada') {
+                let d = { muitoDes: 5, desmotivado: 6, normal: 6, motivado: 3, muito: 1 }[nv];
+                if (pers === 'vaidoso' && nv !== 'muito') d += 2;
+                if (pers === 'tranquilo') d -= 1;
+                if (p.prob > 0) d = Math.min(d, 2);   // problema pessoal pede uma conversa só com ele
+                return d;
+            }
+            if (op.id === 'elogiar') {
+                if (fase === 'boa') return { vaidoso: 6, profissional: 3 }[pers] || 4;
+                if (fase === 'normal') return { vaidoso: 4, profissional: 1 }[pers] || 2;
+                return { vaidoso: 2, profissional: -1, lider: -1 }[pers] || 0;   // elogio na má fase soa falso
+            }
+            if (fase === 'ruim') return { profissional: 5, lider: 5, ambicioso: 4, tranquilo: 2, vaidoso: -2, temperamental: -4 }[pers];
+            if (fase === 'normal') return { profissional: 2, lider: 2, ambicioso: 1, tranquilo: 0, vaidoso: -3, temperamental: -5 }[pers];
+            return pers === 'profissional' ? -1 : -3;   // cobrar quem está ganhando irrita
+        };
+        let subiu = 0, caiu = 0;
+        for (const p of alvos) {
+            let d = Math.round((efeito(p) * fator + (op.id === 'cada' ? U.rand(-1, 1) : 0)) * 10) / 10;
+            if (op.id === 'cada') d = Math.max(0.5, d);   // conversa de incentivo nunca desmotiva
+            Mot.mudar(p, d);
+            if (d > 0) subiu++; else if (d < 0) caiu++;
+            if (op.id === 'cada') s.car.conversas[p.id] = agora;
+        }
+        const moral = op.id === 'elogiar' ? { boa: 4, normal: 2, ruim: 0 }[fase] : op.id === 'cobrar' ? { boa: -3, normal: 0, ruim: 3 }[fase] : 2;
+        t.moral = U.clamp(t.moral + Math.round(moral * fator), 5, 99);
+        const mudaram = alvos.filter(p => antes.get(p.id) !== Mot.nivel(p));
+        const resumo = `<b class="verde">▲ ${subiu} mais motivado(s)</b>${caiu ? ` · <b class="vermelho">▼ ${caiu} menos</b>` : ''} · motivação média agora <b>${Math.round(U.media(el, p => Mot.valor(p)))}</b>/100
+            ${mudaram.length ? `<div class="lista-grupo">${mudaram.map(p => `<div>${UI.pos(p.pos)} ${U.esc(p.nome)}: ${antes.get(p.id).icone} → ${Mot.nivel(p).icone} ${Mot.nivel(p).nome}</div>`).join('')}</div>` : ''}
+            ${alvos.some(p => p.prob > 0) ? '<small class="cinza">🏠 Quem tem problema pessoal precisa de uma conversa só com ele.</small>' : ''}`;
+        await UI.aviso({ cada: '🔥 Você motivou o grupo', elogiar: '👏 Você elogiou o grupo', cobrar: '📈 Você cobrou o grupo' }[op.id], resumo, '📣');
+        Vida.log(s, `📣 Conversa com o grupo (${op.id === 'cada' ? 'motivar todos' : op.id === 'elogiar' ? 'elogio' : 'cobrança'}): ${subiu} mais motivados, ${caiu} menos.`, caiu > subiu ? 'ruim' : 'bom');
+        Jogo.manterRolagem = true;
+        Jogo.atualizar();
+    },
+
+    // ---------------------------------------------------------------
     //  Aba "Vestiário"
     // ---------------------------------------------------------------
     tela(s) {
@@ -436,6 +509,9 @@ const Mot = {
             <div class="cartao-topo"><h3>💬 Vestiário do ${U.esc(t.nome)}</h3><span>Motivação média: <b>${Math.round(media)}</b>/100</span></div>
             <div class="mot-resumo">${cont.map(({ n, q }) => `<div class="mot-caixa ${n.classe}"><span>${n.icone}</span><b>${q}</b><small>${n.nome}</small></div>`).join('')}</div>
             <p class="cinza pequeno">Jogador motivado rende mais em campo (até +3,5 de habilidade); desmotivado rende menos (até −4). A motivação muda com os resultados, com o tempo de jogo e com as suas conversas. Uma conversa por jogador por semana.</p>
+            <div class="linha-botoes linha-grupo">
+                <button class="btn ${s.car.grupo === agora ? '' : 'btn-primario'}" data-acao="motGrupo" ${s.car.grupo === agora ? 'disabled' : ''}>${s.car.grupo === agora ? '✔ Já falou com o grupo nesta semana' : '📣 Conversar com todo o grupo'}</button>
+            </div>
             ${prom.length ? `<h4>🤝 Promessas em andamento</h4><div class="lista-prom">${prom.map(([pid, pr]) => `<div>${U.esc(s.jog[pid].nome)}: ${pr.tipo === 'titular' ? 'começar jogando' : 'jogar'} · ${pr.feitos}/${pr.precisa} jogo(s) · prazo: ${Math.max(0, pr.ate - agora)} semana(s)</div>`).join('')}</div>` : ''}
             <div class="rolavel"><table class="tabela tabela-elenco">
                 <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>OVR</th><th class="esq">Motivação</th><th>Sem jogar</th><th>Forma</th><th class="esq">Personalidade</th><th></th></tr></thead>
@@ -453,4 +529,5 @@ const Mot = {
 
 Object.assign(ACOES, {
     motConversar: d => Mot.conversar(Jogo.s, Jogo.s.jog[+d.pid]),
+    motGrupo: () => Mot.conversarGrupo(Jogo.s),
 });

@@ -279,7 +279,10 @@ const Tecnico = {
                 <div class="tatica-controles">
                     <label>Formação <select class="sel" data-mudar="tcForm">${Object.keys(FORMACOES).map(f => `<option ${f === t.form ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
                     <label>Estilo <select class="sel" data-mudar="tcEstilo">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${k === t.estilo ? 'selected' : ''}>${e.nome}</option>`).join('')}</select></label>
-                    <button class="btn btn-pequeno" data-acao="tcAuto">🤖 Escalar automático</button>
+                </div>
+                <div class="escala-auto">
+                    <span class="cinza pequeno">🤖 Escalar automático:</span>
+                    ${Object.entries(CRITERIOS_ESCALA).map(([k, c]) => `<button class="chip-btn ${!t.tit && (t.criterio || 'ovr') === k ? 'ativo' : ''}" data-acao="tcAuto" data-c="${k}" title="${c.desc}">${c.icone} ${c.nome}</button>`).join('')}
                 </div>
                 <div class="campinho">${campo}<div class="campo-linha-meio"></div><div class="campo-circulo"></div><div class="campo-area cima"></div><div class="campo-area baixo"></div></div>
                 <p class="cinza pequeno">${sel != null ? `Escolha na lista quem vai jogar de <b>${POS_NOME[slotPos]}</b>.` : 'Clique numa posição do campo e depois no jogador da lista. Números em vermelho = jogador fora de posição.'}</p>
@@ -290,7 +293,8 @@ const Tecnico = {
                 <p class="cinza pequeno">Com o capitão em campo o time joga melhor. Veteranos e craques são os melhores líderes.</p>
             </div>
             <div class="cartao">
-                <h3>Jogadores ${t.tit ? '<small class="tag">escalação manual</small>' : '<small class="tag">automática</small>'}</h3>
+                <h3>Jogadores ${t.tit ? '<small class="tag">escalação manual</small>' : `<small class="tag">automática: ${CRITERIOS_ESCALA[t.criterio || 'ovr'].icone} ${CRITERIOS_ESCALA[t.criterio || 'ovr'].nome}</small>`}</h3>
+                ${!t.tit ? `<p class="cinza pequeno">${CRITERIOS_ESCALA[t.criterio || 'ovr'].desc} A escalação é refeita a cada jogo.</p>` : ''}
                 <div class="rolavel lista-escalar">${lista.map(p => {
             const disp = Escalacao.disponivel(p);
             const ef = slotPos ? Math.round(Escalacao.efetivo(p, slotPos)) : p.ovr;
@@ -921,7 +925,15 @@ Object.assign(ACOES, {
         Jogo.manterRolagem = true;
         Jogo.atualizar();
     },
-    tcAuto: () => { const t = Tecnico.time(Jogo.s); t.tit = null; Jogo.ui.slotSel = null; Jogo.atualizar(); UI.toast('🤖 Escalação automática ativada.'); },
+    tcAuto: d => {
+        const t = Tecnico.time(Jogo.s);
+        const c = CRITERIOS_ESCALA[d.c] ? d.c : 'ovr';
+        t.tit = null;
+        t.criterio = c;
+        Jogo.ui.slotSel = null;
+        Jogo.atualizar();
+        UI.toast(`${CRITERIOS_ESCALA[c].icone} Escalação automática: ${CRITERIOS_ESCALA[c].nome}. Vale para os próximos jogos.`);
+    },
     tcForm: (d, el) => { const t = Tecnico.time(Jogo.s); t.form = el.value; t.tit = null; Jogo.ui.slotSel = null; Jogo.atualizar(); },
     tcEstilo: (d, el) => { Tecnico.time(Jogo.s).estilo = el.value; Jogo.atualizar(); },
     tcFiltrar: () => {

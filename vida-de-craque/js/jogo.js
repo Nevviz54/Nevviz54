@@ -126,6 +126,7 @@ const Jogo = {
             <label class="campo check"><input type="checkbox" data-mudar="opCenas" ${o.cenas !== false ? 'checked' : ''}> 🎬 Cutscenes (novo clube, títulos, fim de temporada...)</label>
             <label class="campo check"><input type="checkbox" data-mudar="opAnim" ${o.animacoes !== false ? 'checked' : ''}> ✨ Animações (cliques, gols, transições)</label>
             <label class="campo check"><input type="checkbox" data-mudar="opAutosave" ${o.autosave ? 'checked' : ''}> 💾 Salvamento automático toda semana</label>
+            <label class="campo check"><input type="checkbox" data-mudar="opSimularJogos" ${o.simularJogos ? 'checked' : ''}> ⏩ Simular os jogos do meu time direto ao avançar a semana (mais rápido)</label>
         </div>`;
     },
 
@@ -552,14 +553,18 @@ const Jogo = {
             const meu = modo.meuTime(s);
             const meus = meu >= 0 ? Mundo.partidasDaSemana(s).filter(j => j.h === meu || j.a === meu) : [];
             Mundo.simularSemana(s, j => j.h === meu || j.a === meu);
+            // jogos do usuário: na tela da partida ou simulados direto (avanço rápido
+            // ou a opção "simular os jogos do meu time")
+            const simular = rapido || this.opcoes.simularJogos;
             for (const jogo of meus) {
-                if (rapido) {
+                if (simular) {
                     const opts = s.modo === 'tecnico' ? { controle: jogo.h === meu ? 0 : 1 } : { usuario: s.car.pid };
                     const m = Partida.criar(s, jogo, opts);
                     Partida.simularAteOFim(m);
                     const r = Partida.finalizar(s, m);
                     Mundo.registrar(s, jogo, r);
                     if (modo.posJogo) await modo.posJogo(s, jogo, m, r, true);
+                    if (!rapido) UI.toast(`⚽ ${s.times[jogo.h].nome} ${r.gh} x ${r.ga} ${s.times[jogo.a].nome}${r.pen ? ' (pênaltis)' : ''}`);
                 } else {
                     await TelaPartida.jogar(s, jogo);
                 }
@@ -910,6 +915,7 @@ Object.assign(ACOES, {
     opVelocidade: (d, el) => { Jogo.opcoes.velocidade = +el.value; Jogo.gravarOpcoes(); },
     opTema: (d, el) => { Jogo.opcoes.tema = el.value; Jogo.gravarOpcoes(); },
     opAutosave: (d, el) => { Jogo.opcoes.autosave = el.checked; Jogo.gravarOpcoes(); },
+    opSimularJogos: (d, el) => { Jogo.opcoes.simularJogos = el.checked; Jogo.gravarOpcoes(); },
     opSom: (d, el) => { Jogo.opcoes.som = el.checked; Jogo.gravarOpcoes(); Som.tocar('moeda'); },
     opVolume: (d, el) => { Jogo.opcoes.volume = +el.value; Jogo.gravarOpcoes(); Som.tocar('moeda'); },
     opCenas: (d, el) => { Jogo.opcoes.cenas = el.checked; Jogo.gravarOpcoes(); },

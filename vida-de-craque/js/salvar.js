@@ -558,7 +558,7 @@ const Salvar = {
     },
 
     // Opções do jogo (resolução, velocidade etc.) — ficam só neste navegador
-    opcoesPadrao: { resolucao: 'auto', escala: 100, velocidade: 2, autosave: true, tema: 'escuro', som: true, volume: 60, cenas: true, animacoes: true },
+    opcoesPadrao: { resolucao: 'auto', escala: 100, velocidade: 2, autosave: true, tema: 'escuro', som: true, volume: 60, cenas: true, animacoes: true, simularJogos: false },
 
     lerOpcoes() {
         try {

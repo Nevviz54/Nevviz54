@@ -194,6 +194,7 @@ const Selecoes = {
 
     // pergunta se o jogo do usuário vai ser ao vivo
     async aoVivo(s, a, b, rotulo) {
+        if (Jogo.opcoes && Jogo.opcoes.simularJogos) return false;   // opção "simular os jogos do meu time"
         const na = Selecoes.nacao(a), nb = Selecoes.nacao(b);
         const i = await UI.perguntar(rotulo, `${na.bandeira} <b>${U.esc(na.nome)}</b> x <b>${U.esc(nb.nome)}</b> ${nb.bandeira}`, ['▶ Jogar ao vivo', '⏩ Simular resultado'], '🌎');
         return i === 0;
