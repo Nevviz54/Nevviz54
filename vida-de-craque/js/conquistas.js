@@ -53,6 +53,10 @@ const CONQUISTAS = [
     { id: 'crias', modo: 'tecnico', icone: '🌱', nome: 'Cria da casa', desc: 'Subir 5 garotos da base para o profissional.', teste: s => cont(s, 'crias') >= 5 },
     { id: 'olheiro5', modo: 'tecnico', icone: '🔭', nome: 'Rede de olheiros', desc: 'Contratar um olheiro 5 estrelas.', teste: s => cont(s, 'olheiro5') >= 1 },
     { id: 'garimpo', modo: 'tecnico', icone: '⛏️', nome: 'Garimpeiro', desc: 'Levar para a base um garoto com teto 95+ achado por um olheiro.', teste: s => cont(s, 'garimpo') >= 1 },
+    // partida ao vivo (js/partidaExtras.js)
+    { id: 'viradaTatica', modo: 'tecnico', icone: '🧠', nome: 'Virada tática', desc: 'Vencer um jogo que estava perdendo depois de mudar as instruções.', teste: s => cont(s, 'viradasTaticas') >= 1 },
+    { id: 'nervosDeAco', modo: 'tecnico', icone: '⏱️', nome: 'Nervos de aço', desc: 'Vencer uma final ou um clássico com gol depois dos 80 minutos.', teste: s => cont(s, 'vitoriasNoFim') >= 1 },
+    { id: 'pavioCurto', modo: 'tecnico', icone: '🟥', nome: 'Pavio curto', desc: 'Ser expulso reclamando com o árbitro.', teste: s => cont(s, 'expulsoesTecnico') >= 1 },
 
     // ---------------- Jogador ----------------
     { id: 'estreia', modo: 'jogador', icone: '👟', nome: 'Estreia', desc: 'Jogar a primeira partida profissional.', teste: s => { const p = jogU(s); return p && p.cj + p.j >= 1; } },
@@ -69,6 +73,11 @@ const CONQUISTAS = [
     { id: 'ovr90', modo: 'jogador', icone: '🌟', nome: 'Lenda viva', desc: 'Chegar a 90 de habilidade.', teste: s => { const p = jogU(s); return p && p.ovr >= 90; } },
     { id: 'transfer50', modo: 'jogador', icone: '💸', nome: 'Negócio milionário', desc: 'Ser vendido por € 50 milhões ou mais.', teste: s => cont(s, 'maiorVenda') >= 5e7 },
     { id: 'habilidades', modo: 'jogador', icone: '⚡', nome: 'Jogador completo', desc: 'Ter 5 habilidades especiais.', teste: s => (s.car.habs || []).length >= 5 },
+    // partida ao vivo (js/partidaExtras.js)
+    { id: 'golaco', modo: 'jogador', icone: '🖼️', nome: 'Pintura', desc: 'Marcar um golaço.', teste: s => cont(s, 'golacos') >= 1 },
+    { id: 'golacos10', modo: 'jogador', icone: '🎨', nome: 'Artista da bola', desc: 'Marcar 10 golaços na carreira.', teste: s => cont(s, 'golacos') >= 10 },
+    { id: 'bicicleta', modo: 'jogador', icone: '🚲', nome: 'Bicicleta!', desc: 'Marcar um gol de bicicleta.', teste: s => cont(s, 'bicicletas') >= 1 },
+    { id: 'heroiFinal', modo: 'jogador', icone: '⏱️', nome: 'Herói no fim', desc: 'Marcar um gol decisivo depois dos 80 minutos e vencer uma final ou um clássico.', teste: s => cont(s, 'golsDecisivos') >= 1 },
 ];
 
 // Peso de cada tipo de taça: fama, felicidade e reputação do técnico

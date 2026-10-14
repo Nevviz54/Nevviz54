@@ -81,6 +81,25 @@ de jogador quanto na de técnico:
   **Copa da Ásia** nos anos ímpares. Fase de grupos + mata-mata, com pênaltis.
 - Cada jogo pode ser jogado **ao vivo** (com os seus lances, se você for o jogador) ou simulado.
 
+## 🏟️ Partida ao vivo (nos dois modos)
+
+- **🎬 Modo destaques** (ligado por padrão; botão na partida e em Opções): o relógio dispara e só segura
+  no que importa — gols, VAR, expulsões, lesões, mudanças do técnico rival e, como jogador, os **seus lances**
+  (o resultado do lance aparece rápido, sem clique extra). Como técnico, a reta final de jogo apertado volta
+  ao ritmo normal. Um jogo inteiro leva poucos segundos mais as suas decisões. Os botões de velocidade continuam valendo.
+- **Clima e gramado** ☀️🥵🌧️🌫️🥶🟫: sorteado conforme o país e a época do ano, aparece antes do jogo e na narração.
+  Calor cansa mais (e tem parada para hidratação), chuva faz o goleiro falhar e sai gol de erro, neblina tira os
+  chutes de longe, frio dá mais lesão e gramado ruim diminui a diferença técnica. Nos lances do jogador, chuva e
+  gramado ruim atrapalham as jogadas de efeito.
+- **📺 VAR**: alguns gols vão para a revisão (e podem ser anulados) e às vezes o árbitro é chamado ao monitor para
+  marcar pênalti — se o pênalti for do seu time, **você bate** (ou defende, se for o goleiro).
+- **Lances polêmicos**: pênalti não marcado, cartão exagerado, vermelho discutível...
+- **🌟 Golaços**: bicicleta, voleio, de fora da área, falta no ângulo, chapéu no goleiro, gol olímpico e jogadas
+  individuais, com narração especial. O jeito do gol segue o lance que você escolheu (tocar por cobertura pode virar chapéu).
+  Golaço seu ou gol decisivo no fim de final/clássico tem **comemoração especial** com confete.
+- Os técnicos da IA também mexem no time: pressão total quando estão perdendo, se fecham para segurar a vitória e às
+  vezes colocam um marcador individual no seu craque (ou em você!).
+
 ## 📋 Carreira de Técnico
 
 - Escolha **qualquer clube** das 22 ligas.
@@ -92,6 +111,12 @@ de jogador quanto na de técnico:
 - **Finanças**: caixa, receita, folha salarial, premiação.
 - **Diretoria**: a confiança sobe e desce com os resultados. Se zerar, você é demitido — e vai ter que esperar propostas de outros clubes.
 - **Jogo ao vivo**: narração minuto a minuto, substituições, mudança de postura e conversa no intervalo. Também dá para simular direto.
+- **📣 Instruções durante o jogo** (e no intervalo): 🎯 **marcar o craque deles** (ele finaliza bem menos, mas o marcador
+  pode levar cartão), ↔️ **jogar pelas pontas** (mais cruzamentos e gols de cabeça, um pouco mais exposto),
+  🧱 **segurar o resultado** (bem menos chances para os dois lados, cera e amarelos) e ⚡ **pressão total** (muito mais
+  ataque, mas o fôlego acaba em uns 20 minutos e o elenco sai cansado).
+- **😤 Reclamar com o árbitro** num lance polêmico contra o seu time: pode dar raça ao time... ou amarelo, ou
+  **expulsão do técnico** (sem trocas nem instruções até o fim, multa e suspensão no jogo seguinte, vendo da tribuna).
 - **Treino do time**: equilibrado, ataque, defesa, tático, físico ou descanso — cada um dá um bônus diferente nos jogos.
 - **Capitão**: escolha o líder do elenco — com ele em campo o time joga melhor (mais ainda se for experiente).
 - **Estrutura do clube**: invista em estádio (mais renda e força em casa), CT (jogadores evoluem mais rápido) e categorias de base (joias melhores), do nível 1 ao 5.
@@ -138,7 +163,9 @@ de jogador quanto na de técnico:
 - Escolha o **treino** da semana (leve, normal ou intenso).
 - Nas partidas aparecem **lances em que você decide**, com a **chance de cada opção** na tela
   (ex.: "Driblar o goleiro — ⚽ 33% de gol", "Passe curto — ✅ 84% de acerto · ⚠️ risco de gol contra").
-  A chance já leva em conta a sua habilidade e as habilidades especiais.
+  A chance já leva em conta a sua habilidade, as habilidades especiais, o clima e a **marcação individual**
+  (quando o técnico rival põe alguém só para te marcar).
+- **Golaços** contam para as conquistas e viralizam nas redes (mais fama).
 - **Lances de cada posição**: centroavante (pivô, rebote na pequena área), ponta (1 contra 1, contra-ataque),
   meia (tabela, escanteio, falta), volante (bote, saída de bola pressionada), lateral (apoio, marcar o ponta),
   zagueiro (bola nas costas, marcação na área, saída de bola) e goleiro (pênalti, cruzamento, recuo
@@ -167,7 +194,7 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 
 Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
 tríplice coroa, invencível, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
-seleção, milionário, casamento, dono de uma ilha,
+seleção, golaço de bicicleta, virada tática, técnico expulso, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 
 ## 🎬 Animações e cutscenes
@@ -177,7 +204,8 @@ viver até os 100 anos... Ficam na aba **Conquistas**.
   e a virada do ano), em títulos, finais e clássicos, demissão e aposentadoria.
   Clique para avançar, **Pular** (ou ESC) para encerrar.
 - **Animações**: efeito ao clicar nos botões, troca de abas suave, dinheiro “pulsando”
-  quando entra ou sai, tela de **GOOOL** com as cores do time durante as partidas.
+  quando entra ou sai, tela de **GOOOL** com as cores do time durante as partidas, revisão do **VAR**,
+  cartão vermelho para o técnico e comemoração de golaço com confete.
 - **Sons** sintetizados (apito, torcida, gol, moedas, conquista) — sem arquivos externos.
 
 ## ⚙️ Menu e opções
@@ -189,7 +217,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - **Carregar** um jogo salvo
 - **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
 - **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
-- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), sons e volume, cutscenes e animações (dá para desligar)
+- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), sons e volume, cutscenes e animações (dá para desligar)
 - **Voltar ao menu principal**
 
 ## 📝 Observações sobre os dados

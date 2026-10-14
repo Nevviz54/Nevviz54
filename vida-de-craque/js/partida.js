@@ -7,12 +7,13 @@ const PESO_GOL = { ATA: 4.2, PON: 3.0, MEI: 2.2, VOL: 1.0, LAT: 0.7, ZAG: 0.8, G
 const PESO_ASSIST = { MEI: 4, PON: 3.5, ATA: 2, LAT: 2, VOL: 1.5, ZAG: 0.4, GOL: 0.05 };
 const PESO_CARTAO = { ZAG: 3, VOL: 3, LAT: 2, MEI: 1.5, PON: 1, ATA: 1.2, GOL: 0.3 };
 
+// gols "comuns" (os golaços — bicicleta, falta no ângulo, de fora da área... — ficam em js/partidaExtras.js)
 const JEITOS_GOL = [
     'bate cruzado e marca!', 'sobe mais que todo mundo e cabeceia para o fundo da rede!',
-    'arrisca de fora da área... GOLAÇO!', 'aparece na pequena área e só empurra!',
+    'aparece na pequena área e só empurra!', 'bate rasteiro no canto, sem chance!',
     'dribla dois e toca na saída do goleiro!', 'cobra pênalti com categoria!',
-    'pega o rebote e não perdoa!', 'acerta um chute no ângulo!', 'de cobertura, que pintura!',
-    'cobra falta direto e marca!', 'finaliza de primeira, sem chance pro goleiro!',
+    'pega o rebote e não perdoa!', 'chuta colocado, a bola beija a trave e entra!',
+    'escora o cruzamento na segunda trave!', 'finaliza de primeira, sem chance pro goleiro!',
 ];
 const JEITOS_PERDE = [
     '{n} chuta e {g} faz uma defesaça!', '{n} manda por cima do gol.', 'NA TRAVE! {n} quase marca!',
@@ -52,6 +53,7 @@ const Partida = {
             m.banco.push(banco);
             for (const pid of esc) if (pid != null) m.st[pid] = Partida.novoStat(0, lado);
         });
+        PartidaExtras.criar(m);   // [partida] clima/gramado, instruções, VAR e técnico suspenso (m.px)
         if (m.usuario != null && m.st[m.usuario]) Partida.planejarLances(m, 1);
         Partida.recalcular(m);
         return m;
@@ -126,6 +128,7 @@ const Partida = {
                 meio: M * fator,
             };
         });
+        PartidaExtras.ajustar(m);   // [partida] efeitos do clima, das instruções e do técnico expulso
     },
 
     nomeTime(m, lado) {
@@ -199,6 +202,8 @@ const Partida = {
                 if (ev) novos.push(ev);
             }
         }
+        // [partida] VAR, pênaltis, lances polêmicos, clima e instruções do técnico
+        novos.push(...PartidaExtras.passo(m, novos));
 
         let pausa = null;
         if (m.min === 45) {
@@ -227,7 +232,8 @@ const Partida = {
     sortearAutor(m, lado, exceto) {
         const lista = Partida.emCampo(m, lado).filter(p => p.id !== exceto);
         if (!lista.length) return null;
-        return U.pesado(lista, p => PESO_GOL[Partida.slotDe(m, lado, p.id)] * Math.pow(p.ovr / 70, 2.2) * (p.id === m.usuario ? 0.5 : 1));
+        // [partida] pesoAutor: o craque marcado individualmente finaliza menos
+        return U.pesado(lista, p => PESO_GOL[Partida.slotDe(m, lado, p.id)] * Math.pow(p.ovr / 70, 2.2) * (p.id === m.usuario ? 0.5 : 1) * PartidaExtras.pesoAutor(m, lado, p));
     },
 
     sortearAssist(m, lado, exceto) {
@@ -239,7 +245,9 @@ const Partida = {
     gol(m, lado, autor, comAssist, assistente) {
         m.gols[lado]++;
         m.st[autor.id].g++;
-        let ass = assistente || (comAssist ? Partida.sortearAssist(m, lado, autor.id) : null);
+        // [partida] jeito do gol: golaços (bicicleta, falta no ângulo...), lances do jogador, chuva...
+        const jeito = PartidaExtras.jeitoGol(m, lado, autor);
+        let ass = assistente || (comAssist && !jeito.semAssist ? Partida.sortearAssist(m, lado, autor.id) : null);
         if (ass) m.st[ass.id].a++;
         let comemora = '';
         const evs = [];
@@ -247,10 +255,12 @@ const Partida = {
             comemora = ` E comemora: ${m.s.car.comemoracao}!`;
             m.st[autor.id].comemorou = (m.st[autor.id].comemorou || 0) + 1;
         }
-        evs.push(Partida.evento(m, {
+        const ev = Partida.evento(m, {
             tipo: 'gol', lado, pid: autor.id, pid2: ass ? ass.id : null,
-            txt: `⚽ GOOOL do ${Partida.nomeTime(m, lado)}! ${autor.nome} ${U.escolha(JEITOS_GOL)}${ass ? ` (assist.: ${ass.nome})` : ''} — ${Partida.placarTxt(m)}.${comemora}`,
-        }));
+            txt: `${jeito.golaco ? '🌟 ' : ''}⚽ GOOOL do ${Partida.nomeTime(m, lado)}! ${autor.nome} ${jeito.txt}${ass ? ` (assist.: ${ass.nome})` : ''} — ${Partida.placarTxt(m)}.${comemora}`,
+        });
+        PartidaExtras.marcarGol(m, ev, jeito);   // [partida] golaço (s.golacos) e gol decisivo no fim
+        evs.push(ev);
         if (comemora && /camisa/i.test(m.s.car.comemoracao) && m.esc[lado].includes(autor.id)) {
             evs.push(...Partida.cartao(m, lado, autor, false));
         }
@@ -354,6 +364,8 @@ const Partida = {
     //  Lances do jogador (modo carreira de jogador)
     // -----------------------------------------------------------------
     sortearLance(m) {
+        // [partida] pênalti marcado pelo VAR vira o lance do jogador (batedor ou goleiro)
+        if (m.lanceForcado) { const l = m.lanceForcado; m.lanceForcado = null; return l; }
         const slot = Partida.slotDe(m, Partida.ladoDoUsuario(m), m.usuario);
         const lista = LANCES[POS_GRUPO[slot]].concat(LANCES_POS[slot] || []);
         return U.pesado(lista, l => l.peso || 1);
@@ -399,7 +411,7 @@ const Partida = {
         if (lance.defesa && grupo === 'G' && Partida.hab(m, 'paredao')) k *= 1.15;
         if (lance.defesa && grupo === 'D' && Partida.hab(m, 'xerife')) k *= 1.12;
         if (m.min >= 75 && Partida.hab(m, 'decisivo')) k *= 1.2;
-        return k;
+        return k * PartidaExtras.multLance(m, lance, o, p);   // [partida] marcação individual e clima
     },
 
     // op = índice da opção escolhida (-1 = automático)
@@ -408,6 +420,7 @@ const Partida = {
         const p = m.s.jog[m.usuario];
         if (op < 0) op = U.int(0, lance.ops.length - 1);
         const o = lance.ops[op];
+        m.lanceAtual = { lance, o };   // [partida] o jeito do gol segue a jogada escolhida (e o VAR não revisa)
         const ch = Partida.chanceOpcao(m, lance, o);
         m.bonus[p.id] = m.bonus[p.id] || 0;
         const res = { txt: '', bom: false, eventos: [] };
@@ -469,6 +482,7 @@ const Partida = {
             }
         }
         Partida.evento(m, { tipo: 'lance', lado, pid: p.id, txt: `⭐ ${p.nome}: ${o.txt.replace(/^\S+\s/, '')} — ${res.txt}` });
+        m.lanceAtual = null;
         return res;
     },
 
@@ -518,6 +532,7 @@ const Partida = {
             if (p.amar >= 3) { p.susp = Math.max(p.susp, 1); p.amar = 0; }
             if (st.les) p.les = U.chance(0.12) ? U.int(8, 20) : U.int(1, 5);
         }
+        PartidaExtras.finalizar(s, m, r);   // [partida] cansaço do calor/pressão, expulsão do técnico, conquistas
         return r;
     },
 

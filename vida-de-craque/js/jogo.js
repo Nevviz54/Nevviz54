@@ -116,6 +116,7 @@ const Jogo = {
             <label class="campo">⏱️ Velocidade das partidas
                 <select class="sel" data-mudar="opVelocidade">${[1, 2, 3, 4].map(v => `<option value="${v}" ${o.velocidade === v ? 'selected' : ''}>${['', 'Lenta (1x)', 'Normal (2x)', 'Rápida (4x)', 'Turbo (8x)'][v]}</option>`).join('')}</select>
             </label>
+            <label class="campo check"><input type="checkbox" data-mudar="opDestaques" ${o.destaques !== false ? 'checked' : ''}> 🎬 Modo destaques nas partidas ao vivo (o jogo corre e só para nos gols, VAR, expulsões e nos seus lances)</label>
             <label class="campo">🎨 Tema
                 <select class="sel" data-mudar="opTema"><option value="escuro" ${o.tema === 'escuro' ? 'selected' : ''}>Escuro</option><option value="claro" ${o.tema === 'claro' ? 'selected' : ''}>Claro</option></select>
             </label>
@@ -470,12 +471,12 @@ const Jogo = {
             <ul><li>Escale o time na aba <b>Tática</b> (clique numa posição do campinho e depois no jogador).</li>
             <li>Compre e venda na aba <b>Mercado</b> durante as janelas (semanas 1–6 e 22–26). Jogadores sem clube podem ser contratados a qualquer momento.</li>
             <li>Fique de olho na <b>confiança da diretoria</b>: se ela zerar, você é demitido.</li>
-            <li>No jogo ao vivo você pode substituir, mudar a postura e falar com o time no intervalo.</li>
+            <li>No jogo ao vivo você pode substituir, mudar a postura, dar <b>instruções</b> (marcar o craque deles, jogar pelas pontas, segurar o resultado, pressão total) e falar com o time no intervalo. Lance polêmico? Dá para reclamar com o árbitro... por sua conta e risco.</li>
             <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba Tática. Invista em <b>estádio, CT e base</b> na aba Estrutura.</li>
             <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li></ul>
             <h4>⚽ Carreira de jogador</h4>
             <ul><li>Escolha o <b>treino</b> da semana: mais intenso = evolui mais rápido, mas cansa e pode lesionar.</li>
-            <li>Nas partidas, aparecem <b>lances</b> em que você decide: chutar, driblar, tocar, dar o carrinho...</li>
+            <li>Nas partidas, aparecem <b>lances</b> em que você decide: chutar, driblar, tocar, dar o carrinho... No modo <b>🎬 Destaques</b> o jogo corre e só para nos seus lances e nos lances importantes. Chuva, neblina, calor e marcação individual mudam as chances.</li>
             <li>Propostas de outros clubes chegam nas janelas. Você também pode pedir para ser negociado.</li>
             <li>Ganhe <b>pontos de habilidade</b> (subindo de nível, sendo o melhor em campo, fazendo hat-trick) e desbloqueie <b>habilidades especiais</b> na aba Treino.</li>
             <li>Escolha o número da camisa e a sua <b>comemoração de gol</b> na aba Carreira.</li>

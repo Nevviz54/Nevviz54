@@ -17,6 +17,7 @@ const TelaPartida = {
             this.resultado = null;
             this.extraFim = '';
             this.vistos = 0;
+            PartidaExtras.novaTela(this);   // [partida] modo destaques e estado da tela
             const m = this.m, th = s.times[m.h], ta = s.times[m.a];
             if (m.final) await Cena.duelo('🏆 GRANDE FINAL', th, ta, Mundo.nomeCompeticao(s, jogo.comp));
             else if (m.classico) await Cena.duelo('🔥 CLÁSSICO', th, ta, Mundo.nomeCompeticao(s, jogo.comp));
@@ -59,7 +60,7 @@ const TelaPartida = {
             <div class="placar">
                 <div class="placar-time">${UI.escudo(th, true)}<span>${U.esc(th.nome)}</span><small>${th.form} · ${ESTILOS[m.estilo[0]].nome}</small></div>
                 <div class="placar-centro">
-                    <div class="placar-comp">${U.esc(comp)}</div>${selo}
+                    <div class="placar-comp">${U.esc(comp)}</div>${selo}${PartidaExtras.selo(m)}
                     <div class="placar-gols" id="pl-gols">${m.gols[0]} <i>x</i> ${m.gols[1]}</div>
                     <div class="placar-min" id="pl-min">${this.textoMin()}</div>
                 </div>
@@ -80,7 +81,8 @@ const TelaPartida = {
 
     atualizar() {
         const m = this.m;
-        const set = (id, html) => { const e = document.getElementById(id); if (e) e.innerHTML = html; };
+        // só redesenha o que mudou (os botões não somem no meio do clique quando o relógio corre rápido)
+        const set = (id, html) => { const e = document.getElementById(id); if (e && e._html !== html) { e.innerHTML = html; e._html = html; } };
         set('pl-gols', `${m.gols[0]} <i>x</i> ${m.gols[1]}`);
         set('pl-min', this.textoMin());
         set('pl-lado0', this.lado(0));
@@ -136,12 +138,13 @@ const TelaPartida = {
     eventos() {
         const m = this.m;
         const evs = m.eventos.slice().reverse();
-        if (this.fase === 'pre') return this.preJogo() + evs.map(e => `<div class="ev ev-${e.tipo}">${U.esc(e.txt)}</div>`).join('');
+        // [partida] e.cls: classe extra do evento (golaço, gol anulado...)
+        if (this.fase === 'pre') return this.preJogo() + evs.map(e => `<div class="ev ev-${e.tipo} ${e.cls || ''}">${U.esc(e.txt)}</div>`).join('');
         if (!evs.length) return '<div class="ev ev-apito">⚽ A bola vai rolar!</div>';
         const vistos = this.vistos || 0;
         this.vistos = m.eventos.length;
         const total = m.eventos.length;
-        return evs.map((e, i) => `<div class="ev ev-${e.tipo} ${total - i > vistos ? 'ev-novo' : ''}"><span class="ev-min">${e.min}'</span> ${U.esc(e.txt)}</div>`).join('');
+        return evs.map((e, i) => `<div class="ev ev-${e.tipo} ${e.cls || ''} ${total - i > vistos ? 'ev-novo' : ''}"><span class="ev-min">${e.min}'</span> ${U.esc(e.txt)}</div>`).join('');
     },
 
     preJogo() {
@@ -162,7 +165,7 @@ const TelaPartida = {
             txt = `📋 Seu time vai a campo no <b>${s.times[lado === 0 ? m.h : m.a].form}</b>, estilo <b>${ESTILOS[m.estilo[lado]].nome}</b>.<br>
                 ${rel > 3 ? '💪 Seu time é favorito.' : rel < -3 ? `⚠️ O ${U.esc(adv.nome)} é favorito.` : '⚖️ Jogo equilibrado.'}`;
         }
-        return `<div class="pre-jogo">${txt}</div>`;
+        return `<div class="pre-jogo">${txt}${PartidaExtras.htmlPreJogo(m)}</div>`;   // [partida] clima e dicas
     },
 
     controles() {
@@ -171,20 +174,23 @@ const TelaPartida = {
             const fora = s.modo === 'jogador' && this.situacaoUsuario() === 'fora';
             return `${s.modo === 'tecnico' ? '<button class="btn" data-acao="plTatica">📋 Alterar tática</button>' : ''}
                 <button class="btn btn-primario btn-grande" data-acao="plComecar">▶ ${fora ? 'Assistir ao jogo' : 'Começar partida'}</button>
-                <button class="btn" data-acao="plSimular">⏩ Simular resultado</button>`;
+                <button class="btn" data-acao="plSimular">⏩ Simular resultado</button>
+                ${PartidaExtras.botaoDestaques(this)}`;
         }
         if (this.fase === 'fim') {
             return `<div class="resumo-fim">${this.resumoFim()}</div><button class="btn btn-primario btn-grande" data-acao="plSair">Continuar ▶</button>`;
         }
         const vel = Jogo.opcoes.velocidade;
         let html = `<button class="btn ${this.rodando ? '' : 'btn-primario'}" data-acao="plPausar">${this.rodando ? '⏸ Pausar' : '▶ Continuar'}</button>
-            <div class="vel">${[1, 2, 3, 4].map(v => `<button class="btn btn-pequeno ${vel === v ? 'ativo' : ''}" data-acao="plVel" data-v="${v}">${['', '1x', '2x', '4x', '8x'][v]}</button>`).join('')}</div>`;
+            <div class="vel">${[1, 2, 3, 4].map(v => `<button class="btn btn-pequeno ${vel === v ? 'ativo' : ''}" data-acao="plVel" data-v="${v}">${['', '1x', '2x', '4x', '8x'][v]}</button>`).join('')}</div>
+            ${PartidaExtras.botaoDestaques(this)}`;
         if (m.controle >= 0) {
-            html += `<button class="btn" data-acao="plSub" ${m.subs[m.controle] >= 5 ? 'disabled' : ''}>🔁 Substituir (${m.subs[m.controle]}/5)</button>
-                <select data-mudar="plEstilo" class="sel">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${m.estilo[m.controle] === k ? 'selected' : ''}>${e.nome}</option>`).join('')}</select>`;
+            const travado = PartidaExtras.bloqueado(m);   // [partida] técnico expulso: sem trocas nem mudança de estilo
+            html += `<button class="btn" data-acao="plSub" ${m.subs[m.controle] >= 5 || travado ? 'disabled' : ''}>🔁 Substituir (${m.subs[m.controle]}/5)</button>
+                <select data-mudar="plEstilo" class="sel" ${travado ? 'disabled' : ''}>${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${m.estilo[m.controle] === k ? 'selected' : ''}>${e.nome}</option>`).join('')}</select>`;
         }
         html += '<button class="btn btn-fantasma" data-acao="plPular">⏭ Pular para o fim</button>';
-        return html;
+        return html + PartidaExtras.htmlControles(this);   // [partida] instruções, reclamação e expulsão
     },
 
     resumoFim() {
@@ -202,7 +208,7 @@ const TelaPartida = {
                 .sort((a, b) => (r.notas[b.id] || 0) - (r.notas[a.id] || 0));
             html += `<div class="rf-notas">${notas.map(p => `<span>${U.esc(p.nome.split(' ').slice(-1)[0])} ${UI.nota(r.notas[p.id])}</span>`).join('')}</div>`;
         }
-        return html + (this.extraFim || '');
+        return html + PartidaExtras.htmlFim(m) + (this.extraFim || '');   // [partida] golaços, VAR, clima, expulsão
     },
 
     // ---------------------------------------------------------------
@@ -211,37 +217,45 @@ const TelaPartida = {
     iniciar() {
         if (this.rodando || this.m.terminou) return;
         this.rodando = true;
-        clearInterval(this.timer);
-        this.timer = setInterval(() => this.tick(), VELOCIDADES[Jogo.opcoes.velocidade] || 300);
+        this.agendar(null);
         this.atualizar();
+    },
+
+    // [partida] relógio com atraso variável: o modo destaques acelera e segura nos lances importantes
+    agendar(r) {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.tick(), PartidaExtras.atraso(this, r));
     },
 
     parar() {
         this.rodando = false;
-        clearInterval(this.timer);
+        clearTimeout(this.timer);
         this.timer = null;
     },
 
     tick() {
         if (!this.rodando) return;
-        const r = Partida.passo(this.m);
+        const r = PartidaExtras.passos(this);   // [partida] 1 minuto (ou alguns, no modo destaques)
         if (r.pausa) this.parar();
         this.atualizar();
-        const gol = r.eventos.find(e => e.tipo === 'gol');
+        const gol = r.eventos.find(e => e.tipo === 'gol' && !e.anulado);
         if (gol) {
             const g = document.getElementById('pl-gols');
             if (g) { g.classList.remove('pisca'); void g.offsetWidth; g.classList.add('pisca'); }
             TelaPartida.festaGol(gol);
         }
+        PartidaExtras.depoisDoTick(this, r);   // [partida] VAR, lance polêmico, avisos do modo destaques
         if (r.pausa === 'intervalo') Som.tocar('apito');
         if (r.pausa === 'fim') Som.tocar('apitoFinal');
         if (r.pausa === 'intervalo') this.intervalo();
         else if (r.pausa === 'lance') this.lance();
         else if (r.pausa === 'fim') this.fim();
+        else if (this.rodando) this.agendar(r);
     },
 
     // overlay e som quando sai gol
     festaGol(ev) {
+        if (PartidaExtras.festa(this, ev)) return;   // [partida] golaço ou gol decisivo no fim: comemoração especial
         const m = this.m, s = m.s;
         const t = s.times[ev.lado ? m.a : m.h];
         let nosso = false;
@@ -253,11 +267,12 @@ const TelaPartida = {
 
     async intervalo() {
         const m = this.m, s = m.s;
-        if (m.controle >= 0) {
+        if (m.controle >= 0 && !PartidaExtras.bloqueado(m)) {
             const lado = m.controle;
             const t = s.times[lado === 0 ? m.h : m.a];
             const dif = m.gols[lado] - m.gols[1 - lado];
-            const i = await UI.perguntar('Intervalo — vestiário', `Placar: <b>${Partida.placarTxt(m)}</b>.<br>O que você fala para o time?`, ['👏 Elogiar o time', '😡 Dar uma bronca', '🧘 Pedir calma e foco'], '🗣️');
+            // [partida] a conversa do vestiário também deixa mudar as instruções para o 2º tempo
+            const i = await PartidaExtras.perguntaIntervalo(m);
             let txt;
             if (i === 0) { const v = dif >= 0 ? 6 : -2; t.moral += v; txt = v > 0 ? 'O time voltou motivado!' : 'Os jogadores acharam estranho ser elogiados perdendo...'; }
             else if (i === 1) { const v = dif < 0 ? (U.chance(0.65) ? 8 : -5) : -4; t.moral += v; txt = v > 0 ? 'A bronca acordou o time!' : 'A bronca pegou mal no vestiário.'; }
@@ -268,7 +283,8 @@ const TelaPartida = {
             UI.toast(txt);
             this.iniciar();
         } else {
-            setTimeout(() => { if (this.fase === 'jogo' && !this.pausaMenu) this.iniciar(); }, 900);
+            if (m.controle >= 0) UI.toast('🟥 Sem você no vestiário: o auxiliar conversa com o time.');
+            setTimeout(() => { if (this.fase === 'jogo' && !this.pausaMenu && this.m === m) this.iniciar(); }, 900);
         }
     },
 
@@ -276,12 +292,14 @@ const TelaPartida = {
         const m = this.m;
         const lance = Partida.sortearLance(m);
         const ops = lance.ops.map(o => o.txt + Partida.textoChance(Partida.chanceOpcao(m, lance, o)));
-        const i = await UI.perguntar(`Seu lance! ${m.min}'`, `${lance.txt}<br><small class="cinza">As chances já levam em conta a sua habilidade e as suas habilidades especiais.</small>`, ops, '⭐');
+        // [partida] notaLance: marcação individual e clima que pesam no lance
+        const i = await UI.perguntar(`Seu lance! ${m.min}'`, `${lance.txt}<br><small class="cinza">As chances já levam em conta a sua habilidade e as suas habilidades especiais.</small>${PartidaExtras.notaLance(m, lance)}`, ops, '⭐');
         const r = Partida.resolverLance(m, lance, i);
         this.atualizar();
         const gol = r.eventos.find(e => e.tipo === 'gol');
         if (gol) TelaPartida.festaGol(gol);
-        await UI.aviso(r.bom ? 'Boa!' : 'Que pena...', r.txt, r.bom ? '🔥' : '😓');
+        // [partida] no modo destaques o resultado do lance aparece rápido, sem clique
+        if (!PartidaExtras.avisoLance(this, r)) await UI.aviso(r.bom ? 'Boa!' : 'Que pena...', r.txt, r.bom ? '🔥' : '😓');
         if (m.min >= 90) this.fim();
         else this.iniciar();
     },
@@ -334,6 +352,7 @@ ACOES.plVel = d => {
 };
 ACOES.plEstilo = (d, el) => {
     const m = TelaPartida.m;
+    if (PartidaExtras.bloqueado(m)) { UI.toast('🟥 Você foi expulso: só o auxiliar pode mexer no time.', 'erro'); TelaPartida.atualizar(); return; }
     m.estilo[m.controle] = el.value;
     m.s.times[m.controle === 0 ? m.h : m.a].estilo = el.value;
     Partida.recalcular(m);
@@ -342,6 +361,7 @@ ACOES.plEstilo = (d, el) => {
 };
 ACOES.plSub = async () => {
     const m = TelaPartida.m, s = m.s, lado = m.controle;
+    if (PartidaExtras.bloqueado(m)) return UI.toast('🟥 Você foi expulso: só o auxiliar pode mexer no time.', 'erro');
     if (m.subs[lado] >= 5 || !m.banco[lado].length) return UI.toast('Sem substituições disponíveis.', 'erro');
     const estava = TelaPartida.rodando;
     TelaPartida.parar();
