@@ -33,6 +33,9 @@ const UI = {
     //  Modal genérico. Devolve uma Promise com o valor do botão clicado
     // ---------------------------------------------------------------
     modal({ titulo = '', html = '', botoes = [{ txt: 'OK', valor: true }], fechavel = true, largo = false, classe = '' }) {
+        // gancho: avisa quem quiser saber que um modal abriu (js/ritmo.js usa
+        // para o "⏭️ Até algo importante" parar quando aparece uma decisão)
+        if (UI.aoAbrirModal) { try { UI.aoAbrirModal(titulo); } catch (e) { console.warn(e); } }
         return new Promise(resolve => {
             const raiz = document.getElementById('modais');
             const fundo = document.createElement('div');

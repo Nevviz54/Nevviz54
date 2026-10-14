@@ -32,6 +32,10 @@ const CONQUISTAS = [
     { id: 'mundialClubes', icone: '🌐', nome: 'Campeão do mundo de clubes', desc: 'Ganhar o Mundial de Clubes.', teste: s => cont(s, 'mundiais') >= 1 },
     { id: 'campeaoSelecao', icone: '🎖️', nome: 'Glória pela seleção', desc: 'Ganhar um torneio com a seleção (jogador ou técnico).', teste: s => s.pessoa.trofeus.some(t => /\(seleção\)/.test(t.txt)) || cont(s, 'titulosSelecao') >= 1 },
     { id: 'centenario', icone: '🎂', nome: 'Centenário', desc: 'Viver até os 100 anos.', teste: s => s.pessoa.idade >= 100 },
+    // ritmo do jogo (js/ritmo.js)
+    { id: 'piloto', icone: '⏭️', nome: 'Piloto automático', desc: 'Avançar 100 semanas com o ⏭️ Até algo importante.', teste: s => cont(s, 'ritmoSemanas') >= 100 },
+    { id: 'horaH', icone: '🎯', nome: 'Hora H', desc: 'O ⏭️ parou antes de um clássico ou final e você venceu o jogo ao vivo.', teste: s => cont(s, 'horaH') >= 1 },
+    { id: 'habitos', icone: '🔁', nome: 'Criatura de hábitos', desc: 'Ter 10 eventos resolvidos sozinhos com uma resposta lembrada.', teste: s => cont(s, 'respostasAuto') >= 10 },
 
     // ---------------- Técnico ----------------
     { id: 'vitoria1', modo: 'tecnico', icone: '✅', nome: 'Primeira vitória', desc: 'Vencer o primeiro jogo como técnico.', teste: s => cont(s, 'vitorias') >= 1 },
@@ -78,6 +82,8 @@ const CONQUISTAS = [
     { id: 'golacos10', modo: 'jogador', icone: '🎨', nome: 'Artista da bola', desc: 'Marcar 10 golaços na carreira.', teste: s => cont(s, 'golacos') >= 10 },
     { id: 'bicicleta', modo: 'jogador', icone: '🚲', nome: 'Bicicleta!', desc: 'Marcar um gol de bicicleta.', teste: s => cont(s, 'bicicletas') >= 1 },
     { id: 'heroiFinal', modo: 'jogador', icone: '⏱️', nome: 'Herói no fim', desc: 'Marcar um gol decisivo depois dos 80 minutos e vencer uma final ou um clássico.', teste: s => cont(s, 'golsDecisivos') >= 1 },
+    // ritmo do jogo (js/ritmo.js)
+    { id: 'rotina', modo: 'jogador', icone: '🤖', nome: 'Rotina de atleta', desc: 'Treinar 46 semanas (uma temporada) no 🤖 treino automático.', teste: s => cont(s, 'treinosAuto') >= 46 },
 ];
 
 // Peso de cada tipo de taça: fama, felicidade e reputação do técnico

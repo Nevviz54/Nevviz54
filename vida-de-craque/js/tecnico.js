@@ -576,7 +576,9 @@ const Tecnico = {
         if (!rapido && U.chance(0.22)) {
             const opcoes = venceu ? ['👏 "O mérito é todo dos jogadores."', '😎 "Eu avisei que ia dar certo."', '🎯 "Ainda temos muito a melhorar."']
                 : ['🤝 "A culpa é minha, eu assumo."', '😡 "A arbitragem nos prejudicou!"', '🗣️ "Faltou atitude de alguns jogadores."'];
-            const i = await UI.perguntar('Coletiva de imprensa', `Repórteres perguntam sobre ${venceu ? 'a vitória' : empate ? 'o empate' : 'a derrota'} contra o ${U.esc(adv.nome)}.`, opcoes, '🎙️');
+            // ritmo (js/ritmo.js): dá para lembrar a resposta e a coletiva se responde sozinha
+            const i = await Ritmo.perguntar(s, venceu ? 'coletiva:vitoria' : 'coletiva:tropeco', 'Coletiva de imprensa', `Repórteres perguntam sobre ${venceu ? 'a vitória' : empate ? 'o empate' : 'a derrota'} contra o ${U.esc(adv.nome)}.`, opcoes, '🎙️',
+                venceu ? 'Coletiva depois de vitória' : 'Coletiva depois de empate ou derrota');
             let txt;
             if (venceu) {
                 if (i === 0) { t.moral += 4; txt = 'O elenco adorou ser valorizado.'; }

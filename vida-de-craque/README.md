@@ -100,6 +100,22 @@ de jogador quanto na de técnico:
 - Os técnicos da IA também mexem no time: pressão total quando estão perdendo, se fecham para segurar a vitória e às
   vezes colocam um marcador individual no seu craque (ou em você!).
 
+## ⏭️ Ritmo: menos cliques para o tempo andar (nos dois modos)
+
+- **⏭️ Até algo importante** (botão ao lado de "4 semanas"): simula semana a semana e **para sozinho** quando
+  aparece uma decisão (proposta, renovação, convocação, lesão, mensagem de jogador ou da base...), quando o próximo
+  jogo é um **clássico ou uma final** (para você jogar ao vivo — clique de novo para simular), quando a janela de
+  transferências abre ou fecha, quando um titular se machuca feio, quando a diretoria perde a paciência ou quando a
+  temporada acaba. No máximo 12 semanas por vez (dá para mudar em Opções). Enquanto roda, o botão vira **⏹ Parar**.
+- No fim aparece o **resumo do que rolou**: semanas, vitórias/empates/derrotas, placar somado, seus gols, OVR,
+  confiança da diretoria, dinheiro e títulos — e o motivo da parada. O "⏩ 4 semanas" também mostra esse resumo.
+- **🗓️ Esta semana**: no perfil (abas Vida/Atividades) aparece um resumo compacto da última semana — placares,
+  gols, dinheiro, felicidade, fama — e as novidades do diário, sem precisar abrir nada.
+- **🔁 Lembrar minha escolha**: nos eventos da vida (e na coletiva depois dos jogos) dá para marcar a caixinha; da
+  próxima vez o mesmo evento se resolve sozinho, com um aviso rápido e uma linha no diário. Eventos com uma opção só
+  já viram aviso rápido. A lista fica em **Vida → 🔁 Automático**, onde dá para esquecer cada resposta.
+- **⚡ Menos eventos aleatórios** (Opções ou Vida → 🔁 Automático): os eventos da vida aparecem bem menos.
+
 ## 📋 Carreira de Técnico
 
 - Escolha **qualquer clube** das 22 ligas.
@@ -160,7 +176,10 @@ de jogador quanto na de técnico:
 ## ⚽ Carreira de Jogador (o lado BitLife)
 
 - Escolha a **idade para começar** (de 16 a 35 anos): mais novo tem mais potencial; mais velho já começa mais pronto e recebe propostas de clubes maiores.
-- Escolha o **treino** da semana (leve, normal ou intenso).
+- Escolha o **treino** da semana (leve, normal ou intenso) — ele vale para as semanas seguintes até você mudar.
+  Ou ligue o **🤖 Treino automático**: toda semana ele escolhe o melhor (leve quando você está lesionado, cansado ou
+  com risco de recaída; intenso quando está inteiro e jovem, com uma semana de recuperação depois de três pesadas;
+  poupa antes de clássico e final; e foca no físico quando você já não evolui).
 - Nas partidas aparecem **lances em que você decide**, com a **chance de cada opção** na tela
   (ex.: "Driblar o goleiro — ⚽ 33% de gol", "Passe curto — ✅ 84% de acerto · ⚠️ risco de gol contra").
   A chance já leva em conta a sua habilidade, as habilidades especiais, o clima e a **marcação individual**
@@ -193,7 +212,7 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 ## 🏅 Conquistas
 
 Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
-tríplice coroa, invencível, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
+tríplice coroa, invencível, piloto automático, hora H, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
 seleção, golaço de bicicleta, virada tática, técnico expulso, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 
@@ -217,7 +236,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - **Carregar** um jogo salvo
 - **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
 - **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
-- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), sons e volume, cutscenes e animações (dá para desligar)
+- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), o "⏭️ Até algo importante" (parar antes de clássicos e finais e o máximo de semanas por vez), menos eventos aleatórios, sons e volume, cutscenes e animações (dá para desligar)
 - **Voltar ao menu principal**
 
 ## 📝 Observações sobre os dados

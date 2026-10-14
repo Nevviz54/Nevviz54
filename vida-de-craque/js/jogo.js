@@ -128,6 +128,7 @@ const Jogo = {
             <label class="campo check"><input type="checkbox" data-mudar="opAnim" ${o.animacoes !== false ? 'checked' : ''}> ✨ Animações (cliques, gols, transições)</label>
             <label class="campo check"><input type="checkbox" data-mudar="opAutosave" ${o.autosave ? 'checked' : ''}> 💾 Salvamento automático toda semana</label>
             <label class="campo check"><input type="checkbox" data-mudar="opSimularJogos" ${o.simularJogos ? 'checked' : ''}> ⏩ Simular os jogos do meu time direto ao avançar a semana (mais rápido)</label>
+            ${Ritmo.htmlOpcoes() /* ritmo: ⏭️, menos eventos e respostas lembradas */}
         </div>`;
     },
 
@@ -465,7 +466,7 @@ const Jogo = {
         return `<div class="ajuda">
             <p><b>Vida de Craque</b> mistura um <b>Football Manager</b> com o <b>BitLife</b>: você cuida da carreira dentro de campo e da vida fora dele.</p>
             <h4>⏩ O tempo</h4>
-            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...), as <b>supercopas</b> no começo da temporada, as copas continentais (Liga dos Campeões, Libertadores, Concachampions, Liga Europa e Sul-Americana), a Supercopa da UEFA, a Recopa e, no fim do ano, o <b>Mundial de Clubes</b>. Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
+            <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Com pressa? <b>⏭️ Até algo importante</b> simula semana a semana e para sozinho quando aparece uma decisão, um clássico ou final (para você jogar ao vivo), a janela de transferências ou o fim da temporada — e mostra o resumo do que aconteceu. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...), as <b>supercopas</b> no começo da temporada, as copas continentais (Liga dos Campeões, Libertadores, Concachampions, Liga Europa e Sul-Americana), a Supercopa da UEFA, a Recopa e, no fim do ano, o <b>Mundial de Clubes</b>. Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
             <p><b>💬 Vestiário (técnico)</b>: cada jogador tem uma motivação (🔥 muito motivado, 😀 motivado, 😐 normal, 😕 desmotivado, 😠 muito desmotivado). Ela muda com os resultados, com o tempo de jogo e com as suas conversas, e quanto mais motivado, melhor ele joga. Converse com cada um (uma vez por semana), pergunte por que está desmotivado e cumpra as promessas de tempo de jogo: promessa quebrada pesa muito.</p>
             <h4>📋 Carreira de técnico</h4>
             <ul><li>Escale o time na aba <b>Tática</b> (clique numa posição do campinho e depois no jogador).</li>
@@ -482,7 +483,7 @@ const Jogo = {
             <li>Escolha o número da camisa e a sua <b>comemoração de gol</b> na aba Carreira.</li>
             <li>Quando se aposentar, pode virar técnico com a mesma pessoa!</li></ul>
             <h4>❤️ Vida</h4>
-            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
+            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. Cansou de um evento que se repete? Marque <b>🔁 Lembrar minha escolha</b> e ele passa a se resolver sozinho (a lista fica em Vida → 🔁 Automático). E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
             <h4>⌨️ Atalhos</h4>
             <p><b>ESC</b>: abre/fecha o menu de pausa (salvar, carregar, opções, voltar ao menu).</p>
             <p><b>Saves</b>: o jogo salva sozinho toda semana. Pelo link online do Claude os saves vão para a nuvem da sua conta (celular e PC). Para guardar uma cópia, use <b>📤 Exportar</b> (arquivo ou código) e depois <b>📥 Importar</b>.</p>
@@ -524,6 +525,7 @@ const Jogo = {
             <footer class="rodape">
                 <div class="rodape-info">${modo.rodape(s)}</div>
                 <div class="rodape-botoes">
+                    ${Ritmo.botaoRodape(s) /* ritmo: ⏭️ Até algo importante / ⏹ Parar */}
                     <button class="btn btn-fantasma" data-acao="avancarRapido" title="Simula 4 semanas sem abrir as partidas">⏩ 4 semanas</button>
                     <button class="btn btn-avancar" data-acao="avancar">▶ Avançar semana</button>
                 </div>
@@ -551,6 +553,7 @@ const Jogo = {
         try {
             const s = this.s, modo = this.modo();
             if (modo.antesDaSemana && (await modo.antesDaSemana(s)) === false) return;
+            Ritmo.inicioSemana(s);   // ritmo: fotografia para o resumo "Esta semana"
             const meu = modo.meuTime(s);
             const meus = meu >= 0 ? Mundo.partidasDaSemana(s).filter(j => j.h === meu || j.a === meu) : [];
             Mundo.simularSemana(s, j => j.h === meu || j.a === meu);
@@ -570,12 +573,15 @@ const Jogo = {
                     await TelaPartida.jogar(s, jogo);
                 }
             }
+            Ritmo.aposJogos(s, meus, meu, simular);   // ritmo: placares para o resumo da semana
             await modo.semana(s);
             Jogo.ui.rodada = null;
             Vida.semana(s);
-            if (U.chance(rapido ? 0.18 : 0.3)) await Vida.eventoAleatorio(s);
+            // evento da vida (js/ritmo.js: "menos eventos" e não faz o ⏭️ parar)
+            await Ritmo.eventoDaSemana(s, rapido);
             Mundo.posSemana(s);
             if (s.semana >= TOTAL_SEMANAS) await this.fimTemporada();
+            Ritmo.fimSemana(s);   // ritmo: guarda o resumo "Esta semana"
             if (s.pessoa.morto) { this.ocupado = false; return this.fimDeVida(); }
             if (this.opcoes.autosave) {
                 const r = await Salvar.salvar(s, 'auto');
@@ -812,7 +818,7 @@ const Comum = {
     // ---------------- Vida (BitLife) ----------------
     vida(s) {
         const p = s.pessoa, sub = Jogo.ui.subVida;
-        const subs = [['atividades', '🎯 Atividades'], ['relacoes', '❤️ Relacionamentos'], ['bens', '🏠 Bens'], ['invest', '💹 Investimentos'], ['diario', '📔 Diário']];
+        const subs = [['atividades', '🎯 Atividades'], ['relacoes', '❤️ Relacionamentos'], ['bens', '🏠 Bens'], ['invest', '💹 Investimentos'], ['diario', '📔 Diário'], ['ritmo', '🔁 Automático']];
         let corpo = '';
         if (sub === 'atividades') {
             corpo = `<p class="cinza">Ações nesta semana: <b>${p.acoes}/${Vida.MAX_ACOES}</b></p>
@@ -848,6 +854,8 @@ const Comum = {
                 ${(p.negocios || []).length ? `<div class="lista-bens">${p.negocios.map(n => `<div class="bem"><span>${n.icone} <b>${U.esc(n.nome)}</b> <small>desde ${n.ano} · já rendeu ${U.dinheiro(n.lucro || 0)}</small></span><button class="btn btn-pequeno" data-acao="negVender" data-id="${n.id}">Vender</button></div>`).join('')}</div>` : '<p class="cinza">Nenhum negócio ainda. Eles dão renda toda semana, mas podem falir.</p>'}
                 <h4>💼 Abrir um negócio</h4>
                 <div class="grade-loja">${NEGOCIOS.map((n, i) => `<button class="item-loja" data-acao="negAbrir" data-i="${i}" ${p.dinheiro < n.custo ? 'disabled' : ''}><b>${n.icone} ${n.nome}</b><span>${U.dinheiro(n.custo)}</span><small class="cinza">~${U.dinheiro(n.custo * 0.0028)}/semana</small></button>`).join('')}</div>`;
+        } else if (sub === 'ritmo') {
+            corpo = Ritmo.telaVida(s);   // respostas lembradas e ritmo do jogo (js/ritmo.js)
         } else {
             corpo = Comum.diario(s, 200);
         }
@@ -873,7 +881,8 @@ const Comum = {
         ${UI.barra('Aparência', p.aparencia, '💅', 'roxo')}
         <div class="perfil-extra"><span>📱 <b>${Vida.numero(p.seg || 0)}</b> seguidores</span><span>💎 Patrimônio <b>${U.dinheiro(Vida.patrimonio(s))}</b></span></div>
         ${patr}
-        ${p.trofeus.length ? `<div class="pequeno">🏆 ${p.trofeus.length} título(s)</div>` : ''}`;
+        ${p.trofeus.length ? `<div class="pequeno">🏆 ${p.trofeus.length} título(s)</div>` : ''}
+        ${Ritmo.htmlSemana(s) /* ritmo: "🗓️ Esta semana" */}`;
     },
 
     diario(s, n = 60) {
@@ -972,7 +981,7 @@ Object.assign(ACOES, {
     // casca
     aba: d => { Jogo.aba = d.aba; Jogo.atualizar(); const c = document.querySelector('.conteudo'); if (c) c.scrollTop = 0; },
     avancar: () => Jogo.avancar(false),
-    avancarRapido: () => Jogo.avancarVarias(4),
+    avancarRapido: () => Ritmo.rodar(4, false),   // js/ritmo.js: o mesmo avancarVarias(4), com resumo e ⏹
     verTime: d => Jogo.verTime(+d.tid),
     verJogador: d => Jogo.verJogador(+d.pid),
     selLiga: d => { Jogo.ui.liga = d.liga; Jogo.ui.rodada = null; Jogo.atualizar(); },

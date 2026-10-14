@@ -674,8 +674,11 @@ const Vida = {
         const ctx = {};
         if (ev.prep) ev.prep(s, ctx);
         const t = texto.replace(/\{(\w+)\}/g, (_, k) => (ctx[k] != null ? ctx[k] : ''));
-        const i = await UI.perguntar(ev.titulo, t, ev.ops.map(o => o.txt), ev.icone);
-        const res = ev.ops[i].fn(s, ctx) || '';
+        // ritmo (js/ritmo.js): pergunta com "🔁 Lembrar minha escolha"; resposta
+        // lembrada (ou evento de uma opção só) se resolve sozinha, sem abrir nada
+        const r = await Ritmo.escolherEvento(s, ev, t);
+        const res = ev.ops[r.i].fn(s, ctx) || '';
+        if (r.auto) return Ritmo.eventoAutomatico(s, ev, r, res, t);
         if (res) {
             Vida.log(s, `${ev.icone} ${res}`, 'evento');
             await UI.aviso(ev.titulo, res, ev.icone);

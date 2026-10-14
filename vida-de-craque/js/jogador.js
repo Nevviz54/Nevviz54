@@ -163,7 +163,7 @@ const Jogador = {
                     </div>
                 </div>
                 <div class="cartao acoes-rapidas">
-                    <button class="btn" data-acao="aba" data-aba="treino">🏋️ Treino: ${TREINOS[s.car.treino].nome}</button>
+                    <button class="btn" data-acao="aba" data-aba="treino">🏋️ Treino: ${s.car.treinoAuto ? '🤖 ' : ''}${TREINOS[s.car.treino].nome}</button>
                     <button class="btn" data-acao="aba" data-aba="vida">🎯 Atividades (${s.pessoa.acoes}/${Vida.MAX_ACOES})</button>
                     <button class="btn" data-acao="aba" data-aba="carreira">📄 Contrato e propostas</button>
                 </div>
@@ -239,6 +239,7 @@ const Jogador = {
                 <div class="grade-treinos">${Object.entries(TREINOS).map(([k, t]) => `
                     <button class="atividade ${s.car.treino === k ? 'ativa' : ''}" data-acao="jgTreino" data-t="${k}">
                         <span class="at-icone">${t.icone}</span><b>${t.nome}</b><small>${t.desc}</small></button>`).join('')}</div>
+                ${Ritmo.htmlTreinoAuto(s) /* ritmo: 🤖 treino automático */}
                 <p class="cinza pequeno">O treino escolhido vale para todas as semanas até você mudar.</p>
             </div>
             <div class="cartao"><h3>📈 Evolução</h3>
@@ -287,6 +288,7 @@ const Jogador = {
     // -----------------------------------------------------------------
     async semana(s) {
         const p = Jogador.p(s);
+        Ritmo.escolherTreino(s, p);   // ritmo: 🤖 treino automático escolhe o treino da semana
         const tr = TREINOS[s.car.treino];
         const pessoa = s.pessoa;
         if (p.bonusEscala > 0) { p.bonusEscalaSem = (p.bonusEscalaSem || 0) - 1; if (p.bonusEscalaSem <= 0) p.bonusEscala = 0; }
@@ -599,7 +601,7 @@ Object.assign(ACOES, {
     },
     jgCamisa: (d, el) => { Jogo.s.car.camisa = U.clamp(Math.round(+el.value || 10), 1, 99); Jogo.manterRolagem = true; Jogo.atualizar(); },
     jgComemora: (d, el) => { Jogo.s.car.comemoracao = el.value; UI.toast(`🎉 Nova comemoração: ${el.value}`); },
-    jgTreino: d => { Jogo.s.car.treino = d.t; Jogo.manterRolagem = true; Jogo.atualizar(); UI.toast(`Treino: ${TREINOS[d.t].nome}`); },
+    jgTreino: d => { Jogo.s.car.treino = d.t; Jogo.s.car.treinoAuto = false; /* escolher na mão desliga o 🤖 */ Jogo.manterRolagem = true; Jogo.atualizar(); UI.toast(`Treino: ${TREINOS[d.t].nome}`); },
     async jgConversarTecnico() {
         const s = Jogo.s, p = Jogador.p(s);
         if (s.car.conversaSem === s.ano * 100 + s.semana) return UI.toast('Você já falou com o técnico esta semana.');
