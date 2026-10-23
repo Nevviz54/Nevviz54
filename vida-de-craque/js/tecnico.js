@@ -35,6 +35,7 @@ const Tecnico = {
             { id: 'elenco', nome: 'Elenco', icone: '👥', render: Tecnico.elenco },
             { id: 'base', nome: 'Base', icone: '🌱', render: Base.tela },
             { id: 'vestiario', nome: 'Vestiário', icone: '💬', render: Mot.tela },
+            { id: 'comissao', nome: 'Comissão', icone: '🧑‍💼', render: Comissao.tela },   // comissao: auxiliar, preparador, médico e analista
             { id: 'tatica', nome: 'Tática', icone: '📋', render: Tecnico.tatica },
             { id: 'mercado', nome: 'Mercado', icone: '💸', render: Tecnico.mercado },
             { id: 'calendario', nome: 'Jogos', icone: '📅', render: Tecnico.calendario },
@@ -202,6 +203,7 @@ const Tecnico = {
             <div class="cc-moral">Moral do elenco<b>${t.moral >= 65 ? '😄 Alta' : t.moral >= 40 ? '🙂 Normal' : '😟 Baixa'}</b></div>
         </div>
         ${ofertas}
+        ${Comissao.htmlPendencias(s, t) /* comissao: 📝 lista de pendências */}
         <div class="grade-3">
             <div class="cartao">
                 <h3>📅 Próximos jogos</h3>
@@ -244,13 +246,13 @@ const Tecnico = {
         const t = Tecnico.time(s);
         const el = Mundo.elenco(s, t).sort((a, b) => POSICOES.indexOf(a.pos) - POSICOES.indexOf(b.pos) || b.ovr - a.ovr);
         const titulares = new Set(Escalacao.doTime(s, t));
-        return `<div class="cartao">
+        return `${Comissao.painelElenco(s, t) /* comissao: ✍️ renovação em lote */}<div class="cartao">
             <div class="cartao-topo"><h3>👥 Elenco do ${U.esc(t.nome)} (${el.length} jogadores)</h3><span class="cinza pequeno">Clique no nome para renovar, vender ou dispensar.</span></div>
             <div class="rolavel"><table class="tabela tabela-elenco">
             <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th>Pot.</th><th>Mot.</th><th>Cond.</th><th>J</th><th>G</th><th>A</th><th>Nota</th><th>Contrato</th><th>Salário</th><th>Valor</th></tr></thead>
             <tbody>${el.map(p => `<tr class="${titulares.has(p.id) ? 'titular' : ''}">
                 <td>${UI.pos(p.pos)}</td>
-                <td class="esq">${UI.jogador(p)} ${titulares.has(p.id) ? '<small class="tag">titular</small>' : ''}${p.les > 0 ? ` 🚑${p.les}` : ''}${p.susp > 0 ? ' 🟥' : ''}${s.car.venda.includes(p.id) ? ' 🏷️' : ''}</td>
+                <td class="esq">${UI.jogador(p)} ${titulares.has(p.id) ? '<small class="tag">titular</small>' : ''}${p.les > 0 ? ` 🚑${p.les}` : ''}${p.susp > 0 ? ' 🟥' : ''}${s.car.venda.includes(p.id) ? ' 🏷️' : ''}${Comissao.botaoSubstituto(s, p) /* comissao: 🔍 buscar substituto */}</td>
                 <td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td><td class="pequeno">${Jogo.potencialTxt(s, p)}</td><td>${Mot.badge(p, true)}</td>
                 <td>${Math.round(p.cond)}%</td><td>${p.j}</td><td>${p.g}</td><td>${p.a}</td><td>${p.j ? UI.nota(p.ns / p.j) : '-'}</td>
                 <td class="${p.contr <= 1 ? 'vermelho' : ''}">${s.ano + p.contr - 1}</td><td>${U.dinheiro(p.sal)}</td><td>${U.dinheiro(Mundo.valor(p))}</td></tr>`).join('')}</tbody></table></div>
@@ -326,7 +328,7 @@ const Tecnico = {
         lista.sort((a, b) => b.ovr - a.ovr || a.idade - b.idade);
         const total = lista.length;
         lista = lista.slice(0, 80);
-        return `<div class="cartao">
+        return `${Comissao.bannerMercado(s) /* comissao: 🔍 substituto e sugestões */}<div class="cartao">
             <div class="cartao-topo"><h3>💸 Mercado de transferências</h3><span>${Mundo.emJanela(s) ? '<b class="verde">Janela ABERTA</b>' : '<b class="vermelho">Janela fechada</b> — só jogadores sem clube'} · Caixa: <b>${U.dinheiro(t.saldo)}</b></span></div>
             <div class="filtros">
                 <select class="sel" id="f-pos"><option value="">Todas as posições</option>${POSICOES.map(p => `<option value="${p}" ${f.pos === p ? 'selected' : ''}>${POS_NOME[p]}</option>`).join('')}</select>
@@ -416,6 +418,8 @@ const Tecnico = {
             if (U.chance(0.35) && s.car.ofertas.length < 4) s.car.ofertas.push(...Tecnico.gerarOfertas(s, 1));
             return;
         }
+        // comissao (js/comissao.js): o auxiliar escolhe o treino, fala com o grupo, renova e cuida da base
+        Comissao.semana(s, t);
         // treino coletivo
         const tr = TREINOS_TIME[s.car.treinoTime] || TREINOS_TIME.equilibrado;
         for (const p of Mundo.elenco(s, t)) {
@@ -433,6 +437,8 @@ const Tecnico = {
         await Mot.semana(s, t);
         // categoria de base e olheiros
         await Base.semana(s, t);
+        // comissao: salários da comissão, físico, médico e o resumo do que o auxiliar fez
+        Comissao.fimSemana(s, t);
         // obras na estrutura
         if (s.car.obra) {
             s.car.obra.falta--;
@@ -571,6 +577,7 @@ const Tecnico = {
             Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
             await Cena.titulo(c.nome, t, `${U.esc(s.pessoa.nome)} leva o ${t.nome} ao título!`);
         }
+        Comissao.posJogo(s, t, m, r);   // comissao: médico encurta as lesões e o analista conta a dica
         await Tecnico.departamentoMedico(s, t, m, rapido);
         // coletiva de imprensa
         if (!rapido && U.chance(0.22)) {

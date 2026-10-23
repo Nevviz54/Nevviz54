@@ -1157,3 +1157,73 @@ body[data-tema="claro"] .hst-premio { color: #a16207; }
 }
 .sem-gap .hst-ent-botoes > *, .sem-gap .hst-duelos > * { margin: 0 .2rem .35rem; }
 .sem-gap .hst-emp-cands > * + *, .sem-gap .hst-tipos > * + * { margin-top: .4rem; }
+
+/* ---------- comissao ---------- */
+/* aba Comissão: membros, vagas e tarefas delegadas */
+.cm-grade { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: .2rem; }
+.cm-membro { border-color: rgba(34, 197, 94, .45); }
+.cm-vaga { border-style: dashed; background: transparent; }
+.cm-vaga p { margin: .2rem 0 .3rem; }
+.cm-vaga .btn { align-self: flex-start; }
+.cm-efeito { color: var(--primaria); font-weight: 600; margin: .1rem 0 .2rem; line-height: 1.35; }
+body[data-tema="claro"] .cm-efeito { color: var(--primaria2); }
+.cm-membro .linha-botoes { justify-content: flex-start; margin-top: .2rem; }
+.cm-delegs { display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); gap: .6rem; margin: .5rem 0 .7rem; }
+.cm-delegs .atividade { padding: .65rem .55rem; }
+.cm-delegs .atividade .at-icone { font-size: 1.5rem; }
+.cm-ult { background: var(--cartao2); border: 1px solid var(--borda); border-radius: 10px; padding: .5rem .7rem; font-size: .88rem; line-height: 1.45; }
+/* pendências na tela do clube */
+.cm-pend-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: .45rem; margin-top: .5rem; }
+.cm-pend { display: flex; align-items: center; gap: .6rem; background: var(--cartao2); border: 1px solid var(--borda); border-left: 4px solid var(--azul); border-radius: 10px; padding: .45rem .6rem; min-width: 0; }
+.cm-pend.cm-urgente { border-left-color: var(--vermelho); background: linear-gradient(90deg, rgba(239, 68, 68, .12), var(--cartao2) 55%); }
+.cm-pend.cm-aviso { border-left-color: var(--amarelo); }
+.cm-pend-ic { font-size: 1.35rem; line-height: 1; flex: none; }
+.cm-pend-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.3; }
+.cm-pend-txt b { font-size: .92rem; }
+.cm-pend-txt small { color: var(--cinza); font-size: .8rem; overflow-wrap: anywhere; }
+.cm-pend .btn { flex: none; white-space: nowrap; }
+/* elenco: renovação em lote e buscar substituto */
+.cm-barra-elenco { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin: 0 0 .7rem; }
+.cm-sub { font: inherit; font-size: .78rem; line-height: 1; cursor: pointer; background: var(--cartao2); border: 1px solid var(--borda); border-radius: 6px; padding: .12rem .28rem; margin-left: .3rem; vertical-align: middle; color: var(--texto); }
+.cm-sub:hover { border-color: var(--primaria); }
+.cm-lote { border-color: var(--primaria); }
+.cm-lote-opcoes { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; margin: .3rem 0 .6rem; }
+.cm-lote-opcoes label { display: inline-flex; align-items: center; gap: .35rem; color: var(--cinza); }
+.cm-lote-opcoes .sel-mini { max-width: 13rem; }
+.cm-tabela-lote tr.cm-sel td { background: rgba(34, 197, 94, .08); }
+.cm-check { width: 1.05rem; height: 1.05rem; accent-color: var(--primaria); cursor: pointer; }
+.cm-medio { color: #d97706; }
+.cm-lote-total { display: flex; justify-content: space-between; gap: .4rem 1.2rem; flex-wrap: wrap; margin-top: .7rem; font-size: .92rem; }
+.cm-lote .linha-botoes { justify-content: flex-start; margin-top: .7rem; }
+.cm-subst { border-color: var(--azul); }
+.cm-subst h4 { margin: .6rem 0 .2rem; }
+.cm-sugestoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .55rem; margin-top: .4rem; }
+.cm-sug { background: var(--cartao2); border: 1px solid var(--borda); border-radius: 12px; padding: .55rem .65rem; display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.cm-sug-topo { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.cm-sug-topo .link-jog { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.cm-vant { display: flex; flex-wrap: wrap; gap: .25rem; }
+.cm-vant .tag { color: var(--primaria); font-size: .74rem; font-weight: 600; }
+body[data-tema="claro"] .cm-vant .tag { color: var(--primaria2); }
+.cm-sug .btn { align-self: flex-start; margin-top: .15rem; }
+/* partida: relatório do analista e dica durante o jogo */
+.cm-relatorio { width: 100%; max-width: 32rem; text-align: left; background: var(--cartao2); border: 1px solid rgba(59, 130, 246, .55); border-radius: 14px; padding: .6rem .85rem; font-size: .92rem; line-height: 1.4; }
+.cm-rel-topo { display: flex; align-items: baseline; gap: .4rem; flex-wrap: wrap; }
+.cm-rel-topo small { color: var(--cinza); }
+.cm-relatorio .ficha { margin: .3rem 0; }
+.cm-relatorio .ficha > div { padding: .22rem 0; }
+.cm-relatorio p { margin: .3rem 0 0; }
+.cm-dica-txt { font-size: .95rem; }
+.cm-pre-sem { max-width: 32rem; }
+.cm-dica-jogo { font-size: .85rem; color: var(--texto); }
+@media (max-width: 600px) {
+    .cm-pend-lista { grid-template-columns: 1fr; }
+    .cm-pend { padding: .45rem .5rem; gap: .45rem; }
+    .cm-pend .btn { padding: .3rem .5rem; font-size: .8rem; }
+    .cm-delegs { grid-template-columns: 1fr 1fr; }
+    .cm-sugestoes { grid-template-columns: 1fr 1fr; }
+    .cm-sug-topo { flex-wrap: wrap; }
+    .cm-sug-topo .link-jog { order: 3; flex-basis: 100%; white-space: normal; overflow-wrap: break-word; line-height: 1.2; }
+    .cm-lote-total { flex-direction: column; }
+    .cm-relatorio { font-size: .88rem; }
+}
+.sem-gap .cm-barra-elenco > * + *, .sem-gap .cm-lote-opcoes > * + *, .sem-gap .cm-pend > * + * { margin-left: .5rem; }

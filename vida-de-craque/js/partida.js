@@ -79,6 +79,9 @@ const Partida = {
             const lid = 0.4 + (cap.idade >= 28 ? 0.3 : 0) + (cap.ovr >= t.rep + 3 ? 0.3 : 0);
             b.ata += lid; b.def += lid;
         }
+        // comissao (js/comissao.js): seguir a dica do analista de desempenho
+        const ba = Comissao.bonusAnalista(m, lado);
+        b.ata += ba; b.def += ba;
         return b;
     },
 
@@ -186,7 +189,7 @@ const Partida = {
                 if (p) novos.push(...Partida.cartao(m, lado, p, true));
             }
             // Lesões
-            if (U.chance(0.0009)) {
+            if (U.chance(0.0009 * Comissao.fatorLesao(m, lado))) {   // comissao: o preparador físico do usuário evita lesões
                 const p = U.escolha(Partida.emCampo(m, lado));
                 if (p && !(p.id === m.usuario && Partida.hab(m, 'blindado') && U.chance(0.5))) {
                     m.st[p.id].les = true;

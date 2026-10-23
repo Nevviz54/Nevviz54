@@ -190,7 +190,9 @@ const Mot = {
             tranquilo: `E aí, professor. Faz ${p.sj} jogos que não jogo... Será que eu consigo uns minutinhos?`,
             lider: `Professor, quero ajudar o grupo dentro de campo. ${p.sj} jogos de fora é muito tempo para mim.`,
         };
-        const i = await UI.perguntar(`📱 Mensagem de ${U.esc(p.nome)}`,
+        // comissao (js/comissao.js): com a tarefa delegada, o auxiliar técnico responde sozinho (-1 = você responde)
+        const auto = Comissao.responderCobranca(s, t, p);
+        const i = auto >= 0 ? auto : await UI.perguntar(`📱 Mensagem de ${U.esc(p.nome)}`,
             `${UI.pos(p.pos)} <b>${U.esc(p.nome)}</b> · ${p.idade} anos · OVR ${p.ovr} · ${Mot.badge(p)}<br><br><i>"${textos[pers]}"</i>`,
             ['✅ "Pode ficar tranquilo, você vai ter minutos nas próximas semanas."', '🏋️ "Mostra no treino que merece a vaga."', '🏷️ "Se não está feliz, te coloco à venda."', '🙈 Ignorar a mensagem'], '📱');
         let txt;
@@ -211,7 +213,7 @@ const Mot = {
             txt = `${p.nome} ficou no vácuo... e não gostou nada.`;
         }
         Vida.log(s, `📱 ${txt}`, i === 0 ? 'bom' : '');
-        UI.toast(`📱 ${txt}`);
+        if (auto < 0) UI.toast(`📱 ${txt}`);   // comissao: a resposta do auxiliar já entra no resumo da semana
     },
 
     prometer(s, p, tipo) {

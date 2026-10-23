@@ -159,6 +159,27 @@ de jogador quanto na de técnico:
   sua reputação, maior a seleção. Você comanda a seleção nas Datas FIFA e nos torneios (pode
   acumular com o clube) e pode ser demitido se o aproveitamento for ruim.
 - **Departamento médico**: em lesões sérias, decida se paga um tratamento caro para o jogador voltar antes.
+- **🧑‍💼 Comissão técnica** (aba **Comissão**): contrate **auxiliar técnico**, **💪 preparador físico**, **🩺 médico** e
+  **📊 analista de desempenho**, de 1 a 5 estrelas (3 candidatos por função; a lista muda a cada 8 semanas e clubes maiores
+  atraem gente melhor). O clube paga salário semanal, luvas para contratar e multa para demitir. Se você trocar de clube,
+  o auxiliar vai junto.
+  - **Auxiliar**: delegue o **treino da semana**, a **conversa com o grupo**, as **mensagens dos jogadores** (cobranças por
+    tempo de jogo), a **renovação dos contratos** que vencem (dentro do orçamento) e a **base** (testa os treinos de cada
+    garoto, responde as mensagens deles, cumpre as promessas de subir e decide quem sobe aos 20 anos). Mais estrelas =
+    decisões melhores (e salários menores nas renovações). Tudo vira um aviso rápido e uma linha no diário — nenhuma
+    janela no meio da semana. Se você mesmo trocar o treino na aba Tática, ele respeita a sua escolha naquela semana.
+  - **Preparador físico**: mais físico toda semana, menos lesões nos jogos e menos recaídas. **Médico**: lesões mais curtas e
+    recuperação extra.
+  - **Analista**: relatório do adversário no pré-jogo (formação, craque, últimos jogos, ponto fraco) com uma **dica**. Seguir a
+    dica (o estilo ou a instrução certa) deixa o time mais forte; com auxiliar, ele passa a dica aos jogadores e vale meio
+    bônus até nos jogos simulados.
+- **📝 Pendências** na tela do clube: contratos vencendo, desmotivados, titulares machucados, promessas, relatórios de
+  olheiros, propostas de emprego, jogadores à venda, caixa no vermelho... cada uma com um botão que leva direto para a aba certa.
+- **🔍 Buscar substituto** (ao lado de cada nome no Elenco): abre o Mercado já filtrado (mesma posição, OVR parecido ou
+  melhor, mais novo ou mais barato) com as melhores opções em destaque.
+- **✍️ Renovação em lote** (no Elenco): marque vários contratos que vencem, veja o impacto na folha e no resultado semanal e
+  renove todos de uma vez. Jogador desmotivado, ambicioso ou que se acha grande demais para o clube pode recusar (o risco
+  aparece na lista).
 - **💬 Vestiário e motivação**: cada jogador tem uma motivação — 🔥 muito motivado, 😀 motivado,
   😐 normal, 😕 desmotivado ou 😠 muito desmotivado — que aparece no elenco e antes de cada partida.
   Quanto mais motivado, melhor ele joga (de −4 a +3,5 de habilidade em campo). O resultado do
@@ -240,7 +261,8 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 
 Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
 tríplice coroa, invencível, piloto automático, hora H, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
-seleção, golaço de bicicleta, virada tática, técnico expulso, freguês do rival, missão cumprida, bom de microfone,
+seleção, golaço de bicicleta, virada tática, técnico expulso, comissão completa, braço direito, lição de casa, canetada,
+freguês do rival, missão cumprida, bom de microfone,
 superempresário, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 

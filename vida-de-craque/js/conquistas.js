@@ -61,6 +61,12 @@ const CONQUISTAS = [
     { id: 'viradaTatica', modo: 'tecnico', icone: '🧠', nome: 'Virada tática', desc: 'Vencer um jogo que estava perdendo depois de mudar as instruções.', teste: s => cont(s, 'viradasTaticas') >= 1 },
     { id: 'nervosDeAco', modo: 'tecnico', icone: '⏱️', nome: 'Nervos de aço', desc: 'Vencer uma final ou um clássico com gol depois dos 80 minutos.', teste: s => cont(s, 'vitoriasNoFim') >= 1 },
     { id: 'pavioCurto', modo: 'tecnico', icone: '🟥', nome: 'Pavio curto', desc: 'Ser expulso reclamando com o árbitro.', teste: s => cont(s, 'expulsoesTecnico') >= 1 },
+    // comissão técnica (js/comissao.js)
+    { id: 'comissaoCompleta', modo: 'tecnico', icone: '🧑‍💼', nome: 'Comissão completa', desc: 'Ter auxiliar, preparador físico, médico e analista ao mesmo tempo.', teste: s => { const cm = s.car && s.car.cm; return !!(cm && cm.staff && cm.tid === s.car.tid && ORDEM_CM.every(k => cm.staff[k])); } },
+    { id: 'staff5', modo: 'tecnico', icone: '🌟', nome: 'Time de especialistas', desc: 'Contratar um profissional 5 estrelas para a comissão técnica.', teste: s => cont(s, 'staff5') >= 1 },
+    { id: 'bracoDireito', modo: 'tecnico', icone: '🤝', nome: 'Braço direito', desc: 'O auxiliar técnico resolver 50 tarefas delegadas por você.', teste: s => cont(s, 'tarefasAuxiliar') >= 50 },
+    { id: 'licaoDeCasa', modo: 'tecnico', icone: '📊', nome: 'Lição de casa', desc: 'Vencer 10 jogos seguindo a dica do analista de desempenho.', teste: s => cont(s, 'dicasAnalista') >= 10 },
+    { id: 'canetada', modo: 'tecnico', icone: '✍️', nome: 'Canetada', desc: 'Renovar 5 contratos de uma vez na renovação em lote.', teste: s => cont(s, 'renovacaoLote') >= 5 },
 
     // ---------------- Jogador ----------------
     { id: 'estreia', modo: 'jogador', icone: '👟', nome: 'Estreia', desc: 'Jogar a primeira partida profissional.', teste: s => { const p = jogU(s); return p && p.cj + p.j >= 1; } },

@@ -241,7 +241,9 @@ const Base = {
         if (!p) return;
         p.msgB = s.car.baseMsg = agora;
         const anos = Math.max(1, Math.round(p.sb / TOTAL_SEMANAS));
-        const i = await UI.perguntar(`📱 Mensagem de ${U.esc(p.nome)} (base)`,
+        // comissao (js/comissao.js): com a base delegada, o auxiliar responde (sobe ou promete; -1 = você responde)
+        const auto = Comissao.responderBase(s, t, p);
+        const i = auto >= 0 ? auto : await UI.perguntar(`📱 Mensagem de ${U.esc(p.nome)} (base)`,
             `${UI.pos(p.pos)} <b>${U.esc(p.nome)}</b> · ${p.idade} anos · OVR ${p.ovr} · potencial ${p.pmin}–${p.pmax}<br><br>
             <i>"Professor, já são ${anos > 1 ? `${anos} anos` : 'muitos meses'} na base e eu sinto que não estou sendo aproveitado. Se eu não tiver uma chance no profissional, vou procurar outro clube."</i>`,
             ['⬆️ "Pode subir: a partir de hoje você treina com o profissional."', '🤝 "Até o fim da temporada você sobe, prometo."', '⏳ "Tenha paciência, sua hora vai chegar."', '👋 "Se quer ir embora, pode ir."'], '🌱');
@@ -321,7 +323,9 @@ const Base = {
         }
         for (const p of Base.garotos(s, t)) {
             if (p.idade < 20) continue;
-            const i = await UI.perguntar('Fim do ciclo na base', `${UI.pos(p.pos)} <b>${U.esc(p.nome)}</b> fez ${p.idade} anos e não pode mais jogar na base.<br>OVR ${p.ovr} · potencial ${p.pmin}–${p.pmax}`,
+            // comissao (js/comissao.js): com a base delegada, o auxiliar decide (-1 = você decide)
+            const auto = Comissao.decidirVinte(s, t, p);
+            const i = auto >= 0 ? auto : await UI.perguntar('Fim do ciclo na base', `${UI.pos(p.pos)} <b>${U.esc(p.nome)}</b> fez ${p.idade} anos e não pode mais jogar na base.<br>OVR ${p.ovr} · potencial ${p.pmin}–${p.pmax}`,
                 ['⬆️ Subir para o profissional', '👋 Liberar'], '🎓');
             if (i === 0) Base.promover(s, p, t); else Base.liberar(s, p, t, 'idade limite');
         }

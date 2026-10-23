@@ -165,7 +165,7 @@ const TelaPartida = {
             txt = `📋 Seu time vai a campo no <b>${s.times[lado === 0 ? m.h : m.a].form}</b>, estilo <b>${ESTILOS[m.estilo[lado]].nome}</b>.<br>
                 ${rel > 3 ? '💪 Seu time é favorito.' : rel < -3 ? `⚠️ O ${U.esc(adv.nome)} é favorito.` : '⚖️ Jogo equilibrado.'}`;
         }
-        return `<div class="pre-jogo">${txt}${PartidaExtras.htmlPreJogo(m)}</div>`;   // [partida] clima e dicas
+        return `<div class="pre-jogo">${txt}${PartidaExtras.htmlPreJogo(m)}${Comissao.htmlPreJogo(m) /* comissao: relatório do analista */}</div>`;   // [partida] clima e dicas
     },
 
     controles() {
@@ -190,7 +190,7 @@ const TelaPartida = {
                 <select data-mudar="plEstilo" class="sel" ${travado ? 'disabled' : ''}>${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${m.estilo[m.controle] === k ? 'selected' : ''}>${e.nome}</option>`).join('')}</select>`;
         }
         html += '<button class="btn btn-fantasma" data-acao="plPular">⏭ Pular para o fim</button>';
-        return html + PartidaExtras.htmlControles(this);   // [partida] instruções, reclamação e expulsão
+        return html + PartidaExtras.htmlControles(this) + Comissao.htmlDica(m);   // [partida] instruções, reclamação e expulsão · comissao: dica do analista
     },
 
     resumoFim() {
