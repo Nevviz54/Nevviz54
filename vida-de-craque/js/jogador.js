@@ -108,6 +108,7 @@ const Jogador = {
         Vida.log(s, `👶 Você nasceu ${Jogador.noPais(form.pais)}. Desde pequeno, só pensava em bola.`, '');
         Vida.log(s, `✍️ Aos ${idade} anos, você assinou seu primeiro contrato com o ${t.nome}! Salário: ${U.dinheiro(p.sal)}/ano.`, 'bom');
         Mundo.noticia(s, `🌱 ${t.nome} contrata ${idade <= 21 ? 'o jovem ' : ''}${form.nome}, de ${idade} anos.`, 'clube');
+        Historia.iniciar(s); // historia: rival pessoal e metas da primeira temporada
         Jogo.s = s;
         Jogo.aba = 'inicio';
         Jogo.atualizar();
@@ -137,7 +138,8 @@ const Jogador = {
         if (!prox) return 'Sem mais jogos nesta temporada.';
         const casa = prox.h === p.tid;
         const adv = s.times[casa ? prox.a : prox.h];
-        return `${prox.sem === s.semana ? '<b class="verde">JOGO ESTA SEMANA</b>' : `Semana ${prox.sem + 1}`} · ${U.esc(prox.nomeComp)} · ${casa ? '🏠' : '✈️'} vs ${UI.escudo(adv)} <b>${U.esc(adv.nome)}</b>`;
+        return `${prox.sem === s.semana ? '<b class="verde">JOGO ESTA SEMANA</b>' : `Semana ${prox.sem + 1}`} · ${U.esc(prox.nomeComp)} · ${casa ? '🏠' : '✈️'} vs ${UI.escudo(adv)} <b>${U.esc(adv.nome)}</b>`
+            + Historia.selo(s, prox); // historia: selo de duelo contra o rival
     },
 
     // -----------------------------------------------------------------
@@ -180,7 +182,8 @@ const Jogador = {
         const t = p.tid >= 0 ? s.times[p.tid] : null;
         const hist = s.car.hist.slice().reverse();
         const totG = U.soma(s.car.hist, h => h.g) + p.g, totJ = U.soma(s.car.hist, h => h.j) + p.j;
-        return `<div class="grade-2">
+        // historia: metas da temporada, rival e empresário no topo da aba
+        return Historia.painel(s) + `<div class="grade-2">
             <div class="cartao"><h3>📄 Contrato</h3>
                 ${t ? `<div class="ficha">
                     <div><span>Clube</span><b>${UI.time(s, t.id)}</b></div>
@@ -346,6 +349,7 @@ const Jogador = {
             const ch = 0.12 + (s.car.pedirTransf ? 0.3 : 0) + pessoa.fama / 400 + Math.max(0, p.ovr - t.rep) * 0.03;
             if (U.chance(ch)) await Jogador.proposta(s, false);
         }
+        await Historia.semana(s); // historia: rival, metas, clima no clube e empresário
         // aposentadoria forçada
         if (p.idade >= 41) await Jogador.aposentar(s, true);
     },
@@ -368,9 +372,10 @@ const Jogador = {
             return;
         }
         let sal = U.redondo(Math.max(p.sal * 1.1, Mundo.salarioPedido(p, Mundo.riquezaDoTime(s, t))));
+        sal = Historia.salario(s, sal); // historia: empresário negociador
         const i = await UI.perguntar('Proposta de renovação', `O ${U.esc(t.nome)} quer renovar por mais 3 anos com salário de <b>${U.dinheiro(sal)}/ano</b> (hoje: ${U.dinheiro(p.sal)}).`, ['✍️ Assinar', '💬 Pedir 30% a mais', '👋 Recusar e sair livre'], '📄');
         if (i === 1) {
-            if (U.chance(0.4 + Math.max(0, rank < 5 ? 0.3 : 0))) {
+            if (U.chance(0.4 + Math.max(0, rank < 5 ? 0.3 : 0) + Historia.bonusPedido(s))) {   // historia: + empresário negociador
                 sal = U.redondo(sal * 1.3);
                 await UI.aviso('Aceito!', `O clube topou: ${U.dinheiro(sal)}/ano!`, '🤑');
             } else {
@@ -384,6 +389,7 @@ const Jogador = {
         p.sal = sal;
         p.contr = 4;
         Vida.log(s, `✍️ Você renovou com o ${t.nome} até ${s.ano + 3}. Salário: ${U.dinheiro(sal)}/ano.`, 'bom');
+        Historia.luvas(s, sal, 'renovação'); // historia: luvas do empresário negociador
     },
 
     async proposta(s, livre) {
@@ -392,18 +398,20 @@ const Jogador = {
         const minRep = livre ? p.ovr - 14 : Math.max(p.ovr - 9, atual ? atual.rep - 6 : 0);
         const maxRep = p.ovr + (livre ? 0 : 4);
         const cands = s.times.filter(t => t.id !== p.tid && t.rep >= minRep && t.rep <= maxRep);
+        Historia.ampliarCands(s, p, cands, maxRep); // historia: o empresário "Conexões" traz clubes maiores
         if (!cands.length) return;
         const dest = U.escolha(cands);
         const liga = Mundo.liga(s, dest.liga);
         const taxa = livre ? 0 : U.redondo(Mundo.valor(p) * U.rand(0.9, 1.25));
         let sal = U.redondo(Math.max(p.sal * (livre ? 0.9 : 1.08), Mundo.salarioPedido(p, liga.riqueza) * U.rand(0.95, 1.3)));
+        sal = Historia.salario(s, sal); // historia: empresário negociador
         const anos = U.int(2, 5);
         const i = await UI.perguntar('Proposta de transferência!', `O <b>${U.esc(dest.nome)}</b> (${U.esc(liga.nome)}, ${Mundo.posicaoNaLiga(s, dest.id)}º lugar) quer te contratar!<br>
             <div class="ficha"><div><span>Salário</span><b>${U.dinheiro(sal)}/ano</b></div><div><span>Contrato</span><b>${anos} anos</b></div>${taxa ? `<div><span>Taxa ao seu clube</span><b>${U.dinheiro(taxa)}</b></div>` : ''}<div><span>Força do time</span><b>${U.estrelas((dest.rep - 50) / 7)}</b></div></div>`,
             ['✅ Aceitar', '💬 Pedir salário maior', '❌ Recusar'], '📨');
         if (i === 2) { Vida.log(s, `❌ Você recusou proposta do ${dest.nome}.`, ''); return; }
         if (i === 1) {
-            if (U.chance(0.5)) { sal = U.redondo(sal * 1.2); await UI.aviso('Topa!', `O ${U.esc(dest.nome)} aumentou para ${U.dinheiro(sal)}/ano.`, '🤝'); }
+            if (U.chance(0.5 + Historia.bonusPedido(s) /* historia: + empresário negociador */)) { sal = U.redondo(sal * 1.2); await UI.aviso('Topa!', `O ${U.esc(dest.nome)} aumentou para ${U.dinheiro(sal)}/ano.`, '🤝'); }
             else { await UI.aviso('Desistiram', `O ${U.esc(dest.nome)} achou que você pediu demais e desistiu.`, '🚪'); return; }
         }
         if (atual) {
@@ -420,6 +428,7 @@ const Jogador = {
         s.car.pedirTransf = false;
         s.car.vaiSair = false;
         s.car.clubes.push(dest.id);
+        Historia.aoTransferir(s, atual, dest, sal); // historia: luvas, clima no clube novo e rival
         Mundo.noticia(s, atual ? `💸 ${p.nome} deixa o ${atual.nome} e assina com o ${dest.nome}${taxa ? ` por ${U.dinheiro(taxa)}` : ''}.` : `✍️ ${dest.nome} contrata ${p.nome}, que estava livre.`, 'transfer');
         Vida.log(s, `✍️ Você assinou com o ${dest.nome}! Salário: ${U.dinheiro(sal)}/ano.`, 'bom');
         Vida.mudar(s, { felicidade: 8, fama: 2 });
@@ -429,7 +438,7 @@ const Jogador = {
 
     jogouSemana: false,
 
-    async posJogo(s, jogo, m, r) {
+    async posJogo(s, jogo, m, r, rapido) {
         const p = Jogador.p(s);
         const st = m.st[p.id];
         const t = s.times[p.tid];
@@ -465,6 +474,8 @@ const Jogador = {
             if (motivo === 'no banco' || motivo === 'fora dos relacionados') Vida.mudar(s, { felicidade: -1.5 });
         }
         if (st && st.les && p.les >= 3) await Jogador.lesaoSeria(s);
+        // historia: duelo com o rival, metas e entrevista pós-jogo (só nos jogos ao vivo)
+        const extraHst = await Historia.posJogo(s, jogo, m, r, rapido);
         if (Mundo.ehFinal(s, jogo) && venceu) {
             const c = Mundo.copa(s, jogo.comp);
             s.pessoa.trofeus.push({ ano: s.ano, txt: `${c.nome} (${t.nome})` });
@@ -472,9 +483,9 @@ const Jogador = {
             Vida.mudar(s, { felicidade: peso.fel, fama: peso.fama });
             Vida.log(s, `🏆 CAMPEÃO: ${c.nome.toUpperCase()}!`, 'titulo');
             await Cena.titulo(c.nome, t, `${p.nome} levanta a taça!`);
-            return '<div class="rf-linha destaque-bom">🏆 VOCÊ É CAMPEÃO!</div>';
+            return '<div class="rf-linha destaque-bom">🏆 VOCÊ É CAMPEÃO!</div>' + extraHst;
         }
-        return '';
+        return extraHst;
     },
 
     async antesFimTemporada(s) {
@@ -489,6 +500,7 @@ const Jogador = {
             await Cena.titulo(liga.nome, t, `${p.nome} é campeão com o ${t.nome}!`);
         }
         Vida.log(s, `📊 Temporada ${s.ano}: ${p.j} jogos, ${p.g} gols, ${p.a} assistências.`, '');
+        await Historia.antesFimTemporada(s); // historia: fecha as metas e o duelo da temporada com o rival
     },
 
     resumoTemporada(s) {
@@ -540,6 +552,7 @@ const Jogador = {
         }
         s.car.vaiSair = false;
         s.car.ovrInicioTemp = p.ovr;
+        await Historia.depoisFimTemporada(s, resumo); // historia: balanço, novo rival e metas do ano novo
         if (p.idade >= 36 && p.ovr < 60) {
             const i = await UI.perguntar('Fim da linha?', `Você tem ${p.idade} anos e seu corpo já não responde como antes. Pensa em se aposentar?`, ['👴 Sim, pendurar as chuteiras', '💪 Ainda tenho lenha pra queimar'], '🤔');
             if (i === 0) await Jogador.aposentar(s, false, true);
@@ -628,7 +641,7 @@ Object.assign(ACOES, {
         const merecido = Mundo.salarioPedido(p, Mundo.riquezaDoTime(s, t));
         const bom = p.j >= 8 && p.ns / p.j >= 6.8;
         let txt;
-        if ((merecido > p.sal * 1.1 || bom) && U.chance(0.6)) {
+        if ((merecido > p.sal * 1.1 || bom) && U.chance(0.6 + Historia.bonusPedido(s))) {   // historia: + empresário negociador
             const novo = U.redondo(Math.max(merecido, p.sal * U.rand(1.15, 1.35)));
             txt = `💰 O clube aceitou! Seu salário subiu de ${U.dinheiro(p.sal)} para ${U.dinheiro(novo)} por ano.`;
             p.sal = novo;

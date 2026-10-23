@@ -104,11 +104,12 @@ de jogador quanto na de técnico:
 
 - **⏭️ Até algo importante** (botão ao lado de "4 semanas"): simula semana a semana e **para sozinho** quando
   aparece uma decisão (proposta, renovação, convocação, lesão, mensagem de jogador ou da base...), quando o próximo
-  jogo é um **clássico ou uma final** (para você jogar ao vivo — clique de novo para simular), quando a janela de
+  jogo é um **clássico, uma final ou o duelo com o seu rival** (para você jogar ao vivo — clique de novo para simular), quando a janela de
   transferências abre ou fecha, quando um titular se machuca feio, quando a diretoria perde a paciência ou quando a
   temporada acaba. No máximo 12 semanas por vez (dá para mudar em Opções). Enquanto roda, o botão vira **⏹ Parar**.
 - No fim aparece o **resumo do que rolou**: semanas, vitórias/empates/derrotas, placar somado, seus gols, OVR,
-  confiança da diretoria, dinheiro e títulos — e o motivo da parada. O "⏩ 4 semanas" também mostra esse resumo.
+  confiança da diretoria, dinheiro e títulos (no modo jogador, também os duelos com o rival e as metas cumpridas)
+  — e o motivo da parada. O "⏩ 4 semanas" também mostra esse resumo.
 - **🗓️ Esta semana**: no perfil (abas Vida/Atividades) aparece um resumo compacto da última semana — placares,
   gols, dinheiro, felicidade, fama — e as novidades do diário, sem precisar abrir nada.
 - **🔁 Lembrar minha escolha**: nos eventos da vida (e na coletiva depois dos jogos) dá para marcar a caixinha; da
@@ -193,6 +194,32 @@ de jogador quanto na de técnico:
 - **Identidade**: escolha o número da camisa e a sua comemoração de gol (Siuuu, robozinho, dancinha... ou tirar a camisa e levar amarelo 😅).
 - **Lesões com decisão**: tratamento caro para voltar antes ou recuperação normal.
 - Propostas de outros clubes, renovação de contrato e pedido de aumento.
+- **⚔️ Rival pessoal**: no começo da carreira o jogo escolhe um rival de verdade — mesma posição,
+  idade e nível parecidos, de outro clube (de preferência da sua liga). A aba **Carreira** compara os
+  números de vocês na temporada e na carreira. Quando os times se enfrentam tem **duelo** (quem jogou
+  melhor ganha fama e felicidade), aviso na semana anterior, selo no rodapé e o ⏭️ para antes do jogo para
+  você jogar ao vivo; no meio do caminho ele provoca nas redes e vira notícia. No fim da temporada sai o
+  balanço da rivalidade. Se você o superar por duas temporadas seguidas (ou ele se aposentar, ficar para
+  trás, for jogar em outro país ou virar seu companheiro de time), aparece um rival novo — às vezes uma
+  joia mais nova. Se for **você** que mudar de país, a imprensa de lá arruma um rival novo na hora.
+- **🎯 Metas da temporada**: todo começo de temporada chegam 3 metas do técnico e do patrocinador,
+  do empresário ou da torcida, conforme a sua posição e o seu papel no elenco ("Fazer 12 gols", "Média
+  de nota 6,8", "8 jogos sem sofrer gol", "Não ser expulso", "Vencer um clássico"...). Cada uma tem
+  barra de progresso na aba Carreira e prêmio na hora em que é cumprida (ponto de habilidade, bônus
+  em dinheiro, aumento, fama). Meta perdida custa felicidade, a confiança do técnico ou parte do
+  patrocínio. No fim do ano aparece o **balanço da temporada** com as metas, o duelo com o rival e as
+  metas do ano seguinte (no avanço rápido ele não abre sozinho: fica no botão 📊 da aba Carreira).
+- **🧑‍🏫 Confiança do técnico e 📣 moral com a torcida**: sobem e descem com as metas e as entrevistas.
+  Técnico confiante te dá mais chances de jogar; desconfiado, te deixa na geladeira.
+- **🎤 Entrevista pós-jogo**: de vez em quando, depois de um jogo marcante (atuação de gala ou ruim,
+  clássico, final, duelo com o rival), a tela do fim do jogo oferece uma resposta rápida e opcional:
+  🙏 Humilde, 😎 Confiante, 🔥 Provocar (pode bombar... ou virar polêmica dias depois) ou 📱 Postar nas
+  redes. Mexe com fama, seguidores, felicidade, técnico e torcida. Nos jogos simulados não aparece.
+- **💼 Empresário**: escolha um entre 3 candidatos (a lista muda a cada 12 semanas; os famosos, como
+  Jorge Mendes e Pini Zahavi, só aceitam jogadores famosos): 🤝 **Negociador** (salários maiores,
+  luvas ao assinar ou renovar e mais chance quando você pede mais), 📣 **Marqueteiro** (renegocia e traz patrocínios, mais seguidores) ou
+  🌐 **Conexões** (mais propostas, inclusive de clubes maiores). Ele cobra comissão toda semana e pode
+  ser trocado ou demitido (pagando uma rescisão).
 - **Seleção**: jogando bem, você é convocado e **joga** as Datas FIFA, a Copa do Mundo, a Eurocopa,
   a Copa América e os outros torneios de seleções — ao vivo, com os seus lances.
 - Quando se aposentar, você pode **virar técnico** com a mesma pessoa (mesmo dinheiro, fama e família).
@@ -213,7 +240,8 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 
 Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
 tríplice coroa, invencível, piloto automático, hora H, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
-seleção, golaço de bicicleta, virada tática, técnico expulso, milionário, casamento, dono de uma ilha,
+seleção, golaço de bicicleta, virada tática, técnico expulso, freguês do rival, missão cumprida, bom de microfone,
+superempresário, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 
 ## 🎬 Animações e cutscenes
@@ -236,7 +264,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - **Carregar** um jogo salvo
 - **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
 - **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
-- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), o "⏭️ Até algo importante" (parar antes de clássicos e finais e o máximo de semanas por vez), menos eventos aleatórios, sons e volume, cutscenes e animações (dá para desligar)
+- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), o "⏭️ Até algo importante" (parar antes de clássicos, finais e duelos com o rival e o máximo de semanas por vez), menos eventos aleatórios, sons e volume, cutscenes e animações (dá para desligar)
 - **Voltar ao menu principal**
 
 ## 📝 Observações sobre os dados

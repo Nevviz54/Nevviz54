@@ -84,6 +84,14 @@ const CONQUISTAS = [
     { id: 'heroiFinal', modo: 'jogador', icone: '⏱️', nome: 'Herói no fim', desc: 'Marcar um gol decisivo depois dos 80 minutos e vencer uma final ou um clássico.', teste: s => cont(s, 'golsDecisivos') >= 1 },
     // ritmo do jogo (js/ritmo.js)
     { id: 'rotina', modo: 'jogador', icone: '🤖', nome: 'Rotina de atleta', desc: 'Treinar 46 semanas (uma temporada) no 🤖 treino automático.', teste: s => cont(s, 'treinosAuto') >= 46 },
+    // rival, metas, entrevistas e empresário (js/historia.js)
+    { id: 'rivalFregues', modo: 'jogador', icone: '⚔️', nome: 'Freguês', desc: 'Vencer 5 duelos contra o seu rival.', teste: s => cont(s, 'duelosVencidos') >= 5 },
+    { id: 'rivalSuperado', modo: 'jogador', icone: '👑', nome: 'Página virada', desc: 'Superar um rival por duas temporadas seguidas.', teste: s => cont(s, 'rivaisSuperados') >= 1 },
+    { id: 'metasTodas', modo: 'jogador', icone: '🎯', nome: 'Missão cumprida', desc: 'Cumprir todas as metas de uma temporada.', teste: s => cont(s, 'temporadasPerfeitas') >= 1 },
+    { id: 'metas10', modo: 'jogador', icone: '📈', nome: 'Caçador de metas', desc: 'Cumprir 10 metas da temporada na carreira.', teste: s => cont(s, 'metasCumpridas') >= 10 },
+    { id: 'microfone', modo: 'jogador', icone: '🎤', nome: 'Bom de microfone', desc: 'Dar 10 entrevistas depois dos jogos.', teste: s => cont(s, 'entrevistas') >= 10 },
+    { id: 'provocador', modo: 'jogador', icone: '🔥', nome: 'Provocador', desc: 'Provocar nas entrevistas e se dar bem 3 vezes.', teste: s => cont(s, 'provocacoesBoas') >= 3 },
+    { id: 'superagente', modo: 'jogador', icone: '💼', nome: 'Superempresário', desc: 'Ser agenciado por um empresário 5 estrelas.', teste: s => cont(s, 'empresario5') >= 1 },
 ];
 
 // Peso de cada tipo de taça: fama, felicidade e reputação do técnico

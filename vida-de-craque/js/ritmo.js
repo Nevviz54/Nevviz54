@@ -84,7 +84,7 @@ const Ritmo = {
             if (!p || p.les > 0 || p.susp > 0) return '';   // você nem vai jogar
         }
         const g = Ritmo.jogoGrandeNa(s, s.semana);
-        return g ? g.txt : '';
+        return g ? g.txt : Historia.jogoGrande(s);   // historia: o duelo com o seu rival também faz parar
     },
 
     lesionadosSerios(s) {
@@ -232,6 +232,7 @@ const Ritmo = {
         if (Math.abs(ses.din) >= 1000) partes.push(`💰 ${ses.din > 0 ? '+' : ''}${U.dinheiro(ses.din)}`);
         const tr = s.pessoa.trofeus.length - ses.trof;
         if (tr > 0) partes.push(`🏆 ${tr} título${tr > 1 ? 's' : ''}`);
+        if (ses.modo === 'jogador') partes.push.apply(partes, Historia.partesSessao(ses));   // historia: duelos e metas
         return partes;
     },
 
@@ -509,7 +510,7 @@ const Ritmo = {
     // -----------------------------------------------------------------
     htmlOpcoesRitmo() {
         const o = Jogo.opcoes;
-        return `<label class="campo check"><input type="checkbox" data-mudar="rtOpGrandes" ${o.ritmoGrandes !== false ? 'checked' : ''}> ⏭️ "Até algo importante" para antes de clássicos e finais (para você jogar ao vivo)</label>
+        return `<label class="campo check"><input type="checkbox" data-mudar="rtOpGrandes" ${o.ritmoGrandes !== false ? 'checked' : ''}> ⏭️ "Até algo importante" para antes de clássicos, finais e duelos com o seu rival (para você jogar ao vivo)</label>
             <label class="campo">⏭️ Máximo de semanas por vez no "Até algo importante"
                 <select class="sel" data-mudar="rtOpMax">${RITMO_LIMITES.map(v => `<option value="${v}" ${Ritmo.limite() === v ? 'selected' : ''}>${v === 46 ? 'Até o fim da temporada' : v + ' semanas'}</option>`).join('')}</select>
             </label>
