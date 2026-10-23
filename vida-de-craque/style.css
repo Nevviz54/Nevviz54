@@ -1227,3 +1227,105 @@ body[data-tema="claro"] .cm-vant .tag { color: var(--primaria2); }
     .cm-relatorio { font-size: .88rem; }
 }
 .sem-gap .cm-barra-elenco > * + *, .sem-gap .cm-lote-opcoes > * + *, .sem-gap .cm-pend > * + * { margin-left: .5rem; }
+
+/* ---------- clima ---------- */
+/* torcida, ingressos, pré-temporada, último dia da janela, objetivos, química e técnicos rivais (js/clube.js) */
+.clb-cc { margin-left: 0; cursor: pointer; }
+.cabecalho-clube .clb-cc b small { font-weight: 600; opacity: .75; }
+.clb-humor { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .6rem; border-radius: 999px; font-weight: 700; font-size: .85rem; white-space: nowrap; background: var(--cartao2); border: 1px solid var(--borda); }
+.clb-h5 { color: #fde047; }
+.clb-h4 { color: #4ade80; }
+.clb-h3 { color: #93c5fd; }
+.clb-h2 { color: var(--cinza); }
+.clb-h1 { color: #fb923c; }
+.clb-h0 { color: #f87171; }
+body[data-tema="claro"] .clb-h5 { color: #a16207; }
+body[data-tema="claro"] .clb-h4 { color: #15803d; }
+body[data-tema="claro"] .clb-h3 { color: #1d4ed8; }
+body[data-tema="claro"] .clb-h1 { color: #c2410c; }
+body[data-tema="claro"] .clb-h0 { color: #b91c1c; }
+/* termômetro da torcida */
+.clb-termo { margin: .7rem 0 .4rem; }
+.clb-termo-barra { position: relative; height: .7rem; border-radius: 999px; background: linear-gradient(90deg, #dc2626, #f97316 25%, #facc15 45%, #4ade80 70%, #22c55e 85%, #f5b301); }
+.clb-termo-barra i { position: absolute; top: 50%; width: 1.1rem; height: 1.1rem; margin-left: -.55rem; margin-top: -.55rem; border-radius: 50%; background: #fff; border: 3px solid var(--cartao); box-shadow: 0 0 0 2px var(--texto), 0 2px 6px rgba(0, 0, 0, .4); }
+.clb-termo-rot { display: flex; justify-content: space-between; align-items: center; margin-top: .35rem; font-size: .9rem; }
+.clb-precos { display: flex; gap: .4rem; flex-wrap: wrap; margin: .3rem 0 .2rem; }
+.clb-precos + p { margin: .2rem 0 .4rem; }
+.clb-grade > * { min-width: 0; }
+.clb-evts { display: grid; gap: .35rem; margin: .4rem 0; }
+.clb-evt { font-size: .88rem; line-height: 1.4; border-left: 3px solid var(--borda); padding: .1rem 0 .1rem .55rem; }
+.clb-evt small { color: var(--cinza); margin-right: .2rem; }
+.clb-evt-bom { border-left-color: var(--primaria); }
+.clb-evt-ruim { border-left-color: var(--vermelho); }
+.clb-ingressos .ficha { margin-bottom: 0; }
+/* pré-temporada */
+.clb-pre { border-color: var(--ouro); }
+.clb-pre-ops { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .6rem; margin-top: .6rem; }
+.clb-pre-ops .atividade { padding: .65rem .55rem; justify-content: flex-start; }
+.clb-pre-ops .at-icone { font-size: 1.6rem; }
+.clb-pre-ef { color: var(--primaria) !important; font-weight: 600; line-height: 1.35; }
+body[data-tema="claro"] .clb-pre-ef { color: var(--primaria2) !important; }
+.clb-pre-modal .modal-botoes .btn { padding: .55rem .8rem; }
+.clb-pre-bt { display: flex; flex-direction: column; gap: .15rem; text-align: left; font-weight: 400; line-height: 1.3; }
+.clb-pre-bt b { font-size: 1rem; }
+.clb-pre-bt small { color: var(--cinza); font-size: .8rem; }
+/* último dia da janela */
+.clb-dl-aviso { border-color: var(--vermelho); background: linear-gradient(120deg, rgba(239, 68, 68, .14), var(--cartao) 60%); }
+.clb-dl-aviso p { margin: .4rem 0 0; }
+.clb-dl-relogio { display: flex; flex-direction: column; align-items: center; gap: .25rem; margin-bottom: .7rem; text-align: center; }
+.clb-dl-hora { font-family: 'Oswald', system-ui, sans-serif; font-size: 2.1rem; line-height: 1; }
+.clb-dl-hora b { font-variant-numeric: tabular-nums; }
+.clb-dl-relogio small { color: var(--cinza); }
+.clb-dl-barra { width: 100%; max-width: 30rem; height: .45rem; border-radius: 999px; background: var(--cartao2); overflow: hidden; }
+.clb-dl-barra i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f59e0b); transform-origin: left; animation: clbRelogio linear forwards; }
+@keyframes clbRelogio { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.clb-dl-fim .clb-dl-hora { color: var(--vermelho); animation: clbPisca .8s ease-in-out infinite alternate; }
+@keyframes clbPisca { from { opacity: 1; } to { opacity: .45; } }
+.clb-dl-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .6rem; }
+.clb-dl-card { display: flex; flex-direction: column; gap: .3rem; background: var(--cartao2); border: 1px solid var(--borda); border-radius: 12px; padding: .65rem .75rem; min-width: 0; }
+.clb-dl-card p { margin: 0; font-size: .88rem; line-height: 1.4; }
+.clb-dl-card.resolvido { opacity: .75; }
+.clb-dl-tipo { font-weight: 800; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ouro); }
+body[data-tema="claro"] .clb-dl-tipo { color: #a16207; }
+.clb-dl-jog { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
+.clb-dl-botoes { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .15rem; }
+.clb-dl-res { font-weight: 700; font-size: .88rem; }
+/* objetivos da diretoria */
+.clb-objs { display: grid; gap: .5rem; margin: .5rem 0; }
+.clb-objs h4 { margin: .5rem 0 0; }
+.clb-obj { display: flex; flex-direction: column; gap: .2rem; }
+.clb-obj-topo { display: flex; justify-content: space-between; gap: .5rem; align-items: baseline; font-size: .92rem; font-weight: 600; line-height: 1.3; }
+.clb-obj .stat-fundo { height: .4rem; }
+.clb-obj small { font-size: .78rem; }
+.clb-obj-falhou { opacity: .65; }
+.clb-objs.compacto { gap: .35rem; margin-top: .2rem; }
+.clb-objs.compacto .clb-obj-topo { font-size: .85rem; }
+/* química do elenco */
+.clb-setores { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: .6rem 0; }
+.clb-setor { display: flex; flex-direction: column; gap: .2rem; background: var(--cartao2); border: 1px solid var(--borda); border-radius: 12px; padding: .55rem .7rem; min-width: 0; }
+.clb-setor.on { border-color: rgba(34, 197, 94, .55); }
+.clb-setor b { overflow-wrap: anywhere; }
+.clb-setor small { font-size: .78rem; line-height: 1.35; }
+.clb-setor-tit { color: var(--cinza); font-weight: 700; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; }
+.clb-nivel { color: var(--primaria); font-weight: 700; }
+body[data-tema="claro"] .clb-nivel { color: var(--primaria2); }
+.clb-outras { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; font-size: .8rem; margin-bottom: .2rem; }
+.clb-briga { display: flex; align-items: center; gap: .6rem; background: rgba(239, 68, 68, .12); border: 1px solid rgba(239, 68, 68, .45); border-radius: 10px; padding: .45rem .65rem; margin-top: .5rem; font-size: .9rem; line-height: 1.35; }
+.clb-briga span { flex: 1; min-width: 0; }
+.clb-briga .btn { flex: none; }
+/* bastidores e pré-jogo */
+.clb-prox { background: var(--cartao2); border: 1px solid var(--borda); border-radius: 10px; padding: .45rem .65rem; margin: .4rem 0 .6rem; line-height: 1.6; font-size: .9rem; }
+.clb-cols .linha-jogo { flex-wrap: wrap; }
+.clb-prejogo { width: 100%; max-width: 32rem; margin: .6rem auto 0; text-align: left; background: var(--cartao2); border: 1px solid rgba(245, 179, 1, .5); border-radius: 14px; padding: .55rem .8rem; font-size: .88rem; line-height: 1.45; display: grid; gap: .2rem; }
+@media (max-width: 600px) {
+    .clb-setores { grid-template-columns: 1fr; }
+    .clb-pre-ops { grid-template-columns: 1fr 1fr; }
+    .clb-pre-ops .atividade small { font-size: .72rem; }
+    .clb-dl-hora { font-size: 1.7rem; }
+    .clb-dl-lista { grid-template-columns: 1fr; }
+    .clb-briga { flex-wrap: wrap; }
+    .clb-prejogo { font-size: .82rem; }
+    .cabecalho-clube .cc-moral { padding: .3rem .6rem; }
+}
+.sem-gap .clb-precos > *, .sem-gap .clb-dl-botoes > *, .sem-gap .clb-outras > * { margin: 0 .35rem .35rem 0; }
+.sem-gap .clb-briga > * + *, .sem-gap .clb-dl-jog > * + * { margin-left: .4rem; }

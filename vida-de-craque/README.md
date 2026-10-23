@@ -193,7 +193,35 @@ de jogador quanto na de técnico:
   vaidoso, tranquilo ou líder), e a mesma frase funciona com um e irrita outro.
 - **Cobranças por tempo de jogo**: quem passa vários jogos sem entrar manda mensagem cobrando.
   Prometa minutos e ele fica motivado; mas promessa quebrada derruba a motivação dele e a do grupo.
-- Coletivas de imprensa, protestos da torcida...
+- **🎙️ Bastidores** (aba nova): a torcida, os objetivos da diretoria, os técnicos rivais e as coletivas num lugar só.
+- **📣 Humor da torcida** (0–100, no topo da tela do clube): sobe com resultados acima do esperado (zebras e clássicos mexem
+  mais), títulos e reforços de peso; cai com tropeços e com a **venda de ídolos** (os craques, o capitão, quem tem 3 anos de casa,
+  as crias da base). Torcida feliz dá **força nos jogos em casa** (até +0,6) e enche o estádio; revoltada pesa contra. Tem
+  **faixas** no CT, **mosaico**, **festa no aeroporto** depois de vitórias grandes fora de casa, **protestos** e até o
+  **"Fora, professor!"**, que derruba a confiança da diretoria.
+- **🎟️ Preço do ingresso** (Finanças ou Bastidores): barato (torcida feliz, bilheteria menor), normal ou caro (bilheteria bem
+  maior, mas a torcida reclama toda semana).
+- **👔 Técnicos rivais e 🎙️ coletivas**: cada clube tem o seu técnico (nome do país, estilo: cavalheiro, estrategista, provocador,
+  boleiro ou pavio curto) e você guarda o **retrospecto contra cada um** (Bastidores e pré-jogo). Antes de clássicos, finais,
+  semifinais e jogos contra os primeiros, às vezes tem **coletiva**: 🤝 respeitar o adversário, 😈 provocar o técnico rival
+  (inflama os dois times; se ganhar, "falou e fez"; se perder, "falou demais"), 🧑‍⚖️ pressionar a arbitragem (pode render multa)
+  ou 🛡️ blindar o elenco. Mexe na motivação do seu time, na força do adversário naquele jogo, na fama, na torcida e na diretoria,
+  e o técnico rival responde nos jornais. Técnicos provocadores também cutucam antes do clássico, e os mal colocados podem
+  ser demitidos no fim do ano.
+- **⏰ Último dia da janela** (semanas 6 e 26): um card na tela do clube abre o mercado de última hora, com o relógio correndo até
+  a meia-noite: uma **pechincha** de um clube que precisa fazer caixa, um **jogador livre** que topa vir na hora e/ou um clube
+  grande querendo levar um dos seus titulares (vender, pedir +20% ou segurar). Se você não abrir, abre sozinho ao avançar a
+  semana; no avanço rápido passa batido (o ⏭️ para uma semana antes).
+- **🤝 Química do elenco** (Vestiário): quem começa jogando junto ganha entrosamento e vira dupla **entrosada** (10 jogos),
+  **afinada** (20) ou **inseparável** (35) — a melhor dupla de defesa, de meio e de ataque em campo dá um bônus pequeno. De vez em
+  quando dois jogadores **brigam** (decisão rápida: conversar, ficar do lado do mais experiente, multar ou deixar quieto); brigados,
+  os dois juntos em campo rendem menos até fazerem as pazes.
+- **🧳 Pré-temporada** (semana 1): **excursão** pela Europa, EUA ou Ásia (clubes menores fazem amistosos pelo interior) — dinheiro,
+  fama e seguidores, mas o elenco começa cansado — ou **treino em casa** (físico em dia, titulares mais entrosados e um bônus nas
+  primeiras semanas). No avanço rápido a diretoria escolhe.
+- **🎯 Objetivos extras da diretoria**: além da posição na liga, 1 ou 2 metas por temporada — vencer um clássico, chegar à
+  semifinal (ou às quartas) da copa nacional, revelar um jogador da base, fechar o ano no lucro, ter o artilheiro da liga ou
+  terminar com a torcida feliz — com progresso na tela do clube. Cada uma vale +6 de confiança e reputação no fim do ano (ou −5).
 
 ## ⚽ Carreira de Jogador (o lado BitLife)
 
@@ -262,6 +290,7 @@ Dezenas de eventos aleatórios com escolhas e consequências.
 Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola de Ouro,
 tríplice coroa, invencível, piloto automático, hora H, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
 seleção, golaço de bicicleta, virada tática, técnico expulso, comissão completa, braço direito, lição de casa, canetada,
+rei das coletivas, falou e fez, ídolo da arquibancada, no apagar das luzes, dupla inseparável, turnê mundial, diretoria na mão,
 freguês do rival, missão cumprida, bom de microfone,
 superempresário, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.

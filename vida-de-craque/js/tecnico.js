@@ -15,6 +15,8 @@ const TREINOS_TIME = {
 
 const Tecnico = {
     meuTime: s => s.car.tid,
+    // clima (js/clube.js): pré-temporada, último dia da janela e coletiva antes de jogo grande
+    antesDaSemana: s => Clube.antesDaSemana(s),
     time: s => s.car.tid >= 0 ? s.times[s.car.tid] : null,
 
     abas(s) {
@@ -36,6 +38,7 @@ const Tecnico = {
             { id: 'base', nome: 'Base', icone: '🌱', render: Base.tela },
             { id: 'vestiario', nome: 'Vestiário', icone: '💬', render: Mot.tela },
             { id: 'comissao', nome: 'Comissão', icone: '🧑‍💼', render: Comissao.tela },   // comissao: auxiliar, preparador, médico e analista
+            { id: 'clima', nome: 'Bastidores', icone: '🎙️', render: Clube.tela },   // clima (js/clube.js): torcida, objetivos, técnicos rivais e coletivas
             { id: 'tatica', nome: 'Tática', icone: '📋', render: Tecnico.tatica },
             { id: 'mercado', nome: 'Mercado', icone: '💸', render: Tecnico.mercado },
             { id: 'calendario', nome: 'Jogos', icone: '📅', render: Tecnico.calendario },
@@ -201,8 +204,10 @@ const Tecnico = {
             ${UI.escudo(t, true)}
             <div><h2>${U.esc(t.nome)}</h2><span>${Mundo.pais(t.pais).bandeira} ${U.esc(liga.nome)} · ${pos}º lugar · Força ${Math.round(Mundo.forca(s, t))}</span></div>
             <div class="cc-moral">Moral do elenco<b>${t.moral >= 65 ? '😄 Alta' : t.moral >= 40 ? '🙂 Normal' : '😟 Baixa'}</b></div>
+            ${Clube.htmlCabecalho(s, t) /* clima: humor da torcida */}
         </div>
         ${ofertas}
+        ${Clube.htmlAvisos(s, t) /* clima: pré-temporada e último dia da janela */}
         ${Comissao.htmlPendencias(s, t) /* comissao: 📝 lista de pendências */}
         <div class="grade-3">
             <div class="cartao">
@@ -215,6 +220,7 @@ const Tecnico = {
                 <h3>👔 Diretoria</h3>
                 ${UI.barra('Confiança', s.car.conf, '🤝')}
                 <p>Meta: terminar em <b>${Tecnico.expectativa(s)}º</b> ou melhor.${s.car.promessa === 'titulo' ? ' <b>Você prometeu o título!</b>' : ''}</p>
+                ${Clube.htmlObjetivos(s, t, true) /* clima: objetivos extras da diretoria */}
                 <p class="pequeno">Contrato até ${s.ano + s.car.contr - 1} · Salário ${U.dinheiro(s.car.sal)}/ano</p>
                 <p class="pequeno">Campanha: ${s.car.v}V ${s.car.e}E ${s.car.d}D</p>
                 <h3>💰 Caixa do clube</h3>
@@ -377,7 +383,7 @@ const Tecnico = {
             <div class="cartao"><h3>Maiores salários</h3>
                 <table class="tabela"><tbody>${top.map(p => `<tr><td>${UI.pos(p.pos)}</td><td class="esq">${UI.jogador(p)}</td><td>${U.dinheiro(p.sal)}/ano</td></tr>`).join('')}</tbody></table>
             </div>
-        </div>`;
+        </div>${Clube.htmlFinancas(s, t) /* clima: 🎟️ preço do ingresso */}`;
     },
 
     carreira(s) {
@@ -439,6 +445,8 @@ const Tecnico = {
         await Base.semana(s, t);
         // comissao: salários da comissão, físico, médico e o resumo do que o auxiliar fez
         Comissao.fimSemana(s, t);
+        // clima (js/clube.js): torcida, ingressos, reforços e ídolos, brigas no elenco e a janela
+        await Clube.semana(s, t);
         // obras na estrutura
         if (s.car.obra) {
             s.car.obra.falta--;
@@ -578,9 +586,10 @@ const Tecnico = {
             await Cena.titulo(c.nome, t, `${U.esc(s.pessoa.nome)} leva o ${t.nome} ao título!`);
         }
         Comissao.posJogo(s, t, m, r);   // comissao: médico encurta as lesões e o analista conta a dica
+        const extraClube = await Clube.posJogo(s, jogo, m, r, rapido);   // clima: torcida, técnico rival, duplas e coletiva
         await Tecnico.departamentoMedico(s, t, m, rapido);
         // coletiva de imprensa
-        if (!rapido && U.chance(0.22)) {
+        if (!rapido && U.chance(0.22) && !Clube.coletivaNaSemana(s)) {   // clima: sem 2ª coletiva no dia de jogo grande
             const opcoes = venceu ? ['👏 "O mérito é todo dos jogadores."', '😎 "Eu avisei que ia dar certo."', '🎯 "Ainda temos muito a melhorar."']
                 : ['🤝 "A culpa é minha, eu assumo."', '😡 "A arbitragem nos prejudicou!"', '🗣️ "Faltou atitude de alguns jogadores."'];
             // ritmo (js/ritmo.js): dá para lembrar a resposta e a coletiva se responde sozinha
@@ -599,7 +608,7 @@ const Tecnico = {
             t.moral = U.clamp(t.moral, 5, 99);
             UI.toast('🎙️ ' + txt);
         }
-        return `<div class="rf-linha">🤝 Confiança da diretoria: ${Math.round(s.car.conf)}% <span class="${dc >= 0 ? 'verde' : 'vermelho'}">(${dc >= 0 ? '+' : ''}${dc.toFixed(1)})</span></div>`;
+        return `<div class="rf-linha">🤝 Confiança da diretoria: ${Math.round(s.car.conf)}% <span class="${dc >= 0 ? 'verde' : 'vermelho'}">(${dc >= 0 ? '+' : ''}${dc.toFixed(1)})</span></div>${extraClube || ''}`;
     },
 
     async antesFimTemporada(s) {
@@ -634,6 +643,8 @@ const Tecnico = {
         s.car.conf = U.clamp(s.car.conf + (esp - pos) * 3, 0, 100);
         s.car.rep = U.clamp(s.car.rep + (esp - pos) * 0.7, 0, 100);
         if (s.car.promessa === 'titulo' && pos !== 1) { s.car.conf = U.clamp(s.car.conf - 15, 0, 100); obs.push('Promessa não cumprida'); }
+        const obsClube = Clube.fimTemporada(s, t);   // clima: objetivos extras, torcida, duplas e técnicos rivais
+        if (obsClube) obs.push(obsClube);
         s.car.hist.push(Tecnico.linhaHist(s, t, obs.join(', ')));
         Vida.log(s, `📊 Temporada ${s.ano}: ${pos}º lugar na ${liga.nome} (meta era ${esp}º).`, pos <= esp ? 'bom' : 'ruim');
         if (Tecnico.titulosPendentes) await Cena.titulo(Tecnico.titulosPendentes[0], t, `${s.pessoa.nome} é campeão com o ${t.nome}!`);
@@ -657,7 +668,7 @@ const Tecnico = {
                     <div><b data-alvo="${s.car.v}">0</b><small>vitórias</small></div>
                     <div><b data-alvo="${tab.gp}">0</b><small>gols marcados</small></div>
                 </div>
-                <div class="cena-sub">${pos <= esp ? '✅' : '❌'} Meta da diretoria: ${esp}º lugar</div>`,
+                <div class="cena-sub">${pos <= esp ? '✅' : '❌'} Meta da diretoria: ${esp}º lugar</div>${Clube.htmlCena(s) /* clima: objetivos extras */}`,
         };
     },
 

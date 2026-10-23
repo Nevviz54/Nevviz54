@@ -106,7 +106,7 @@ const Comissao = {
 
     // receita - folha - base e olheiros - comissão (por semana)
     resultadoSemanal(s, t) {
-        return s.car.receita - Tecnico.folha(s, t) / 52 - Base.custoSemanal(s, t) - Comissao.custoSemanal(s);
+        return s.car.receita - Tecnico.folha(s, t) / 52 - Base.custoSemanal(s, t) - Comissao.custoSemanal(s) + Clube.extraSemanal(s);   // clima: bilheteria (ingresso e torcida)
     },
 
     efeito(papel, est) {
@@ -675,6 +675,7 @@ const Comissao = {
         if (s.car.conf < 30) add('urgente', '⚠️', `Diretoria impaciente: ${Math.round(s.car.conf)}% de confiança`, 'Os próximos resultados podem custar o emprego.', { txt: 'Próximos jogos', aba: 'calendario' });
         if (s.car.capitao == null || !s.jog[s.car.capitao] || s.jog[s.car.capitao].tid !== t.id) add('info', '©️', 'Time sem capitão', 'Com o capitão em campo o time joga melhor.', { txt: 'Tática', aba: 'tatica' });
         if (!aux) add('info', '🧑‍💼', 'Sem auxiliar técnico', 'Contrate um e delegue treino, vestiário, mensagens, renovações e base.', { txt: 'Comissão', aba: 'comissao' });
+        Clube.pendencias(s, t, add);   // clima (js/clube.js): pré-temporada, janela, torcida, brigas e objetivos
         const ordem = { urgente: 0, aviso: 1, info: 2 };
         return itens.sort((a, b) => ordem[a.nivel] - ordem[b.nivel]);
     },

@@ -71,6 +71,9 @@ const Partida = {
     bonusTime(m, lado, t) {
         const s = m.s;
         const b = { ata: 0, def: 0 };
+        // clima (js/clube.js): torcida em casa, duplas, pré-temporada, brigas e a coletiva (que mexe no adversário)
+        const bc = Clube.bonusTime(m, lado, t);
+        b.ata += bc.ata; b.def += bc.def;
         if (!Mundo.timeDoUsuario(s, t.id)) return b;
         const tr = TREINOS_TIME[s.car.treinoTime] || TREINOS_TIME.equilibrado;
         b.ata += tr.ata; b.def += tr.def;

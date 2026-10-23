@@ -507,7 +507,7 @@ const Mot = {
         const media = U.media(el, p => Mot.valor(p));
         const prom = Object.entries(s.car.prom || {}).filter(([pid]) => s.jog[pid] && s.jog[pid].tid === t.id);
         const agora = Mot.agora(s);
-        return `<div class="cartao">
+        return `${Clube.htmlQuimica(s, t) /* clima: duplas entrosadas e brigas */}<div class="cartao">
             <div class="cartao-topo"><h3>💬 Vestiário do ${U.esc(t.nome)}</h3><span>Motivação média: <b>${Math.round(media)}</b>/100</span></div>
             <div class="mot-resumo">${cont.map(({ n, q }) => `<div class="mot-caixa ${n.classe}"><span>${n.icone}</span><b>${q}</b><small>${n.nome}</small></div>`).join('')}</div>
             <p class="cinza pequeno">Jogador motivado rende mais em campo (até +3,5 de habilidade); desmotivado rende menos (até −4). A motivação muda com os resultados, com o tempo de jogo e com as suas conversas. Uma conversa por jogador por semana.</p>

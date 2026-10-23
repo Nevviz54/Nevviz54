@@ -165,7 +165,7 @@ const TelaPartida = {
             txt = `📋 Seu time vai a campo no <b>${s.times[lado === 0 ? m.h : m.a].form}</b>, estilo <b>${ESTILOS[m.estilo[lado]].nome}</b>.<br>
                 ${rel > 3 ? '💪 Seu time é favorito.' : rel < -3 ? `⚠️ O ${U.esc(adv.nome)} é favorito.` : '⚖️ Jogo equilibrado.'}`;
         }
-        return `<div class="pre-jogo">${txt}${PartidaExtras.htmlPreJogo(m)}${Comissao.htmlPreJogo(m) /* comissao: relatório do analista */}</div>`;   // [partida] clima e dicas
+        return `<div class="pre-jogo">${txt}${PartidaExtras.htmlPreJogo(m)}${Comissao.htmlPreJogo(m) /* comissao: relatório do analista */}${Clube.htmlPreJogo(m) /* clima: técnico rival, torcida, duplas e coletiva */}</div>`;   // [partida] clima e dicas
     },
 
     controles() {

@@ -67,6 +67,14 @@ const CONQUISTAS = [
     { id: 'bracoDireito', modo: 'tecnico', icone: '🤝', nome: 'Braço direito', desc: 'O auxiliar técnico resolver 50 tarefas delegadas por você.', teste: s => cont(s, 'tarefasAuxiliar') >= 50 },
     { id: 'licaoDeCasa', modo: 'tecnico', icone: '📊', nome: 'Lição de casa', desc: 'Vencer 10 jogos seguindo a dica do analista de desempenho.', teste: s => cont(s, 'dicasAnalista') >= 10 },
     { id: 'canetada', modo: 'tecnico', icone: '✍️', nome: 'Canetada', desc: 'Renovar 5 contratos de uma vez na renovação em lote.', teste: s => cont(s, 'renovacaoLote') >= 5 },
+    // clima do clube (js/clube.js)
+    { id: 'reiColetiva', modo: 'tecnico', icone: '🎙️', nome: 'Rei das coletivas', desc: 'Dar 10 coletivas antes de jogos grandes.', teste: s => cont(s, 'coletivas') >= 10 },
+    { id: 'falouFez', modo: 'tecnico', icone: '😈', nome: 'Falou e fez', desc: 'Provocar o técnico rival na coletiva e vencer o jogo.', teste: s => cont(s, 'provocacoesVencidas') >= 1 },
+    { id: 'idoloTorcida', modo: 'tecnico', icone: '😍', nome: 'Ídolo da arquibancada', desc: 'Levar o humor da torcida a 95 ou mais.', teste: s => cont(s, 'torcidaMax') >= 95 },
+    { id: 'apagarDasLuzes', modo: 'tecnico', icone: '⏰', nome: 'No apagar das luzes', desc: 'Contratar alguém no último dia da janela.', teste: s => cont(s, 'negociosDeadline') >= 1 },
+    { id: 'duplaInseparavel', modo: 'tecnico', icone: '🤝', nome: 'Dupla inseparável', desc: 'Ter uma dupla com 35 jogos começando juntos.', teste: s => cont(s, 'duplaMax') >= 35 },
+    { id: 'turne', modo: 'tecnico', icone: '✈️', nome: 'Turnê mundial', desc: 'Fazer 3 excursões de pré-temporada.', teste: s => cont(s, 'excursoes') >= 3 },
+    { id: 'diretoriaNaMao', modo: 'tecnico', icone: '🎯', nome: 'Diretoria na mão', desc: 'Cumprir todos os objetivos extras da diretoria numa temporada (pelo menos 2).', teste: s => cont(s, 'objetivosTemporada') >= 1 },
 
     // ---------------- Jogador ----------------
     { id: 'estreia', modo: 'jogador', icone: '👟', nome: 'Estreia', desc: 'Jogar a primeira partida profissional.', teste: s => { const p = jogU(s); return p && p.cj + p.j >= 1; } },

@@ -474,7 +474,8 @@ const Jogo = {
             <li>Fique de olho na <b>confiança da diretoria</b>: se ela zerar, você é demitido.</li>
             <li>No jogo ao vivo você pode substituir, mudar a postura, dar <b>instruções</b> (marcar o craque deles, jogar pelas pontas, segurar o resultado, pressão total) e falar com o time no intervalo. Lance polêmico? Dá para reclamar com o árbitro... por sua conta e risco.</li>
             <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba Tática. Invista em <b>estádio, CT e base</b> na aba Estrutura.</li>
-            <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li></ul>
+            <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li>
+            <li>Na aba <b>🎙️ Bastidores</b>: o humor da torcida (e o preço do ingresso), os objetivos extras da diretoria, os técnicos rivais e as coletivas antes dos jogos grandes. No Vestiário, as duplas entrosadas e as brigas.</li></ul>
             <h4>⚽ Carreira de jogador</h4>
             <ul><li>Escolha o <b>treino</b> da semana: mais intenso = evolui mais rápido, mas cansa e pode lesionar.</li>
             <li>Nas partidas, aparecem <b>lances</b> em que você decide: chutar, driblar, tocar, dar o carrinho... No modo <b>🎬 Destaques</b> o jogo corre e só para nos seus lances e nos lances importantes. Chuva, neblina, calor e marcação individual mudam as chances.</li>
