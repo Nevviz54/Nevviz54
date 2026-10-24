@@ -688,6 +688,7 @@ const Vida = {
 
 // ---------------------------------------------------------------------
 //  Eventos (o coração "BitLife" do jogo)
+//  (js/carreiraExtra.js acrescenta aqui as polêmicas da carreira de jogador)
 // ---------------------------------------------------------------------
 const ehJogador = s => s.modo === 'jogador';
 const ehTecnico = s => s.modo === 'tecnico' && s.car.tid >= 0;

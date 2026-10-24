@@ -647,6 +647,8 @@ const Mundo = {
             s.premios.push(pr);
             resumo.premios.push(pr);
         }
+        // variedade (js/carreiraExtra.js): Chuteira de Ouro, Prêmio Puskás e Seleção da Temporada
+        CarreiraExtra.premiosTemporada(s, resumo);
 
         // Acesso e rebaixamento
         for (const pais of DADOS.paises) {
@@ -785,7 +787,8 @@ const Escalacao = {
     },
 
     efetivo(p, slot) {
-        return p.ovr - penalidadePos(p.pos, slot) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p);
+        // adaptPen: o jogador do usuário se adaptando a uma posição nova (js/carreiraExtra.js)
+        return p.ovr - penalidadePos(p.pos, slot) - Math.max(0, 75 - p.cond) * 0.25 + Mot.bonus(p) - (p.adaptPen || 0);
     },
 
     auto(s, t, form = t.form, ruido = 0) {

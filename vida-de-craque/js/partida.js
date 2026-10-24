@@ -401,7 +401,8 @@ const Partida = {
     },
 
     fatorHabilidade(p) {
-        return U.clamp(0.55 + (p.ovr - 50) / 50 * 0.75, 0.4, 1.3);
+        // adaptPen: adaptação a uma posição nova (js/carreiraExtra.js)
+        return U.clamp(0.55 + (p.ovr - (p.adaptPen || 0) - 50) / 50 * 0.75, 0.4, 1.3);
     },
 
     // multiplicador das habilidades especiais num lance

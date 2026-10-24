@@ -106,6 +106,17 @@ const CONQUISTAS = [
     { id: 'microfone', modo: 'jogador', icone: '🎤', nome: 'Bom de microfone', desc: 'Dar 10 entrevistas depois dos jogos.', teste: s => cont(s, 'entrevistas') >= 10 },
     { id: 'provocador', modo: 'jogador', icone: '🔥', nome: 'Provocador', desc: 'Provocar nas entrevistas e se dar bem 3 vezes.', teste: s => cont(s, 'provocacoesBoas') >= 3 },
     { id: 'superagente', modo: 'jogador', icone: '💼', nome: 'Superempresário', desc: 'Ser agenciado por um empresário 5 estrelas.', teste: s => cont(s, 'empresario5') >= 1 },
+    // variedade: posição, empréstimo, fim de carreira, lenda, polêmicas e prêmios (js/carreiraExtra.js)
+    { id: 'coringa', modo: 'jogador', icone: '🃏', nome: 'Coringa', desc: 'Jogar em 3 posições diferentes na carreira.', teste: s => cont(s, 'posicoesNovas') >= 2 },
+    { id: 'voltaPorCima', modo: 'jogador', icone: '🔁', nome: 'Volta por cima', desc: 'Brilhar num empréstimo e voltar com moral ao clube dono.', teste: s => cont(s, 'emprestimosBons') >= 1 },
+    { id: 'dourada', modo: 'jogador', icone: '🌴', nome: 'Aposentadoria dourada', desc: 'Aceitar uma proposta milionária da MLS ou da Liga MX.', teste: s => cont(s, 'douradas') >= 1 },
+    { id: 'hallFama', modo: 'jogador', icone: '🏛️', nome: 'Hall da Fama', desc: 'Ser homenageado por um clube na aposentadoria.', teste: s => cont(s, 'lendaMax') >= 1 },
+    { id: 'estatua', modo: 'jogador', icone: '🗿', nome: 'Virou estátua', desc: 'Ganhar uma estátua na frente do estádio de um clube.', teste: s => cont(s, 'lendaMax') >= 3 },
+    { id: 'despedida', modo: 'jogador', icone: '🎉', nome: 'Jogo de despedida', desc: 'Fazer um jogo de despedida com o estádio lotado.', teste: s => cont(s, 'despedidas') >= 1 },
+    { id: 'polemico', modo: 'jogador', icone: '🌶️', nome: 'Rei da polêmica', desc: 'Passar por 5 polêmicas fora de campo.', teste: s => cont(s, 'polemicas') >= 5 },
+    { id: 'puskas', modo: 'jogador', icone: '🎆', nome: 'Prêmio Puskás', desc: 'Marcar o gol mais bonito da temporada.', teste: s => s.pessoa.trofeus.some(t => t.txt === 'Prêmio Puskás') },
+    { id: 'chuteiraOuro', modo: 'jogador', icone: '👟', nome: 'Chuteira de Ouro', desc: 'Ser o maior artilheiro do mundo na temporada.', teste: s => s.pessoa.trofeus.some(t => t.txt === 'Chuteira de Ouro') },
+    { id: 'selecaoMundo', modo: 'jogador', icone: '⭐', nome: 'Seleção do mundo', desc: 'Entrar na Seleção da Temporada do mundo.', teste: s => cont(s, 'selecaoMundo') >= 1 },
 ];
 
 // Peso de cada tipo de taça: fama, felicidade e reputação do técnico

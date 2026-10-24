@@ -68,6 +68,10 @@ temporada. Jogadores reais **sem clube** também aparecem no mercado.
 - **Clássicos** 🔥: cerca de 100 rivalidades reais (Fla-Flu, Grenal, El Clásico, Derby della
   Madonnina, Superclásico...). Clima mais quente, mais cartões e moral em dobro para quem vence.
 - **Prêmios** no fim de cada temporada: Bola de Ouro, Prêmio Revelação, Luva de Ouro e Técnico do Ano.
+- **🌟 Mais prêmios** (slide próprio na cutscene do fim da temporada e aba Mundo): **👟 Chuteira de Ouro** (o maior
+  artilheiro do mundo, com peso da liga: nas 5 grandes ligas cada gol vale 2 pontos), **🎆 Prêmio Puskás** (o golaço mais bonito
+  da temporada) e a **⭐ Seleção da Temporada** num campinho 4-3-3 (a do mundo e a da sua liga). Como jogador, entrar numa delas
+  vira troféu; como técnico, você é avisado quando um jogador seu ganha (e ele fica mais motivado).
 
 ### 🌎 Seleções
 
@@ -269,6 +273,23 @@ de jogador quanto na de técnico:
   luvas ao assinar ou renovar e mais chance quando você pede mais), 📣 **Marqueteiro** (renegocia e traz patrocínios, mais seguidores) ou
   🌐 **Conexões** (mais propostas, inclusive de clubes maiores). Ele cobra comissão toda semana e pode
   ser trocado ou demitido (pagando uma rescisão).
+- **🔀 Mudança de posição**: de vez em quando o técnico pede para você mudar (com a idade o ponta vira meia, o lateral vira
+  zagueiro, o volante vira zagueiro... ou falta gente em outra posição e você seria titular lá). Também dá para pedir na aba
+  **Carreira** (o técnico decide). Umas semanas de **adaptação** rendendo um pouco menos (jogar acelera) e os seus **lances
+  passam a ser os da posição nova**. No avanço rápido o pedido do técnico não abre janela: fica esperando resposta na aba Carreira.
+- **🔁 Empréstimo**: quem quase não joga recebe do clube a proposta de ir **emprestado** a um clube menor até o fim da temporada,
+  com **vaga garantida no time**, ou pede na aba Carreira (fora da janela o pedido fica registrado para a próxima). O contrato e o
+  salário continuam com o clube dono, que renova com você se for preciso, e você volta no fim do ano — se jogou bem, o técnico te dá
+  mais chances. Emprestado, você não recebe outras propostas.
+- **🌴 Aposentadoria dourada**: a partir dos 32 anos, nas janelas (ou sem clube), clubes da **MLS** e da **Liga MX** podem aparecer
+  com salários milionários e luvas. Aceitando, a vida fica boa (mais felicidade toda semana), mas a fama cai aos poucos.
+- **🏟️ Ídolo do clube** (aba Carreira): jogos, gols, títulos e temporadas em cada clube viram pontos. Na aposentadoria, os clubes te
+  homenageiam com **🏛️ Hall da Fama**, **👕 camisa aposentada** ou **🗿 estátua**, e o maior deles oferece um **jogo de despedida**
+  (cutscene com estádio lotado, o último gol e a camisa). O "🏟️ Ídolo em" aparece no perfil, no resumo da aposentadoria e no fim da vida.
+- **🔥 Polêmicas** (eventos da vida): festa vazada, briga no treino, convite para reality show, rumor de apostas (com investigação que
+  se resolve semanas depois), exame antidoping com possível falso positivo, foto antiga com a camisa do rival, treta com o seu rival
+  nas redes e o empresário falando demais. Mexem com fama, seguidores, felicidade, confiança do técnico, torcida e até suspensão — e
+  aceitam o **🔁 Lembrar minha escolha**.
 - **Seleção**: jogando bem, você é convocado e **joga** as Datas FIFA, a Copa do Mundo, a Eurocopa,
   a Copa América e os outros torneios de seleções — ao vivo, com os seus lances.
 - Quando se aposentar, você pode **virar técnico** com a mesma pessoa (mesmo dinheiro, fama e família).
@@ -292,14 +313,15 @@ tríplice coroa, invencível, piloto automático, hora H, rei do clássico, aces
 seleção, golaço de bicicleta, virada tática, técnico expulso, comissão completa, braço direito, lição de casa, canetada,
 rei das coletivas, falou e fez, ídolo da arquibancada, no apagar das luzes, dupla inseparável, turnê mundial, diretoria na mão,
 freguês do rival, missão cumprida, bom de microfone,
-superempresário, milionário, casamento, dono de uma ilha,
+superempresário, coringa, volta por cima, aposentadoria dourada, Hall da Fama, virou estátua, jogo de despedida, rei da polêmica,
+Prêmio Puskás, Chuteira de Ouro, seleção do mundo, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.
 
 ## 🎬 Animações e cutscenes
 
 - **Cutscenes** quando você chega a um clube novo (estádio, escudo, camisa com o seu nome),
   no fim de cada temporada (seus números, campeões das ligas, prêmios, acesso/rebaixamento
-  e a virada do ano), em títulos, finais e clássicos, demissão e aposentadoria.
+  e a virada do ano), em títulos, finais e clássicos, demissão, aposentadoria e jogo de despedida.
   Clique para avançar, **Pular** (ou ESC) para encerrar.
 - **Animações**: efeito ao clicar nos botões, troca de abas suave, dinheiro “pulsando”
   quando entra ou sai, tela de **GOOOL** com as cores do time durante as partidas, revisão do **VAR**,

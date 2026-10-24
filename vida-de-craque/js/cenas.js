@@ -216,6 +216,7 @@ const Cena = {
                         <span class="pr-icone">${/Bola/.test(p.tipo) ? '⚽' : /Luva/.test(p.tipo) ? '🧤' : /Revela/.test(p.tipo) ? '🌟' : /Técnico/.test(p.tipo) ? '📋' : '👟'}</span>
                         <small>${U.esc(p.tipo)}</small><b>${U.esc(p.nome)}</b><span class="cinza">${p.tid >= 0 && s.times[p.tid] ? U.esc(s.times[p.tid].nome) : ''}</span></div>`).join('')}</div>`,
             } : null,
+            CarreiraExtra.slideTemporada(s, r),   // variedade: Chuteira de Ouro, Puskás e Seleção da Temporada
             sub ? {
                 fundo: 'radial-gradient(circle at 50% 40%, #0f6b33 0%, #05070c 70%)', classe: 'cs-acesso', som: 'titulo', confete: [tMeu.c1, tMeu.c2, '#22c55e'],
                 html: `<div class="seta-sobe">⬆️</div><div class="cena-titulo">ACESSO!</div><div class="cena-sub">O ${U.esc(tMeu.nome)} vai disputar a ${U.esc(sub.liga)}!</div>`,

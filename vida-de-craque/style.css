@@ -1329,3 +1329,64 @@ body[data-tema="claro"] .clb-nivel { color: var(--primaria2); }
 }
 .sem-gap .clb-precos > *, .sem-gap .clb-dl-botoes > *, .sem-gap .clb-outras > * { margin: 0 .35rem .35rem 0; }
 .sem-gap .clb-briga > * + *, .sem-gap .clb-dl-jog > * + * { margin-left: .4rem; }
+
+/* ---------- variedade ---------- */
+/* carreira de jogador: ídolo do clube, posição, empréstimo e prêmios extras (js/carreiraExtra.js) */
+.cx-painel { margin-bottom: 1rem; }
+.cx-painel > .cartao { margin-bottom: 0; }
+.cx-clube { display: flex; gap: .65rem; align-items: flex-start; padding: .5rem 0 .55rem; border-bottom: 1px solid var(--borda); }
+.cx-clube.atual .cx-clube-topo b { color: var(--ouro); }
+body[data-tema="claro"] .cx-clube.atual .cx-clube-topo b { color: #a16207; }
+.cx-clube > .escudo { margin-top: .15rem; }
+.cx-clube-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .1rem; }
+.cx-clube-topo { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+.cx-clube-topo b { overflow-wrap: anywhere; }
+.cx-selo { display: inline-block; white-space: nowrap; font-size: .74rem; font-weight: 800; border-radius: 999px; padding: .05rem .55rem; border: 1px solid var(--ouro);
+    color: var(--ouro); background: rgba(245, 179, 1, .12); }
+.cx-selo.n3 { background: linear-gradient(135deg, rgba(245, 179, 1, .35), rgba(245, 179, 1, .1)); box-shadow: 0 0 12px rgba(245, 179, 1, .35); }
+body[data-tema="claro"] .cx-selo { color: #854d0e; }
+.cx-rumo h4 { margin: .8rem 0 .3rem; }
+.cx-rumo h4:first-of-type { margin-top: .3rem; }
+.cx-rumo .ficha { margin: .2rem 0 .3rem; }
+.cx-rumo p { margin: .2rem 0 .3rem; }
+.cx-linha { justify-content: flex-start; margin-top: .45rem; }
+.cx-adapt, .cx-pedido { display: flex; flex-direction: column; gap: .2rem; margin-top: .55rem; padding: .5rem .7rem; border-radius: 10px; font-size: .9rem;
+    background: rgba(250, 204, 21, .1); border: 1px solid rgba(250, 204, 21, .45); }
+.cx-pedido { background: rgba(59, 130, 246, .1); border-color: rgba(59, 130, 246, .5); }
+.cx-pedido .linha-botoes { justify-content: flex-start; margin-top: .35rem; }
+.cx-opcoes-pos { display: flex; flex-direction: column; gap: .4rem; margin: .6rem 0; text-align: left; }
+.cx-opcoes-pos > div { background: var(--cartao2); border: 1px solid var(--borda); border-radius: 10px; padding: .45rem .65rem; line-height: 1.35; }
+.cx-opcoes-pos .escudo { min-width: 1.6rem; height: 1.6rem; font-size: .55rem; border-width: 1.5px; margin-right: .2rem; }
+.cx-idolo b { color: var(--ouro); }
+body[data-tema="claro"] .cx-idolo b { color: #a16207; }
+.cx-tab-xi td.esq { white-space: normal; width: 100%; }
+.cx-det { margin-top: .6rem; }
+.cx-det summary { cursor: pointer; font-weight: 700; padding: .3rem 0; }
+/* cutscene: mais prêmios e a Seleção da Temporada num campinho */
+.cx-cena-xi { gap: .45rem; }
+.cx-grade-extras { max-width: 46rem; }
+.cx-grade-extras .premio { padding: .7rem .9rem; }
+.cx-grade-extras .pr-icone { font-size: 1.9rem; }
+.cx-xi-tit { font-family: 'Oswald', system-ui, sans-serif; font-size: 1.35rem; letter-spacing: .04em; margin-top: .35rem; animation: surge .5s .2s both; }
+.cx-campinho { width: 100%; max-width: 34rem; display: flex; flex-direction: column; gap: .4rem; padding: .6rem .4rem; border-radius: 14px;
+    border: 2px solid rgba(255, 255, 255, .35); background: repeating-linear-gradient(180deg, #1d6b3a 0 2.2rem, #187a3f 2.2rem 4.4rem); box-shadow: inset 0 0 30px rgba(0, 0, 0, .35); }
+.cx-xi-linha { display: flex; justify-content: space-around; gap: .3rem; }
+.cx-xi-jog { flex: 0 1 7rem; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: .1rem; background: rgba(0, 0, 0, .5); border-radius: 10px;
+    padding: .25rem .35rem; font-size: .8rem; line-height: 1.15; animation: premioEntra .6s cubic-bezier(.2, 1.4, .4, 1) both; }
+.cx-xi-jog b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
+.cx-xi-jog small { opacity: .75; font-size: .68rem; }
+.cx-xi-jog .pos { min-width: 1.9rem; font-size: .6rem; padding: 0 .15rem; }
+.cx-xi-jog.meu { background: linear-gradient(135deg, rgba(34, 197, 94, .75), rgba(0, 0, 0, .5)); box-shadow: 0 0 14px rgba(34, 197, 94, .7); }
+.cx-xi-minha { font-weight: 800; color: #86efac; animation: surge .5s .8s both; }
+@media (max-width: 600px) {
+    .cx-grade-extras { grid-template-columns: 1fr 1fr; gap: .5rem; }
+    .cx-grade-extras .premio { padding: .5rem .55rem; }
+    .cx-grade-extras .premio b { font-size: 1rem; }
+    .cx-grade-extras .premio .cinza { font-size: .72rem; }
+    .cx-grade-extras .pr-icone { font-size: 1.5rem; }
+    .cx-xi-jog { font-size: .7rem; padding: .2rem; }
+    .cx-xi-jog b { font-size: .72rem; }
+    .cx-xi-tit { font-size: 1.1rem; }
+}
+.sem-gap .cx-clube > * + *, .sem-gap .cx-xi-linha > * + * { margin-left: .4rem; }
+.sem-gap .cx-opcoes-pos > * + *, .sem-gap .cx-campinho > * + * { margin-top: .4rem; }

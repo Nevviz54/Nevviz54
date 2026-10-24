@@ -183,7 +183,8 @@ const Jogador = {
         const hist = s.car.hist.slice().reverse();
         const totG = U.soma(s.car.hist, h => h.g) + p.g, totJ = U.soma(s.car.hist, h => h.j) + p.j;
         // historia: metas da temporada, rival e empresário no topo da aba
-        return Historia.painel(s) + `<div class="grade-2">
+        // variedade: ídolo do clube, posição e empréstimo (js/carreiraExtra.js)
+        return Historia.painel(s) + CarreiraExtra.painel(s) + `<div class="grade-2">
             <div class="cartao"><h3>📄 Contrato</h3>
                 ${t ? `<div class="ficha">
                     <div><span>Clube</span><b>${UI.time(s, t.id)}</b></div>
@@ -350,6 +351,7 @@ const Jogador = {
             if (U.chance(ch)) await Jogador.proposta(s, false);
         }
         await Historia.semana(s); // historia: rival, metas, clima no clube e empresário
+        await CarreiraExtra.semana(s); // variedade: posição, empréstimo, proposta dourada e polêmicas
         // aposentadoria forçada
         if (p.idade >= 41) await Jogador.aposentar(s, true);
     },
@@ -362,7 +364,7 @@ const Jogador = {
     },
 
     async renovacao(s) {
-        const p = Jogador.p(s), t = s.times[p.tid];
+        const p = Jogador.p(s), t = s.times[CarreiraExtra.clubeDono(s)]; // variedade: emprestado, quem renova é o clube dono
         const el = Mundo.elenco(s, t).sort((a, b) => b.ovr - a.ovr);
         const rank = el.indexOf(p);
         const quer = rank < 16 || (p.idade <= 21 && p.pot >= t.rep);
@@ -393,6 +395,7 @@ const Jogador = {
     },
 
     async proposta(s, livre) {
+        if (CarreiraExtra.bloqueiaProposta(s)) return; // variedade: emprestado não recebe propostas
         const p = Jogador.p(s);
         const atual = p.tid >= 0 ? s.times[p.tid] : null;
         const minRep = livre ? p.ovr - 14 : Math.max(p.ovr - 9, atual ? atual.rep - 6 : 0);
@@ -474,6 +477,7 @@ const Jogador = {
             if (motivo === 'no banco' || motivo === 'fora dos relacionados') Vida.mudar(s, { felicidade: -1.5 });
         }
         if (st && st.les && p.les >= 3) await Jogador.lesaoSeria(s);
+        CarreiraExtra.posJogo(s, jogo, m, r); // variedade: números por clube, jogos sem jogar e empréstimo
         // historia: duelo com o rival, metas e entrevista pós-jogo (só nos jogos ao vivo)
         const extraHst = await Historia.posJogo(s, jogo, m, r, rapido);
         if (Mundo.ehFinal(s, jogo) && venceu) {
@@ -541,6 +545,8 @@ const Jogador = {
             p.ovr = Math.max(35, Math.round(p.ovr - d));
             if (p.ovr < antes) Vida.log(s, `📉 A idade pesa: sua habilidade caiu para ${p.ovr}.`, 'ruim');
         }
+        // variedade: Seleção da Temporada e volta do empréstimo (antes do contrato vencer)
+        await CarreiraExtra.depoisFimTemporada(s, resumo);
         // contrato
         if (p.tid >= 0) {
             p.contr--;
@@ -570,8 +576,10 @@ const Jogador = {
         p.aposentado = true;
         Mundo.noticia(s, `👋 ${p.nome} se aposenta aos ${p.idade} anos, com ${totG} gols em ${totJ} jogos.`, 'geral');
         Vida.log(s, `👋 Você se aposentou do futebol: ${totJ} jogos, ${totG} gols e ${s.pessoa.trofeus.length} títulos.`, 'titulo');
-        await Cena.simples('👋', `OBRIGADO, ${U.esc(p.nome.split(' ')[0].toUpperCase())}!`, `${totJ} jogos · ${totG} gols · ${s.pessoa.trofeus.length} títulos. A torcida aplaude de pé.`, 'radial-gradient(circle at 50% 40%, #233a5e 0%, #05070c 70%)', 'torcida');
-        const i = await UI.perguntar('E agora?', `Fim da carreira de jogador: <b>${totJ} jogos</b>, <b>${totG} gols</b>, <b>${s.pessoa.trofeus.length} títulos</b>.<br><br>O que você quer fazer da vida?`, ['📋 Virar técnico de futebol', '🏖️ Curtir a aposentadoria (encerrar)'], '🤔');
+        // variedade: homenagens dos clubes (Hall da Fama, camisa, estátua) e jogo de despedida
+        const festa = await CarreiraExtra.aoAposentar(s);
+        if (!festa) await Cena.simples('👋', `OBRIGADO, ${U.esc(p.nome.split(' ')[0].toUpperCase())}!`, `${totJ} jogos · ${totG} gols · ${s.pessoa.trofeus.length} títulos. A torcida aplaude de pé.`, 'radial-gradient(circle at 50% 40%, #233a5e 0%, #05070c 70%)', 'torcida');
+        const i = await UI.perguntar('E agora?', `Fim da carreira de jogador: <b>${totJ} jogos</b>, <b>${totG} gols</b>, <b>${s.pessoa.trofeus.length} títulos</b>.${CarreiraExtra.textoIdolo(s) /* variedade: 🏟️ Ídolo em */}<br><br>O que você quer fazer da vida?`, ['📋 Virar técnico de futebol', '🏖️ Curtir a aposentadoria (encerrar)'], '🤔');
         if (i === 0) {
             Tecnico.iniciarAposentado(s);
             Jogo.aba = 'inicio';

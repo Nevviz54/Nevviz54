@@ -636,7 +636,7 @@ const Jogo = {
         }
         await UI.modal({
             titulo: `🏁 Fim da temporada ${r.ano}`,
-            html: `${meuTxt}<h4>🏆 Campeões</h4><div class="rs-grade">${campeoes}</div><h4>🏅 Prêmios</h4>${premios}`,
+            html: `${meuTxt}<h4>🏆 Campeões</h4><div class="rs-grade">${campeoes}</div><h4>🏅 Prêmios</h4>${premios}${CarreiraExtra.htmlResumo(s, r) /* variedade: Chuteira, Puskás e Seleção */}`,
             largo: true,
             botoes: [{ txt: `Começar ${r.ano + 1} ▶`, valor: true }],
         });
@@ -663,6 +663,7 @@ const Jogo = {
                 </div>
                 <h4>🏆 Troféus</h4>
                 <div class="lista-trofeus">${p.trofeus.map(t => `<span class="trofeu">🏆 ${U.esc(t.txt)} (${t.ano})</span>`).join('') || '<span class="cinza">Nenhum título.</span>'}</div>
+                ${CarreiraExtra.htmlPerfil(s) /* variedade: 🏟️ Ídolo em */}
                 <h4>👨‍👩‍👧 Família</h4>
                 <p>${p.rel.filter(r => r.vivo && ['conjuge', 'filho', 'pet'].includes(r.tipo)).map(r => `${Vida.rotuloRel(r)}: ${U.esc(r.nome)}`).join(' · ') || 'Você partiu sozinho.'}</p>
                 <div class="linha-botoes"><button class="btn btn-primario btn-grande" data-acao="menuVoltar">🏠 Menu principal</button></div>
@@ -808,7 +809,8 @@ const Comum = {
             </div>
             <div>
                 <div class="cartao"><h3>🏅 Bola de Ouro</h3>${bolas.length ? bolas.map(b => `<div class="rs-linha">${b.ano}: <b>${U.esc(b.nome)}</b> (${b.tid >= 0 && s.times[b.tid] ? U.esc(s.times[b.tid].nome) : '-'}) — ${b.info}</div>`).join('') : '<p class="cinza">Entregue no fim de cada temporada.</p>'}</div>
-                ${s.premios.some(p => /Revelação|Luva|Técnico do Ano/.test(p.tipo)) ? `<div class="cartao"><h3>🌟 Outros prêmios</h3>${s.premios.filter(p => /Revelação|Luva|Técnico do Ano/.test(p.tipo)).slice(-12).reverse().map(p => `<div class="rs-linha">${p.ano} · ${U.esc(p.tipo)}: <b>${U.esc(p.nome)}</b> ${p.pid != null && p.tid >= 0 && s.times[p.tid] ? `(${U.esc(s.times[p.tid].nome)})` : ''}</div>`).join('')}</div>` : ''}
+                ${s.premios.some(p => /Revelação|Luva|Técnico do Ano|Chuteira de Ouro|Puskás/.test(p.tipo)) ? `<div class="cartao"><h3>🌟 Outros prêmios</h3>${s.premios.filter(p => /Revelação|Luva|Técnico do Ano|Chuteira de Ouro|Puskás/.test(p.tipo)).slice(-15).reverse().map(p => `<div class="rs-linha">${p.ano} · ${U.esc(p.tipo)}: <b>${U.esc(p.nome)}</b> ${p.pid != null && p.tid >= 0 && s.times[p.tid] ? `(${U.esc(s.times[p.tid].nome)})` : ''}</div>`).join('')}</div>` : ''}
+                ${CarreiraExtra.cardMundo(s) /* variedade: ⭐ Seleção da Temporada */}
                 <div class="cartao"><h3>🌱 Joias (até 21 anos)</h3>
                     <table class="tabela"><tbody>${jovens.map(p => `<tr class="${p.user ? 'destaque' : ''}"><td>${UI.pos(p.pos)}</td><td class="esq">${UI.jogador(p)}</td><td class="esq">${UI.time(s, p.tid, true)}</td><td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td></tr>`).join('')}</tbody></table>
                 </div>
@@ -883,6 +885,7 @@ const Comum = {
         <div class="perfil-extra"><span>📱 <b>${Vida.numero(p.seg || 0)}</b> seguidores</span><span>💎 Patrimônio <b>${U.dinheiro(Vida.patrimonio(s))}</b></span></div>
         ${patr}
         ${p.trofeus.length ? `<div class="pequeno">🏆 ${p.trofeus.length} título(s)</div>` : ''}
+        ${CarreiraExtra.htmlPerfil(s) /* variedade: 🏟️ Ídolo em */}
         ${Ritmo.htmlSemana(s) /* ritmo: "🗓️ Esta semana" */}`;
     },
 
