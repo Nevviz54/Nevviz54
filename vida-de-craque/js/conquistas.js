@@ -75,6 +75,23 @@ const CONQUISTAS = [
     { id: 'duplaInseparavel', modo: 'tecnico', icone: '🤝', nome: 'Dupla inseparável', desc: 'Ter uma dupla com 35 jogos começando juntos.', teste: s => cont(s, 'duplaMax') >= 35 },
     { id: 'turne', modo: 'tecnico', icone: '✈️', nome: 'Turnê mundial', desc: 'Fazer 3 excursões de pré-temporada.', teste: s => cont(s, 'excursoes') >= 3 },
     { id: 'diretoriaNaMao', modo: 'tecnico', icone: '🎯', nome: 'Diretoria na mão', desc: 'Cumprir todos os objetivos extras da diretoria numa temporada (pelo menos 2).', teste: s => cont(s, 'objetivosTemporada') >= 1 },
+    // carreiras: desafios, clube criado e negociações (js/desafios.js e js/negociacoes.js)
+    { id: 'dsfSerieD', modo: 'tecnico', icone: '🪜', nome: 'Da lama ao topo', desc: 'Cumprir o desafio Da Série D à glória.', teste: s => cont(s, 'dsf_serieD') >= 1 },
+    { id: 'dsfGigante', modo: 'tecnico', icone: '🆘', nome: 'Salvador da pátria', desc: 'Cumprir o desafio Salve o gigante.', teste: s => cont(s, 'dsf_gigante') >= 1 },
+    { id: 'dsfOrcamento', modo: 'tecnico', icone: '💸', nome: 'Milagre sem dinheiro', desc: 'Cumprir o desafio Orçamento zero.', teste: s => cont(s, 'dsf_orcamento') >= 1 },
+    { id: 'dsfBase', modo: 'tecnico', icone: '🌱', nome: 'Pratas da casa', desc: 'Cumprir o desafio Só a base.', teste: s => cont(s, 'dsf_base') >= 1 },
+    { id: 'dsfReconstrucao', modo: 'tecnico', icone: '🔨', nome: 'Reconstrutor', desc: 'Cumprir o desafio Reconstrução.', teste: s => cont(s, 'dsf_reconstrucao') >= 1 },
+    { id: 'dsfContinental', modo: 'tecnico', icone: '🌍', nome: 'Zebra continental', desc: 'Cumprir o desafio Rei do continente.', teste: s => cont(s, 'dsf_continental') >= 1 },
+    { id: 'dsfAcesso', modo: 'tecnico', icone: '🔥', nome: 'Bate e volta', desc: 'Cumprir o desafio Volta imediata.', teste: s => cont(s, 'dsf_acesso') >= 1 },
+    { id: 'dsfZebra', modo: 'tecnico', icone: '🐭', nome: 'Davi contra Golias', desc: 'Cumprir o desafio Pequeno entre gigantes.', teste: s => cont(s, 'dsf_zebra') >= 1 },
+    { id: 'dsfFundador', modo: 'tecnico', icone: '🛠️', nome: 'Do zero ao topo', desc: 'Cumprir o desafio do fundador com o clube que você criou.', teste: s => cont(s, 'dsf_fundador') >= 1 },
+    { id: 'desafios3', modo: 'tecnico', icone: '🎯', nome: 'Caçador de desafios', desc: 'Cumprir 3 desafios de carreira.', teste: s => cont(s, 'desafiosCumpridos') >= 3 },
+    { id: 'clubeProprio', modo: 'tecnico', icone: '🏗️', nome: 'Fundador', desc: 'Criar o seu próprio clube.', teste: s => cont(s, 'clubesCriados') >= 1 },
+    { id: 'clubeProprioCampeao', modo: 'tecnico', icone: '👑', nome: 'Sonho realizado', desc: 'Ser campeão de uma 1ª divisão com o clube que você criou.', teste: s => cont(s, 'criadoCampeao') >= 1 },
+    { id: 'emprestimos5', modo: 'tecnico', icone: '🔁', nome: 'Rei dos empréstimos', desc: 'Fechar 5 empréstimos (pegando ou emprestando).', teste: s => cont(s, 'emprestimosTec') >= 5 },
+    { id: 'vitrine', modo: 'tecnico', icone: '🪟', nome: 'Vitrine', desc: 'Um garoto emprestado por você voltar mais forte.', teste: s => cont(s, 'vitrines') >= 1 },
+    { id: 'trocaFeita', modo: 'tecnico', icone: '🔄', nome: 'Troca de figurinhas', desc: 'Fechar uma troca de jogadores.', teste: s => cont(s, 'trocas') >= 1 },
+    { id: 'revenda', modo: 'tecnico', icone: '📈', nome: 'Dinheiro que volta', desc: 'Receber um percentual de revenda.', teste: s => cont(s, 'revendas') >= 1 },
 
     // ---------------- Jogador ----------------
     { id: 'estreia', modo: 'jogador', icone: '👟', nome: 'Estreia', desc: 'Jogar a primeira partida profissional.', teste: s => { const p = jogU(s); return p && p.cj + p.j >= 1; } },

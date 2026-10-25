@@ -72,20 +72,24 @@ const Tecnico = {
             <div class="sub-abas">${abas}</div>${ligas}`, sJaExiste ? 'menuVoltar' : 'menuNovo');
     },
 
-    async iniciar(form, nomeClube) {
+    // extra (js/desafios.js): { preparar(s) -> clube, depois(s, t), boasVindas(s, t) } para desafios e clube criado
+    async iniciar(form, nomeClube, extra) {
         const s = Mundo.criar(ANO_INICIAL);
         s.modo = 'tecnico';
         s.pessoa = Vida.criarPessoa({ nome: form.nome, idade: form.idade, pais: form.pais });
         s.pessoa.dinheiro = 20000 + form.rep * 4000;
         s.pessoa.fama = form.rep * 0.4;
         s.car = Tecnico.novaCarreira(form.rep);
-        const t = s.times.find(x => x.nome === nomeClube);
+        // carreiras: o desafio (ou o clube criado) prepara o mundo e escolhe o clube
+        const t = extra ? extra.preparar(s) : s.times.find(x => x.nome === nomeClube);
         Vida.log(s, `📋 ${form.nome} começa a carreira de treinador aos ${form.idade} anos.`, 'bom');
         Jogo.migrar(s);
         Tecnico.contratar(s, t.id);
+        if (extra) extra.depois(s, t);
         Jogo.s = s;
         Jogo.aba = 'inicio';
         Jogo.atualizar();
+        if (extra) return extra.boasVindas(s, t);
         await Tecnico.cenaNovoClube(s, t);
         await UI.aviso(`Bem-vindo ao ${t.nome}!`, `A diretoria espera que o time termine em <b>${Tecnico.expectativa(s)}º lugar</b> na ${U.esc(Mundo.liga(s, t.liga).nome)}.<br><br>Dica: veja o <b>Elenco</b>, ajuste a <b>Tática</b> (treino da semana e capitão também!) e clique em <b>Avançar semana</b>.`, '🤝');
     },
@@ -156,6 +160,8 @@ const Tecnico = {
     expectativa(s) {
         const t = Tecnico.time(s);
         if (!t) return 0;
+        const dsf = Desafios.expectativa(s, t);   // carreiras: no "Salve o gigante" a meta é não cair
+        if (dsf) return dsf;
         const liga = Mundo.liga(s, t.liga);
         const f = Mundo.forca(s, t);
         return 1 + liga.times.filter(id => id !== t.id && Mundo.forca(s, s.times[id]) > f).length;
@@ -221,6 +227,7 @@ const Tecnico = {
                 ${UI.barra('Confiança', s.car.conf, '🤝')}
                 <p>Meta: terminar em <b>${Tecnico.expectativa(s)}º</b> ou melhor.${s.car.promessa === 'titulo' ? ' <b>Você prometeu o título!</b>' : ''}</p>
                 ${Clube.htmlObjetivos(s, t, true) /* clima: objetivos extras da diretoria */}
+                ${Desafios.htmlInicio(s, t) /* carreiras: 🎯 desafio de carreira e 🛠️ clube criado */}
                 <p class="pequeno">Contrato até ${s.ano + s.car.contr - 1} · Salário ${U.dinheiro(s.car.sal)}/ano</p>
                 <p class="pequeno">Campanha: ${s.car.v}V ${s.car.e}E ${s.car.d}D</p>
                 <h3>💰 Caixa do clube</h3>
@@ -252,13 +259,13 @@ const Tecnico = {
         const t = Tecnico.time(s);
         const el = Mundo.elenco(s, t).sort((a, b) => POSICOES.indexOf(a.pos) - POSICOES.indexOf(b.pos) || b.ovr - a.ovr);
         const titulares = new Set(Escalacao.doTime(s, t));
-        return `${Comissao.painelElenco(s, t) /* comissao: ✍️ renovação em lote */}<div class="cartao">
+        return `${Comissao.painelElenco(s, t) /* comissao: ✍️ renovação em lote */}${Negociacoes.painelElenco(s, t) /* carreiras: 🔁 empréstimos */}<div class="cartao">
             <div class="cartao-topo"><h3>👥 Elenco do ${U.esc(t.nome)} (${el.length} jogadores)</h3><span class="cinza pequeno">Clique no nome para renovar, vender ou dispensar.</span></div>
             <div class="rolavel"><table class="tabela tabela-elenco">
             <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th>Pot.</th><th>Mot.</th><th>Cond.</th><th>J</th><th>G</th><th>A</th><th>Nota</th><th>Contrato</th><th>Salário</th><th>Valor</th></tr></thead>
             <tbody>${el.map(p => `<tr class="${titulares.has(p.id) ? 'titular' : ''}">
                 <td>${UI.pos(p.pos)}</td>
-                <td class="esq">${UI.jogador(p)} ${titulares.has(p.id) ? '<small class="tag">titular</small>' : ''}${p.les > 0 ? ` 🚑${p.les}` : ''}${p.susp > 0 ? ' 🟥' : ''}${s.car.venda.includes(p.id) ? ' 🏷️' : ''}${Comissao.botaoSubstituto(s, p) /* comissao: 🔍 buscar substituto */}</td>
+                <td class="esq">${UI.jogador(p)} ${titulares.has(p.id) ? '<small class="tag">titular</small>' : ''}${p.les > 0 ? ` 🚑${p.les}` : ''}${p.susp > 0 ? ' 🟥' : ''}${s.car.venda.includes(p.id) ? ' 🏷️' : ''}${Negociacoes.marca(s, p) /* carreiras: 🔁 emprestado */}${Comissao.botaoSubstituto(s, p) /* comissao: 🔍 buscar substituto */}</td>
                 <td>${p.idade}</td><td>${UI.ovr(p.ovr)}</td><td class="pequeno">${Jogo.potencialTxt(s, p)}</td><td>${Mot.badge(p, true)}</td>
                 <td>${Math.round(p.cond)}%</td><td>${p.j}</td><td>${p.g}</td><td>${p.a}</td><td>${p.j ? UI.nota(p.ns / p.j) : '-'}</td>
                 <td class="${p.contr <= 1 ? 'vermelho' : ''}">${s.ano + p.contr - 1}</td><td>${U.dinheiro(p.sal)}</td><td>${U.dinheiro(Mundo.valor(p))}</td></tr>`).join('')}</tbody></table></div>
@@ -334,7 +341,7 @@ const Tecnico = {
         lista.sort((a, b) => b.ovr - a.ovr || a.idade - b.idade);
         const total = lista.length;
         lista = lista.slice(0, 80);
-        return `${Comissao.bannerMercado(s) /* comissao: 🔍 substituto e sugestões */}<div class="cartao">
+        return `${Desafios.bannerMercado(s) /* carreiras: regra do desafio */}${Comissao.bannerMercado(s) /* comissao: 🔍 substituto e sugestões */}<div class="cartao">
             <div class="cartao-topo"><h3>💸 Mercado de transferências</h3><span>${Mundo.emJanela(s) ? '<b class="verde">Janela ABERTA</b>' : '<b class="vermelho">Janela fechada</b> — só jogadores sem clube'} · Caixa: <b>${U.dinheiro(t.saldo)}</b></span></div>
             <div class="filtros">
                 <select class="sel" id="f-pos"><option value="">Todas as posições</option>${POSICOES.map(p => `<option value="${p}" ${f.pos === p ? 'selected' : ''}>${POS_NOME[p]}</option>`).join('')}</select>
@@ -346,6 +353,7 @@ const Tecnico = {
                 <label class="check"><input type="checkbox" id="f-livres" ${f.livres ? 'checked' : ''}> Só sem clube</label>
                 <button class="btn btn-primario" data-acao="tcFiltrar">🔍 Buscar</button>
             </div>
+            ${Negociacoes.dicaMercado(s) /* carreiras: empréstimo e troca na proposta */}
             <p class="cinza pequeno">${total} jogadores encontrados${total > 80 ? ' (mostrando os 80 melhores)' : ''}.${nome ? ' Buscando pelo nome em todos os jogadores, com ou sem clube (OVR, idade e valor não contam).' : ''}${nome && !total ? ' Confira a grafia ou tente só o sobrenome.' : ''}</p>
             <div class="rolavel"><table class="tabela tabela-elenco">
                 <thead><tr><th>Pos</th><th class="esq">Jogador</th><th>Idade</th><th>OVR</th><th class="esq">Clube</th><th>Valor</th><th>Salário</th><th></th></tr></thead>
@@ -383,7 +391,7 @@ const Tecnico = {
             <div class="cartao"><h3>Maiores salários</h3>
                 <table class="tabela"><tbody>${top.map(p => `<tr><td>${UI.pos(p.pos)}</td><td class="esq">${UI.jogador(p)}</td><td>${U.dinheiro(p.sal)}/ano</td></tr>`).join('')}</tbody></table>
             </div>
-        </div>${Clube.htmlFinancas(s, t) /* clima: 🎟️ preço do ingresso */}`;
+        </div>${Clube.htmlFinancas(s, t) /* clima: 🎟️ preço do ingresso */}${Negociacoes.htmlFinancas(s, t) /* carreiras: 🔁 empréstimos e 📈 revendas */}`;
     },
 
     carreira(s) {
@@ -408,13 +416,16 @@ const Tecnico = {
                 <tbody>${hist.map(h => `<tr><td>${h.ano}</td><td class="esq">${U.esc(h.time)}</td><td class="esq">${U.esc(h.liga)}</td><td>${h.pos}º</td><td>${h.v}-${h.e}-${h.d}</td><td class="esq pequeno">${U.esc(h.obs || '')}</td></tr>`).join('') || '<tr><td colspan="6" class="cinza">Primeira temporada em andamento.</td></tr>'}</tbody></table>
                 ${c.histJogador && c.histJogador.length ? `<h4>Como jogador</h4><p class="pequeno">${c.histJogador.length} temporadas · ${U.soma(c.histJogador, h => h.g)} gols</p>` : ''}
             </div>
-        </div>`;
+        </div>${Desafios.htmlCarreira(s) /* carreiras: 🎯 desafios e 🛠️ clubes fundados */}`;
     },
 
     // -----------------------------------------------------------------
     //  Semana
     // -----------------------------------------------------------------
     async semana(s) {
+        // carreiras (js/desafios.js e js/negociacoes.js): saiu do clube encerra o desafio e desfaz os empréstimos
+        await Desafios.semana(s);
+        Negociacoes.semana(s);
         // seleção: jogos nas Datas FIFA e convites (mesmo sem clube)
         await Selecoes.dataFifa(s);
         if (s.semana === 24) await Selecoes.convite(s, 0.25);
@@ -472,7 +483,7 @@ const Tecnico = {
 
     async propostaRecebida(s) {
         const t = Tecnico.time(s);
-        const el = Mundo.elenco(s, t);
+        const el = Mundo.elenco(s, t).filter(p => !p.empr);   // carreiras: emprestado ao clube não está à venda
         if (el.length <= 18) return;
         const listados = el.filter(p => s.car.venda.includes(p.id));
         const p = listados.length && U.chance(0.75) ? U.escolha(listados) : U.pesado(el, p => Math.pow(Math.max(1, p.ovr - 55), 3));
@@ -480,8 +491,12 @@ const Tecnico = {
         const comprador = U.escolha(s.times.filter(x => x.id !== t.id && x.rep >= p.ovr - 7 && x.saldo >= valor * 0.8));
         if (!comprador) return;
         let oferta = U.redondo(valor * (s.car.venda.includes(p.id) ? U.rand(0.75, 1.1) : U.rand(0.9, 1.35)));
+        // carreiras (js/negociacoes.js): vender um pouco mais barato ficando com um % da próxima venda
+        const rev = Negociacoes.opcaoRevenda(s, p, oferta);
+        let revenda = 0;
         const i = await UI.perguntar('Proposta recebida!', `O <b>${U.esc(comprador.nome)}</b> (${U.esc(Mundo.liga(s, comprador.liga).curto)}) oferece <b>${U.dinheiro(oferta)}</b> por <b>${U.esc(p.nome)}</b> (${p.pos}, ${p.idade} anos, OVR ${p.ovr}).<br><small>Valor de mercado: ${U.dinheiro(valor)}</small>`,
-            ['✅ Aceitar', '💬 Pedir 25% a mais', '❌ Recusar'], '💰');
+            ['✅ Aceitar', '💬 Pedir 25% a mais', '❌ Recusar'].concat(rev ? [rev.txt] : []), '💰');
+        if (i === 3 && rev) { oferta = rev.preco; revenda = rev.pct; }
         if (i === 1) {
             if (U.chance(0.45)) {
                 oferta = U.redondo(oferta * 1.25);
@@ -495,6 +510,7 @@ const Tecnico = {
             return;
         }
         Mundo.transferir(s, p, comprador, oferta);
+        if (revenda) Negociacoes.registrarRevenda(s, p, t, comprador, revenda);   // carreiras: 📈 percentual de revenda
         s.car.venda = s.car.venda.filter(id => id !== p.id);
         Mundo.noticia(s, `💸 ${p.nome} deixa o ${t.nome} e vai para o ${comprador.nome} por ${U.dinheiro(oferta)}.`, 'transfer');
         Vida.log(s, `💸 Você vendeu ${p.nome} ao ${comprador.nome} por ${U.dinheiro(oferta)}.`, 'bom');
@@ -613,7 +629,7 @@ const Tecnico = {
 
     async antesFimTemporada(s) {
         const t = Tecnico.time(s);
-        if (!t) return;
+        if (!t) return Negociacoes.fimTemporada(s, null);   // carreiras: empréstimos voltam antes da virada do ano
         Tecnico.titulosPendentes = null;
         const liga = Mundo.liga(s, t.liga);
         const pos = Mundo.posicaoNaLiga(s, t.id);
@@ -647,6 +663,8 @@ const Tecnico = {
         if (obsClube) obs.push(obsClube);
         s.car.hist.push(Tecnico.linhaHist(s, t, obs.join(', ')));
         Vida.log(s, `📊 Temporada ${s.ano}: ${pos}º lugar na ${liga.nome} (meta era ${esp}º).`, pos <= esp ? 'bom' : 'ruim');
+        Desafios.registrarTemporada(s, t);   // carreiras: a temporada entra na conta do desafio
+        Negociacoes.fimTemporada(s, t);      // carreiras: empréstimos voltam antes dos contratos andarem
         if (Tecnico.titulosPendentes) await Cena.titulo(Tecnico.titulosPendentes[0], t, `${s.pessoa.nome} é campeão com o ${t.nome}!`);
     },
 
@@ -673,6 +691,7 @@ const Tecnico = {
     },
 
     async depoisFimTemporada(s, resumo) {
+        await Desafios.fimTemporada(s, resumo);   // carreiras: veredito do desafio (antes dos contadores zerarem)
         const t = Tecnico.time(s);
         s.car.v = s.car.e = s.car.d = 0;
         s.car.promessa = null;
@@ -807,11 +826,14 @@ const Tecnico = {
         const t = Tecnico.time(s);
         if (!t) return [];
         if (p.tid === t.id) {
+            const emp = Negociacoes.acoesEmprestado(s, p, t);   // carreiras: emprestado ao seu clube
+            if (emp) return emp;
             return [
                 { id: 'conversar', txt: '💬 Conversar', classe: 'btn-primario' },
                 { id: 'capitao', txt: s.car.capitao === p.id ? '©️ Já é o capitão' : '©️ Fazer capitão', desativado: s.car.capitao === p.id },
                 { id: 'renovar', txt: '✍️ Renovar contrato', desativado: p.contr > 2 },
                 { id: 'venda', txt: s.car.venda.includes(p.id) ? '🏷️ Tirar da lista de venda' : '🏷️ Colocar à venda' },
+                Negociacoes.botaoEmprestar(s, p, t),   // carreiras: 🔁 emprestar com minutos garantidos
                 { id: 'dispensar', txt: '🚪 Dispensar', classe: 'btn-perigo' },
             ];
         }
@@ -820,6 +842,7 @@ const Tecnico = {
 
     async acaoJogador(s, p, id) {
         const t = Tecnico.time(s);
+        if (/^ng/.test(id)) return Negociacoes.acaoJogador(s, p, id);   // carreiras: empréstimos
         if (id === 'proposta') return Tecnico.proposta(s, p);
         if (id === 'conversar') return Mot.conversar(s, p);
         if (id === 'capitao') { s.car.capitao = p.id; UI.toast(`©️ ${p.nome} é o novo capitão!`); }
@@ -854,6 +877,8 @@ const Tecnico = {
         const dono = p.tid >= 0 ? s.times[p.tid] : null;
         if (dono && !Mundo.emJanela(s)) return UI.aviso('Janela fechada', 'A janela de transferências está fechada. Ela abre nas semanas 1–6 e 22–26. Jogadores sem clube podem ser contratados a qualquer momento.', '🔒');
         if (t.elenco.length >= 34) return UI.aviso('Elenco cheio', 'Seu elenco já tem jogadores demais. Venda ou dispense alguém antes.', '👥');
+        // carreiras (js/negociacoes.js): emprestado não está à venda; regras do desafio de carreira
+        if (await Negociacoes.bloqueioProposta(s, p, t)) return;
         const chave = `${p.id}`;
         if (s.car.recusas[chave] && s.car.recusas[chave] > s.ano * 100 + s.semana - 4) return UI.aviso('Sem interesse', `${U.esc(p.nome)} já disse que não quer conversar agora.`, '🙅');
         const riq = Mundo.riquezaDoTime(s, t);
@@ -883,9 +908,13 @@ const Tecnico = {
                 <div><span>Seu caixa</span><b>${U.dinheiro(t.saldo)}</b></div>
             </div>
             ${dono ? `<label class="campo">Sua oferta (€):<input id="pr-valor" class="inp" type="number" min="0" step="50000" value="${valor}"></label>
-            <p class="cinza pequeno">Titulares e craques custam mais caro que o valor de mercado.</p>` : '<p>Ele está livre: não há taxa de transferência, só o salário.</p>'}`,
-            botoes: [{ txt: dono ? 'Enviar proposta' : 'Contratar', valor: 'ok', antes: f => { const i = f.querySelector('#pr-valor'); oferta = i ? Math.max(0, +i.value || 0) : 0; } }, { txt: 'Cancelar', valor: false, classe: 'btn-fantasma' }],
+            <p class="cinza pequeno">Titulares e craques custam mais caro que o valor de mercado.</p>` : '<p>Ele está livre: não há taxa de transferência, só o salário.</p>'}
+            ${Negociacoes.htmlProposta(s, p, dono) /* carreiras: empréstimo e troca */}`,
+            botoes: [{ txt: dono ? 'Enviar proposta' : 'Contratar', valor: 'ok', desativado: !!(dono && Desafios.semTaxa(s)), antes: f => { const i = f.querySelector('#pr-valor'); oferta = i ? Math.max(0, +i.value || 0) : 0; } }]
+                .concat(Negociacoes.botoesProposta(s, p, dono)).concat([{ txt: 'Cancelar', valor: false, classe: 'btn-fantasma' }]),
         });
+        // carreiras: 🔁 pedir emprestado ou 🔄 propor troca
+        if (r === 'emp' || r === 'troca') return Negociacoes.negociar(s, p, r, { dono, pedido, salario, valor });
         if (r !== 'ok') return;
         if (oferta > t.saldo) return UI.aviso('Sem dinheiro', 'O clube não tem caixa para essa oferta.', '💸');
         if (dono) {

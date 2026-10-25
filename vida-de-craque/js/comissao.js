@@ -106,7 +106,8 @@ const Comissao = {
 
     // receita - folha - base e olheiros - comissão (por semana)
     resultadoSemanal(s, t) {
-        return s.car.receita - Tecnico.folha(s, t) / 52 - Base.custoSemanal(s, t) - Comissao.custoSemanal(s) + Clube.extraSemanal(s);   // clima: bilheteria (ingresso e torcida)
+        return s.car.receita - Tecnico.folha(s, t) / 52 - Base.custoSemanal(s, t) - Comissao.custoSemanal(s) + Clube.extraSemanal(s)   // clima: bilheteria (ingresso e torcida)
+            - Negociacoes.custoSemanal(s);   // carreiras: sua parte do salário dos emprestados
     },
 
     efeito(papel, est) {
@@ -450,7 +451,7 @@ const Comissao = {
     auxRenovar(s, t, aux) {
         if (aux.est <= 2 && U.chance((3 - aux.est) * 0.25)) return;   // auxiliar fraco deixa para depois
         const rank = Mot.ranking(s, t);
-        const cands = Mundo.elenco(s, t).filter(p => p.contr <= 1 && s.car.venda.indexOf(p.id) < 0 && !Comissao.recusouHaPouco(s, p)
+        const cands = Mundo.elenco(s, t).filter(p => p.contr <= 1 && !p.empr && s.car.venda.indexOf(p.id) < 0 && !Comissao.recusouHaPouco(s, p)   // carreiras: emprestado não renova
             && p.renOrc !== s.ano && Comissao.valeRenovar(s, t, p, rank, aux)).sort((a, b) => b.ovr - a.ovr);
         let feitos = 0;
         for (const p of cands) {
@@ -632,7 +633,7 @@ const Comissao = {
         if (t.saldo < 0) add('urgente', '💸', `Caixa negativo: ${U.dinheiro(t.saldo)}`, 'A diretoria perde confiança toda semana assim.', { txt: 'Finanças', aba: 'financas' });
         else if (res < 0 && t.saldo < -res * 8) add('aviso', '💸', `O clube perde ${U.dinheiro(-res)} por semana`, `O caixa dura umas ${Math.max(1, Math.floor(t.saldo / -res))} semanas.`, { txt: 'Finanças', aba: 'financas' });
         // contratos
-        const vencendo = el.filter(p => p.contr <= 1 && s.car.venda.indexOf(p.id) < 0).sort((a, b) => b.ovr - a.ovr);
+        const vencendo = el.filter(p => p.contr <= 1 && !p.empr && s.car.venda.indexOf(p.id) < 0).sort((a, b) => b.ovr - a.ovr);   // carreiras: sem emprestados
         if (vencendo.length) {
             const cuidando = aux && cm.deleg.renov;
             const tarde = s.semana >= 30;
@@ -676,6 +677,8 @@ const Comissao = {
         if (s.car.capitao == null || !s.jog[s.car.capitao] || s.jog[s.car.capitao].tid !== t.id) add('info', '©️', 'Time sem capitão', 'Com o capitão em campo o time joga melhor.', { txt: 'Tática', aba: 'tatica' });
         if (!aux) add('info', '🧑‍💼', 'Sem auxiliar técnico', 'Contrate um e delegue treino, vestiário, mensagens, renovações e base.', { txt: 'Comissão', aba: 'comissao' });
         Clube.pendencias(s, t, add);   // clima (js/clube.js): pré-temporada, janela, torcida, brigas e objetivos
+        Desafios.pendencias(s, t, add);       // carreiras (js/desafios.js): andamento do desafio de carreira
+        Negociacoes.pendencias(s, t, add);    // carreiras (js/negociacoes.js): emprestados sem jogar e fim dos empréstimos
         const ordem = { urgente: 0, aviso: 1, info: 2 };
         return itens.sort((a, b) => ordem[a.nivel] - ordem[b.nivel]);
     },
@@ -699,7 +702,7 @@ const Comissao = {
     // -----------------------------------------------------------------
     elegiveisLote(s, t) {
         const mais = !!Jogo.ui.loteMais;
-        return Mundo.elenco(s, t).filter(p => p.contr <= (mais ? 2 : 1)).sort((a, b) => a.contr - b.contr || b.ovr - a.ovr);
+        return Mundo.elenco(s, t).filter(p => p.contr <= (mais ? 2 : 1) && !p.empr).sort((a, b) => a.contr - b.contr || b.ovr - a.ovr);   // carreiras: emprestado não renova
     },
 
     abrirLote(s, t) {
@@ -715,7 +718,7 @@ const Comissao = {
     },
 
     painelElenco(s, t) {
-        const vencendo = Mundo.elenco(s, t).filter(p => p.contr <= 1).length;
+        const vencendo = Mundo.elenco(s, t).filter(p => p.contr <= 1 && !p.empr).length;   // carreiras: sem emprestados
         if (!Jogo.ui.lote) {
             return `<div class="cm-barra-elenco">
                 <button class="btn btn-pequeno ${vencendo ? 'btn-primario' : ''}" data-acao="cmLote">✍️ Renovação em lote${vencendo ? ` (${vencendo} vencendo)` : ''}</button>

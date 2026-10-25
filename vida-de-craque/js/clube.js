@@ -889,7 +889,7 @@ const Clube = {
         const min = t.rep - 3, max = t.rep + 7;
         for (const id in s.jog) {
             const p = s.jog[id];
-            if (p.tid < 0 || p.tid === t.id || p.user || p.les > 0 || p.idade > 31 || p.ovr < min || p.ovr > max) continue;
+            if (p.tid < 0 || p.tid === t.id || p.user || p.les > 0 || p.empr || p.idade > 31 || p.ovr < min || p.ovr > max) continue;   // carreiras: sem emprestados
             const dono = s.times[p.tid];
             if (!dono || dono.selecao || !dono.liga || dono.elenco.length <= 20) continue;
             cands.push(p);
@@ -902,7 +902,7 @@ const Clube = {
     },
 
     dlAssedio(s, t) {
-        const top = Mundo.elenco(s, t).filter(p => p.les <= 0).sort((a, b) => b.ovr - a.ovr).slice(0, 6);
+        const top = Mundo.elenco(s, t).filter(p => p.les <= 0 && !p.empr).sort((a, b) => b.ovr - a.ovr).slice(0, 6);   // carreiras: sem emprestados
         if (t.elenco.length <= 18 || !top.length) return null;
         const p = U.escolha(top);
         const valor = Mundo.valor(p);
@@ -963,6 +963,8 @@ const Clube = {
             if ((o.tipo === 'pechincha' && (!dono || dono.id !== o.de)) || (o.tipo === 'livre' && p.tid !== -1)) { o.res = 'sumiu'; o.msg = 'Outro clube chegou antes!'; return; }
             if (t.elenco.length >= 34) { o.msg = 'Elenco cheio: não cabe mais ninguém.'; return; }
             if (o.preco > t.saldo) { o.msg = 'Sem caixa para pagar.'; return; }
+            const regra = Desafios.bloqueioCompra(s, p, o.preco);   // carreiras: regras do desafio de carreira
+            if (regra) { o.msg = '🎯 ' + regra; return; }
             Mundo.transferir(s, p, t, o.preco);
             p.sal = o.sal;
             p.contr = (o.tipo === 'livre' ? 2 : 3) + 1;

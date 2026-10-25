@@ -123,12 +123,31 @@ de jogador quanto na de técnico:
 
 ## 📋 Carreira de Técnico
 
-- Escolha **qualquer clube** das 22 ligas.
+- Escolha **qualquer clube** das 22 ligas, encare um **🎯 desafio** ou **🛠️ crie o seu clube** (botões no "Novo técnico").
+- **🎯 Desafios de carreira**: 8 cenários com começo fixo, meta e prazo — **Da Série D à glória** (Série A em até 5 temporadas),
+  **Salve o gigante** (um grande clube afundado: você chega na semana 17, com moral no chão e titulares machucados, e não pode
+  cair), **Orçamento zero** (3 temporadas sem taxas de transferência, cumprindo a meta da diretoria), **Só a base** (só jogadores
+  até 21 anos; top 4 em até 4 temporadas), **Reconstrução** (vender 4 veteranos no 1º ano e ser campeão em até 3), **Rei do
+  continente** (ganhar a Champions ou a Libertadores com um azarão), **Volta imediata** (subir de primeira) e **Pequeno entre
+  gigantes** (não cair por 2 temporadas). Escolha entre 3 ou 4 clubes (🎲 sorteia outros). A meta, o progresso e a regra aparecem
+  na tela do clube ao lado dos objetivos da diretoria, nas Pendências e no Mercado; no fim sai a cutscene de **desafio cumprido**
+  (reputação, bônus e conquista própria) ou de fracasso (a carreira continua). Sair do clube ou ser demitido encerra o desafio.
+- **🛠️ Criar o seu clube**: nome, sigla, duas cores (com prévia do escudo e do cabeçalho), país, estádio e perfil (📣 clube do
+  povo, 💰 investidor rico ou 🌱 formador de talentos). Ele entra na última divisão do país no lugar do clube mais fraco (a liga
+  continua do mesmo tamanho), com elenco de nomes locais e força modesta, e opcionalmente com o desafio **Do zero ao topo**
+  (chegar à 1ª divisão). Sobe, desce e é salvo como qualquer clube.
 - **Elenco**: veja overall, potencial, condição, contrato e valor de cada jogador. Renove, venda ou dispense.
 - **Tática**: 7 formações, 5 estilos de jogo e escalação manual no campinho (clique na posição e depois no jogador).
 - **Escalação automática por critério** (na aba Tática ou em "Alterar tática" antes do jogo): ⭐ **Melhores** (overall),
   🔥 **Mais motivados** ou 🔄 **Rodízio** (quem está há 2 jogos ou mais sem entrar ganha a vaga). Vale para todos os jogos seguintes.
 - **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. A busca por nome procura em todos os jogadores, com ou sem clube, sem ligar para acento ("nene" acha o Nenê). Outros clubes também fazem propostas pelos seus jogadores.
+- **🔁 Empréstimos, 🔄 trocas e 📈 percentual de revenda** (na Proposta do Mercado e nos botões do jogador): **peça emprestado**
+  até o fim da temporada pagando 50%, 75% ou 100% do salário (quanto mais, mais fácil o clube dono topar; titular absoluto não
+  sai), ou **empreste** os seus com **minutos garantidos** (o outro clube paga parte do salário; garoto que joga bastante volta mais
+  forte). Emprestado parado 6 jogos volta antes. **Troca**: ofereça um jogador seu e, se quiser, dinheiro, vendo na hora quanto o
+  outro clube acha que ele vale. **Revenda**: numa proposta recebida, aceite um pouco menos e fique com 15–25% da próxima venda —
+  quando a IA vender o jogador, o dinheiro cai no caixa com notícia. Tudo aparece no Elenco, em Finanças e nas Pendências, e os
+  empréstimos voltam no fim da temporada.
 - **Finanças**: caixa, receita, folha salarial, premiação.
 - **Diretoria**: a confiança sobe e desce com os resultados. Se zerar, você é demitido — e vai ter que esperar propostas de outros clubes.
 - **Jogo ao vivo**: narração minuto a minuto, substituições, mudança de postura e conversa no intervalo. Também dá para simular direto.
@@ -312,7 +331,8 @@ Mais de 50 conquistas para desbloquear: primeiro gol, hat-trick, 100 gols, Bola 
 tríplice coroa, invencível, piloto automático, hora H, rei do clássico, acesso, cria da casa, rede de olheiros, glória pela
 seleção, golaço de bicicleta, virada tática, técnico expulso, comissão completa, braço direito, lição de casa, canetada,
 rei das coletivas, falou e fez, ídolo da arquibancada, no apagar das luzes, dupla inseparável, turnê mundial, diretoria na mão,
-freguês do rival, missão cumprida, bom de microfone,
+freguês do rival, missão cumprida, bom de microfone, da lama ao topo, salvador da pátria, fundador, troca de figurinhas,
+dinheiro que volta,
 superempresário, coringa, volta por cima, aposentadoria dourada, Hall da Fama, virou estátua, jogo de despedida, rei da polêmica,
 Prêmio Puskás, Chuteira de Ouro, seleção do mundo, milionário, casamento, dono de uma ilha,
 viver até os 100 anos... Ficam na aba **Conquistas**.

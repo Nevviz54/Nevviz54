@@ -403,7 +403,7 @@ const Jogo = {
                 <label class="campo">Reputação inicial<select id="nv-rep" class="sel">
                     <option value="20">Desconhecido (difícil)</option><option value="45" selected>Promissor</option><option value="70">Renomado</option><option value="90">Lenda (fácil)</option></select></label>
             </div>
-            <div class="linha-botoes"><button class="btn btn-primario btn-grande" data-acao="novoTecnicoClube">Escolher clube ▶</button></div>` : `
+            <div class="linha-botoes"><button class="btn btn-primario btn-grande" data-acao="novoTecnicoClube">Escolher clube ▶</button>${Desafios.botoesNovo() /* carreiras: 🎯 desafios e 🛠️ criar o seu clube */}</div>` : `
             <div class="form">
                 <label class="campo">Nome de jogador<input id="nv-nome" class="inp" maxlength="30" placeholder="Ex.: Davi Felippe"></label>
                 <label class="campo">Nacionalidade<select id="nv-pais" class="sel">${paises}</select></label>
@@ -475,6 +475,7 @@ const Jogo = {
             <li>No jogo ao vivo você pode substituir, mudar a postura, dar <b>instruções</b> (marcar o craque deles, jogar pelas pontas, segurar o resultado, pressão total) e falar com o time no intervalo. Lance polêmico? Dá para reclamar com o árbitro... por sua conta e risco.</li>
             <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba Tática. Invista em <b>estádio, CT e base</b> na aba Estrutura.</li>
             <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li>
+            <li>Quer uma carreira diferente? Comece por <b>🎯 Desafios</b> (meta e prazo: da Série D à Série A, salvar um gigante, orçamento zero...) ou <b>🛠️ Criar o seu clube</b>. No Mercado, a <b>Proposta</b> também serve para <b>pedir emprestado</b> ou <b>propor uma troca</b>; ao vender, dá para ficar com um <b>% da próxima venda</b>.</li>
             <li>Na aba <b>🎙️ Bastidores</b>: o humor da torcida (e o preço do ingresso), os objetivos extras da diretoria, os técnicos rivais e as coletivas antes dos jogos grandes. No Vestiário, as duplas entrosadas e as brigas.</li></ul>
             <h4>⚽ Carreira de jogador</h4>
             <ul><li>Escolha o <b>treino</b> da semana: mais intenso = evolui mais rápido, mas cansa e pode lesionar.</li>

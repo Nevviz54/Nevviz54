@@ -484,6 +484,7 @@ const Mundo = {
     // -----------------------------------------------------------------
     transferir(s, p, destino, preco) {
         const origem = p.tid >= 0 ? s.times[p.tid] : null;
+        Negociacoes.aoTransferir(s, p, origem, destino, preco);   // carreiras: 📈 percentual de revenda
         if (origem) {
             origem.elenco = origem.elenco.filter(id => id !== p.id);
             origem.saldo += preco;
@@ -528,7 +529,7 @@ const Mundo = {
             let melhor = null;
             for (let tent = 0; tent < 400; tent++) {
                 const p = todos[Math.floor(Math.random() * todos.length)];
-                if (!p || p.pos !== pos || p.user || p.les > 0) continue;
+                if (!p || p.pos !== pos || p.user || p.les > 0 || p.empr) continue;   // carreiras: emprestado fica até o fim
                 if (p.tid === comprador.id) continue;
                 if (p.ovr < piorV + 3 || p.idade > 33) continue;
                 const dono = p.tid >= 0 ? s.times[p.tid] : null;
