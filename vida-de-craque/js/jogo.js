@@ -129,6 +129,8 @@ const Jogo = {
             <label class="campo check"><input type="checkbox" data-mudar="opAutosave" ${o.autosave ? 'checked' : ''}> 💾 Salvamento automático toda semana</label>
             <label class="campo check"><input type="checkbox" data-mudar="opSimularJogos" ${o.simularJogos ? 'checked' : ''}> ⏩ Simular os jogos do meu time direto ao avançar a semana (mais rápido)</label>
             ${Ritmo.htmlOpcoes() /* ritmo: ⏭️, menos eventos e respostas lembradas */}
+            <label class="campo check"><input type="checkbox" data-mudar="opDicasAbas" ${o.dicasAbas !== false ? 'checked' : ''}> 💡 Explicar cada aba na primeira vez que ela é aberta</label>
+            <div class="campo"><button class="btn btn-pequeno" data-acao="opDicasRever">💡 Mostrar as explicações das abas de novo</button></div>
         </div>`;
     },
 
@@ -358,6 +360,7 @@ const Jogo = {
             if (!car.comemoracao) car.comemoracao = 'Correr para a torcida';
             if (car.ovrInicioTemp == null && j) car.ovrInicioTemp = j.ovr;
         }
+        Tatica.registrar(s);   // formação personalizada do técnico (js/tatica.js)
         s.versao = 2;
         return s;
     },
@@ -469,11 +472,12 @@ const Jogo = {
             <p>Cada temporada tem ${TOTAL_SEMANAS} semanas. Clique em <b>Avançar semana</b> para o tempo passar. Quando seu time joga, a partida abre ao vivo. Com pressa? <b>⏭️ Até algo importante</b> simula semana a semana e para sozinho quando aparece uma decisão, um clássico ou final (para você jogar ao vivo), a janela de transferências ou o fim da temporada — e mostra o resumo do que aconteceu. Além da liga, tem a <b>copa nacional</b> de cada país (Copa do Brasil, FA Cup, Copa del Rey...), as <b>supercopas</b> no começo da temporada, as copas continentais (Liga dos Campeões, Libertadores, Concachampions, Liga Europa e Sul-Americana), a Supercopa da UEFA, a Recopa e, no fim do ano, o <b>Mundial de Clubes</b>. Jogos contra o rival são <b>clássicos 🔥</b>: valem mais moral, fama e confiança.</p>
             <p><b>💬 Vestiário (técnico)</b>: cada jogador tem uma motivação (🔥 muito motivado, 😀 motivado, 😐 normal, 😕 desmotivado, 😠 muito desmotivado). Ela muda com os resultados, com o tempo de jogo e com as suas conversas, e quanto mais motivado, melhor ele joga. Converse com cada um (uma vez por semana), pergunte por que está desmotivado e cumpra as promessas de tempo de jogo: promessa quebrada pesa muito.</p>
             <h4>📋 Carreira de técnico</h4>
-            <ul><li>Escale o time na aba <b>Tática</b> (clique numa posição do campinho e depois no jogador).</li>
+            <ul><li>As abas ficam em grupos (🏟️ Clube, 👥 Time, 🌍 Futebol, 🙋 Você). Na primeira vez que você abre uma aba aparece uma explicação; o ❓ mostra de novo.</li>
+            <li>Escale o time na aba <b>Tática</b>: arraste um jogador para cima de outro para trocar de posição, arraste da lista para o campo para pôr um reserva, ou use <b>✏️ Mover posições</b> para criar a sua formação.</li>
             <li>Compre e venda na aba <b>Mercado</b> durante as janelas (semanas 1–6 e 22–26). Jogadores sem clube podem ser contratados a qualquer momento.</li>
             <li>Fique de olho na <b>confiança da diretoria</b>: se ela zerar, você é demitido.</li>
             <li>No jogo ao vivo você pode substituir, mudar a postura, dar <b>instruções</b> (marcar o craque deles, jogar pelas pontas, segurar o resultado, pressão total) e falar com o time no intervalo. Lance polêmico? Dá para reclamar com o árbitro... por sua conta e risco.</li>
-            <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba Tática. Invista em <b>estádio, CT e base</b> na aba Estrutura.</li>
+            <li>Escolha o <b>treino da semana</b> e o <b>capitão</b> na aba 👥 Time → 📋 Tática. Invista em <b>estádio, CT e base</b> em 🏟️ Clube → 🏗️ Estrutura.</li>
             <li>Todo fim de temporada tem a <b>peneira da base</b>: você escolhe uma joia para subir ao profissional.</li>
             <li>Quer uma carreira diferente? Comece por <b>🎯 Desafios</b> (meta e prazo: da Série D à Série A, salvar um gigante, orçamento zero...) ou <b>🛠️ Criar o seu clube</b>. No Mercado, a <b>Proposta</b> também serve para <b>pedir emprestado</b> ou <b>propor uma troca</b>; ao vender, dá para ficar com um <b>% da próxima venda</b>.</li>
             <li>Na aba <b>🎙️ Bastidores</b>: o humor da torcida (e o preço do ingresso), os objetivos extras da diretoria, os técnicos rivais e as coletivas antes dos jogos grandes. No Vestiário, as duplas entrosadas e as brigas.</li></ul>
@@ -481,11 +485,11 @@ const Jogo = {
             <ul><li>Escolha o <b>treino</b> da semana: mais intenso = evolui mais rápido, mas cansa e pode lesionar.</li>
             <li>Nas partidas, aparecem <b>lances</b> em que você decide: chutar, driblar, tocar, dar o carrinho... No modo <b>🎬 Destaques</b> o jogo corre e só para nos seus lances e nos lances importantes. Chuva, neblina, calor e marcação individual mudam as chances.</li>
             <li>Propostas de outros clubes chegam nas janelas. Você também pode pedir para ser negociado.</li>
-            <li>Ganhe <b>pontos de habilidade</b> (subindo de nível, sendo o melhor em campo, fazendo hat-trick) e desbloqueie <b>habilidades especiais</b> na aba Treino.</li>
-            <li>Escolha o número da camisa e a sua <b>comemoração de gol</b> na aba Carreira.</li>
+            <li>Ganhe <b>pontos de habilidade</b> (subindo de nível, sendo o melhor em campo, fazendo hat-trick) e desbloqueie <b>habilidades especiais</b> na aba 🏋️ Treino.</li>
+            <li>Escolha o número da camisa e a sua <b>comemoração de gol</b> na aba 📄 Contrato e carreira.</li>
             <li>Quando se aposentar, pode virar técnico com a mesma pessoa!</li></ul>
             <h4>❤️ Vida</h4>
-            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. Cansou de um evento que se repete? Marque <b>🔁 Lembrar minha escolha</b> e ele passa a se resolver sozinho (a lista fica em Vida → 🔁 Automático). E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
+            <p>Felicidade, saúde, fama e dinheiro. Faça até ${Vida.MAX_ACOES} atividades por semana, cuide da família, namore, case, tenha filhos, compre carros e mansões, invista na bolsa ou abra seu próprio negócio. Eventos aleatórios vão aparecer — suas escolhas têm consequências. Cansou de um evento que se repete? Marque <b>🔁 Lembrar minha escolha</b> e ele passa a se resolver sozinho (a lista fica em ❤️ Vida pessoal → 🔁 Automático). E tem mais de 40 <b>conquistas</b> para desbloquear!</p>
             <h4>⌨️ Atalhos</h4>
             <p><b>ESC</b>: abre/fecha o menu de pausa (salvar, carregar, opções, voltar ao menu).</p>
             <p><b>Saves</b>: o jogo salva sozinho toda semana. Pelo link online do Claude os saves vão para a nuvem da sua conta (celular e PC). Para guardar uma cópia, use <b>📤 Exportar</b> (arquivo ou código) e depois <b>📥 Importar</b>.</p>
@@ -522,7 +526,7 @@ const Jogo = {
                     <button class="btn-icone" data-acao="pausaAbrir" title="Menu (ESC)">⚙️</button>
                 </div>
             </header>
-            <nav class="abas">${abas.map(a => `<button class="aba ${a.id === this.aba ? 'ativa' : ''}" data-acao="aba" data-aba="${a.id}">${a.icone}<span>${a.nome}</span></button>`).join('')}</nav>
+            ${Ajuda.nav(s, abas, this.aba) /* abas agrupadas por assunto + ❓ ajuda (js/ajuda.js) */}
             <main class="conteudo ${trocouAba ? 'entrar' : ''}">${aba.render(s)}</main>
             <footer class="rodape">
                 <div class="rodape-info">${modo.rodape(s)}</div>
@@ -536,6 +540,7 @@ const Jogo = {
         const c = document.querySelector('.conteudo');
         if (c && this.manterRolagem) c.scrollTop = rolagem;
         this.manterRolagem = false;
+        Ajuda.talvez();   // primeira visita da aba: explica como ela funciona
         if (dinAntes != null && dinAntes !== this.dinheiroAntes) {
             const chip = document.querySelector('.chip.dinheiro');
             const dif = this.dinheiroAntes - dinAntes;

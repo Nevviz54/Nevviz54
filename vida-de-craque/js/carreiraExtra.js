@@ -242,7 +242,7 @@ const CarreiraExtra = {
             // ⏭️ / ⏩ / simular jogos: nada de janela, a pergunta fica na aba Carreira
             // (vale até o fim da temporada; quem não responde fica como está)
             x.posPed = { para: sug.para, txt: sug.txt };
-            const txt = `🔀 O técnico quer te ver jogando como ${POS_NOME[sug.para].toLowerCase()}. Responda na aba ⚽ Carreira.`;
+            const txt = `🔀 O técnico quer te ver jogando como ${POS_NOME[sug.para].toLowerCase()}. Responda na aba 📄 Contrato e carreira.`;
             Vida.log(s, txt, '');
             CarreiraExtra.avisar(txt);
             return;

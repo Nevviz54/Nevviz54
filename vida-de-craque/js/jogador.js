@@ -35,16 +35,17 @@ const Jogador = {
     meuTime: s => { const p = s.jog[s.car.pid]; return p ? p.tid : -1; },
 
     abas() {
+        // grupo: a primeira linha da navegação (js/ajuda.js) · desc: o que tem na aba
         return [
-            { id: 'inicio', nome: 'Vida', icone: '🏠', render: Jogador.inicio },
-            { id: 'carreira', nome: 'Carreira', icone: '⚽', render: Jogador.carreira },
-            { id: 'treino', nome: 'Treino', icone: '🏋️', render: Jogador.treino },
-            { id: 'vida', nome: 'Atividades', icone: '🎯', render: Comum.vida },
-            { id: 'clube', nome: 'Meu clube', icone: '🏟️', render: Jogador.clube },
-            { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
-            { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
-            { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
-            { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
+            { id: 'inicio', grupo: 'carreira', nome: 'Resumo', icone: '🏠', desc: 'Seu jogador, números e a sua história', render: Jogador.inicio },
+            { id: 'treino', grupo: 'carreira', nome: 'Treino', icone: '🏋️', desc: 'Treino da semana, evolução e habilidades', render: Jogador.treino },
+            { id: 'carreira', grupo: 'carreira', nome: 'Contrato e carreira', icone: '📄', desc: 'Contrato, propostas, metas, seleção e histórico', render: Jogador.carreira },
+            { id: 'clube', grupo: 'carreira', nome: 'Meu clube', icone: '🏟️', desc: 'Companheiros, tabela e jogos do seu time', render: Jogador.clube },
+            { id: 'vida', grupo: 'vida', nome: 'Vida pessoal', icone: '❤️', desc: 'Atividades, família, bens e investimentos', render: Comum.vida },
+            { id: 'conquistas', grupo: 'vida', nome: 'Conquistas', icone: '🏅', desc: 'Conquistas desbloqueadas', render: Conquistas.tela },
+            { id: 'tabelas', grupo: 'futebol', nome: 'Campeonatos', icone: '📊', desc: 'Tabelas, rodadas, artilharia e copas', render: Comum.tabelas },
+            { id: 'noticias', grupo: 'futebol', nome: 'Notícias', icone: '📰', desc: 'Notícias do futebol', render: Comum.noticias },
+            { id: 'mundo', grupo: 'futebol', nome: 'Prêmios e craques', icone: '🌟', desc: 'Melhores do mundo, Bola de Ouro e joias', render: Comum.mundo },
         ];
     },
 
@@ -113,7 +114,7 @@ const Jogador = {
         Jogo.aba = 'inicio';
         Jogo.atualizar();
         await Jogador.cenaNovoClube(s, t, 'Seu primeiro contrato profissional!');
-        await UI.aviso('Sua vida começa agora!', `Bem-vindo ao <b>${U.esc(t.nome)}</b>, ${U.esc(form.nome)}!<br><br>Escolha seu treino na aba <b>Treino</b> (lá também ficam as <b>habilidades especiais</b>), faça atividades, cuide da família e clique em <b>Avançar semana</b>. Nos jogos, você vai decidir alguns lances!`, '⚽');
+        await UI.aviso('Sua vida começa agora!', `Bem-vindo ao <b>${U.esc(t.nome)}</b>, ${U.esc(form.nome)}!<br><br>Escolha seu treino na aba <b>🏋️ Treino</b> (lá também ficam as <b>habilidades especiais</b>), faça atividades, cuide da família e clique em <b>Avançar semana</b>. Nos jogos, você vai decidir alguns lances!`, '⚽');
     },
 
     cenaNovoClube(s, t, frase) {
@@ -583,7 +584,7 @@ const Jogador = {
         if (i === 0) {
             Tecnico.iniciarAposentado(s);
             Jogo.aba = 'inicio';
-            await UI.aviso('Nova carreira', 'Você agora é técnico! Os clubes interessados aparecem na aba <b>Início</b>. Avance as semanas se nenhum aparecer.', '📋');
+            await UI.aviso('Nova carreira', 'Você agora é técnico! Os clubes interessados aparecem na aba <b>📨 Propostas</b>. Avance as semanas se nenhum aparecer.', '📋');
         } else {
             while (!s.pessoa.morto && s.pessoa.idade < 110) {
                 s.pessoa.dinheiro += U.soma(s.pessoa.patrocinios, x => x.semana) * 52;

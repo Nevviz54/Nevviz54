@@ -123,14 +123,32 @@ const FORMACOES = {
     '3-5-2': [['GOL', 50, 6], ['ZAG', 27, 22], ['ZAG', 50, 19], ['ZAG', 73, 22], ['LAT', 10, 52], ['VOL', 50, 42], ['MEI', 31, 58], ['MEI', 69, 58], ['LAT', 90, 52], ['ATA', 37, 84], ['ATA', 63, 84]],
     '3-4-3': [['GOL', 50, 6], ['ZAG', 27, 22], ['ZAG', 50, 19], ['ZAG', 73, 22], ['LAT', 12, 50], ['VOL', 38, 46], ['MEI', 62, 46], ['LAT', 88, 50], ['PON', 17, 78], ['ATA', 50, 86], ['PON', 83, 78]],
     '5-3-2': [['GOL', 50, 6], ['LAT', 9, 36], ['ZAG', 30, 22], ['ZAG', 50, 19], ['ZAG', 70, 22], ['LAT', 91, 36], ['VOL', 50, 45], ['MEI', 28, 58], ['MEI', 72, 58], ['ATA', 37, 84], ['ATA', 63, 84]],
+    '4-1-4-1': [['GOL', 50, 6], ['LAT', 14, 30], ['ZAG', 37, 22], ['ZAG', 63, 22], ['LAT', 86, 30], ['VOL', 50, 40], ['PON', 14, 64], ['MEI', 36, 58], ['MEI', 64, 58], ['PON', 86, 64], ['ATA', 50, 86]],
+    '4-5-1': [['GOL', 50, 6], ['LAT', 14, 30], ['ZAG', 37, 22], ['ZAG', 63, 22], ['LAT', 86, 30], ['PON', 12, 60], ['VOL', 34, 47], ['MEI', 50, 57], ['VOL', 66, 47], ['PON', 88, 60], ['ATA', 50, 85]],
+    '4-2-2-2': [['GOL', 50, 6], ['LAT', 14, 30], ['ZAG', 37, 22], ['ZAG', 63, 22], ['LAT', 86, 30], ['VOL', 37, 43], ['VOL', 63, 43], ['MEI', 24, 64], ['MEI', 76, 64], ['ATA', 38, 85], ['ATA', 62, 85]],
+    '4-2-4': [['GOL', 50, 6], ['LAT', 14, 30], ['ZAG', 37, 22], ['ZAG', 63, 22], ['LAT', 86, 30], ['VOL', 37, 46], ['MEI', 63, 50], ['PON', 12, 75], ['ATA', 37, 86], ['ATA', 63, 86], ['PON', 88, 75]],
+    '3-4-2-1': [['GOL', 50, 6], ['ZAG', 27, 22], ['ZAG', 50, 19], ['ZAG', 73, 22], ['LAT', 12, 50], ['VOL', 38, 45], ['VOL', 62, 45], ['LAT', 88, 50], ['MEI', 33, 68], ['MEI', 67, 68], ['ATA', 50, 86]],
+    '3-4-1-2': [['GOL', 50, 6], ['ZAG', 27, 22], ['ZAG', 50, 19], ['ZAG', 73, 22], ['LAT', 12, 50], ['VOL', 38, 45], ['VOL', 62, 45], ['LAT', 88, 50], ['MEI', 50, 65], ['ATA', 37, 85], ['ATA', 63, 85]],
+    '5-4-1': [['GOL', 50, 6], ['LAT', 9, 36], ['ZAG', 30, 22], ['ZAG', 50, 19], ['ZAG', 70, 22], ['LAT', 91, 36], ['PON', 15, 62], ['VOL', 38, 50], ['MEI', 62, 50], ['PON', 85, 62], ['ATA', 50, 84]],
+    '5-2-3': [['GOL', 50, 6], ['LAT', 9, 38], ['ZAG', 30, 22], ['ZAG', 50, 19], ['ZAG', 70, 22], ['LAT', 91, 38], ['MEI', 37, 52], ['MEI', 63, 52], ['PON', 17, 76], ['ATA', 50, 86], ['PON', 83, 76]],
+    // + 'Personalizada': a formação que o técnico monta movendo as posições (js/tatica.js)
 };
+// formações prontas (a Personalizada é registrada à parte, por save)
+const FORMACOES_PADRAO = Object.keys(FORMACOES);
 
+// vs: bônus contra o estilo do adversário (um estilo "pega" o outro, como pedra-papel-tesoura)
 const ESTILOS = {
-    retranca: { nome: 'Retranca', ata: -5, def: +5 },
-    defensivo: { nome: 'Defensivo', ata: -2, def: +2.5 },
-    equilibrado: { nome: 'Equilibrado', ata: 0, def: 0 },
-    ofensivo: { nome: 'Ofensivo', ata: +2.5, def: -2 },
-    tudo: { nome: 'Tudo ou nada', ata: +5, def: -5 },
+    retranca: { nome: 'Retranca', ata: -5, def: +5, desc: 'Todo mundo atrás da linha da bola. Quase não sofre gols, mas também quase não ataca.' },
+    defensivo: { nome: 'Defensivo', ata: -2, def: +2.5, desc: 'Time compacto e cauteloso: defende bem e ataca com menos gente.' },
+    contra: { nome: 'Contra-ataque', ata: -1.5, def: +1.5, vs: { ofensivo: { ata: 2.5 }, tudo: { ata: 3.5 }, posse: { ata: 2 }, direto: { ata: 1 }, retranca: { ata: -1 }, defensivo: { ata: -0.5 } },
+        desc: 'Espera atrás e sai em velocidade. Ótimo contra quem ataca muito ou fica com a bola; sofre contra times fechados.' },
+    equilibrado: { nome: 'Equilibrado', ata: 0, def: 0, desc: 'Nem tanto ao ataque, nem tanto à defesa.' },
+    posse: { nome: 'Toque de bola', ata: +0.5, def: -0.5, meio: 6, vs: { retranca: { ata: 2 }, defensivo: { ata: 1.2 }, contra: { def: -1.5 } },
+        desc: 'Fica com a bola e roda até achar o espaço. Fura retrancas; cuidado com o contra-ataque.' },
+    direto: { nome: 'Jogo direto', ata: +1, def: -1, meio: -5, vs: { posse: { ata: 1.5 }, equilibrado: { ata: 0.3 }, retranca: { ata: -1 } },
+        desc: 'Bola longa para os atacantes, sem enrolar. Pega times que saem tocando; rende pouco contra a retranca.' },
+    ofensivo: { nome: 'Ofensivo', ata: +2.5, def: -2, desc: 'Mais gente no ataque: cria mais chances e deixa espaços atrás.' },
+    tudo: { nome: 'Tudo ou nada', ata: +5, def: -5, desc: 'Todo mundo na frente. Para quando precisa do gol de qualquer jeito.' },
 };
 
 // Dados reais (ligas, times e jogadores) são adicionados pelos arquivos em js/dados/

@@ -477,7 +477,7 @@ const Historia = {
             else add('torcida', 'mvp', alvo(E.mvp, 1)) || add('torcida', 'jogos', alvoJogos);
         }
         for (const m of mt.lista) m.premio = Historia.textoPremio(m);
-        if (mt.lista.length) Vida.log(s, `🎯 Metas de ${s.ano} no ${t.nome}: ${mt.lista.map(m => m.txt).join(' · ')}. Acompanhe na aba ⚽ Carreira.`, '');
+        if (mt.lista.length) Vida.log(s, `🎯 Metas de ${s.ano} no ${t.nome}: ${mt.lista.map(m => m.txt).join(' · ')}. Acompanhe na aba 📄 Contrato e carreira.`, '');
     },
 
     convocavel(s) {
@@ -1074,7 +1074,7 @@ const Historia = {
         if (Historia.rapido()) {
             // avanço rápido: nada de janela, só o diário e um aviso (o balanço fica na aba Carreira)
             const m = bal.metas;
-            const txt = `📊 Balanço de ${bal.ano}: ${m ? `${m.lista.filter(x => x.st === 'ok').length}/${m.lista.length} metas cumpridas` : 'temporada encerrada'}${bal.rival ? ` · rival: ${bal.rival.res === 'v' ? 'você levou a melhor' : bal.rival.res === 'd' ? 'ele levou a melhor' : 'empate'}` : ''}. Veja tudo na aba ⚽ Carreira.`;
+            const txt = `📊 Balanço de ${bal.ano}: ${m ? `${m.lista.filter(x => x.st === 'ok').length}/${m.lista.length} metas cumpridas` : 'temporada encerrada'}${bal.rival ? ` · rival: ${bal.rival.res === 'v' ? 'você levou a melhor' : bal.rival.res === 'd' ? 'ele levou a melhor' : 'empate'}` : ''}. Veja tudo na aba 📄 Contrato e carreira.`;
             Vida.log(s, txt, '');
             UI.toast(txt);
         } else await Historia.mostrarBalanco(s, bal);

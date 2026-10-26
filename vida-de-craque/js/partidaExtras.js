@@ -1051,16 +1051,21 @@ const PartidaExtras = {
     },
 
     // vestiário no intervalo: conversa + instruções para o 2º tempo
+    // + o auxiliar sugere trocas e dá dicas, e a janela pode ser minimizada para ver o jogo (js/telaPartida.js)
     perguntaIntervalo(m) {
         const l = m.controle;
         return UI.modal({
             titulo: '<span class="modal-icone">🗣️</span>Intervalo — vestiário',
-            html: `<p class="texto-evento">Placar: <b>${U.esc(Partida.placarTxt(m))}</b>.<br>O que você fala para o time?</p>
+            html: `<button class="btn btn-pequeno pl-minimizar" data-acao="plMinimizar" title="Esconde esta janela: veja as notas e o placar e mexa no time antes do 2º tempo">🔽 Minimizar e ver o time</button>
+                <p class="texto-evento">Placar: <b>${U.esc(Partida.placarTxt(m))}</b>.</p>
+                ${TelaPartida.htmlAux(m)}
                 <div class="px-intervalo"><small class="cinza">📣 Instruções para o 2º tempo (opcional):</small>
-                <div class="px-instr" id="px-instr-intervalo">${PartidaExtras.chipsInstr(m, l, true)}</div></div>`,
+                <div class="px-instr" id="px-instr-intervalo">${PartidaExtras.chipsInstr(m, l, true)}</div></div>
+                <p class="texto-evento pl-fala">O que você fala para o time antes de voltar?</p>`,
             botoes: ['👏 Elogiar o time', '😡 Dar uma bronca', '🧘 Pedir calma e foco'].map((txt, k) => ({ txt, valor: k, classe: 'btn-opcao' })),
             fechavel: false,
-            classe: 'modal-evento',
+            largo: true,
+            classe: 'modal-evento modal-intervalo',
         });
     },
 };

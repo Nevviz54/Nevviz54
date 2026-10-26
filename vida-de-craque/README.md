@@ -33,6 +33,16 @@ navegador mais novo: iOS 16.4+ ou Chrome 80+.) O que pode dar errado é **onde**
 Se o jogo não abrir em alguns segundos, a própria tela de carregamento mostra essas instruções
 (e, se for erro do navegador, o detalhe técnico e um botão **Tentar de novo**).
 
+## 🧭 Navegação
+
+- As abas ficam **agrupadas por assunto**: primeiro o grupo, embaixo as abas dele. Técnico: **🏟️ Clube** (Resumo,
+  Calendário, Bastidores, Finanças, Estrutura), **👥 Time** (Elenco, Tática, Vestiário, Comissão técnica, Base, Mercado),
+  **🌍 Futebol** (Campeonatos, Seleção, Notícias, Prêmios e craques) e **🙋 Você** (Minha carreira, Vida pessoal,
+  Conquistas). Jogador: **⚽ Carreira** (Resumo, Treino, Contrato e carreira, Meu clube), **❤️ Vida** (Vida pessoal,
+  Conquistas) e **🌍 Futebol**. Cada grupo lembra a última aba aberta, e no computador aparece ao lado uma frase dizendo o que tem na aba.
+- **💡 Explicação de cada aba**: na primeira vez que você abre uma aba aparece uma janelinha explicando como ela funciona
+  (só na primeira vez). O botão **❓** ao lado das abas mostra de novo; em Opções dá para desligar ou rever todas.
+
 ## 🌍 O mundo
 
 **22 ligas, 462 clubes e quase 5.000 jogadores reais** (elencos de outubro de 2026):
@@ -103,6 +113,16 @@ de jogador quanto na de técnico:
   Golaço seu ou gol decisivo no fim de final/clássico tem **comemoração especial** com confete.
 - Os técnicos da IA também mexem no time: pressão total quando estão perdendo, se fecham para segurar a vitória e às
   vezes colocam um marcador individual no seu craque (ou em você!).
+- **📝 Nota ao vivo**: a nota de cada jogador aparece ao lado do nome durante o jogo (a mesma conta da nota final:
+  gols, assistências, cartões, defesas do goleiro, chances criadas, placar). 🥵 marca quem está cansado.
+- **Técnico, mexa no time durante o jogo**: toque num jogador do seu time em campo para **substituir** (o banco vem
+  ordenado por quem rende mais naquela posição) ou **trocar de posição** com outro (não gasta substituição).
+- **🗣️ Intervalo**: a janela do vestiário pode ser **minimizada** (🔽) para ver as notas, o placar e os lances e mexer no
+  time antes do 2º tempo; depois é só voltar ao vestiário para conversar com o time. O **🧑‍💼 auxiliar técnico** analisa
+  o 1º tempo e sugere trocas (quem está mal, pendurado com amarelo, cansado ou fora de posição — com quem entra no lugar
+  e um botão **✅ Fazer a troca**) e dicas de postura pelo placar e pelas finalizações. Auxiliar com mais estrelas dá
+  mais sugestões e lê melhor o jogo (com 3★ ou mais ele indica o estilo que encaixa contra o do adversário). Sem auxiliar,
+  o do clube dá uma dica simples.
 
 ## ⏭️ Ritmo: menos cliques para o tempo andar (nos dois modos)
 
@@ -137,7 +157,16 @@ de jogador quanto na de técnico:
   continua do mesmo tamanho), com elenco de nomes locais e força modesta, e opcionalmente com o desafio **Do zero ao topo**
   (chegar à 1ª divisão). Sobe, desce e é salvo como qualquer clube.
 - **Elenco**: veja overall, potencial, condição, contrato e valor de cada jogador. Renove, venda ou dispense.
-- **Tática**: 7 formações, 5 estilos de jogo e escalação manual no campinho (clique na posição e depois no jogador).
+- **Tática**: 16 formações (4-3-3, 4-4-2, 4-2-3-1, 4-1-2-1-2, 3-5-2, 3-4-3, 5-3-2, 4-1-4-1, 4-5-1, 4-2-2-2, 4-2-4,
+  3-4-2-1, 3-4-1-2, 5-4-1, 5-2-3 e a sua ✏️ Personalizada) e 8 estilos de jogo. **Mexa livremente no campinho**:
+  arraste um jogador para cima de outro e os dois **trocam de posição**; arraste um jogador da lista para o campo e ele
+  **entra no lugar** de quem estava lá (no celular, toque numa posição e depois em outra ou no jogador da lista).
+  **✏️ Mover posições**: arraste as bolinhas para qualquer lugar do campo — a posição muda conforme o lugar (zagueiro,
+  lateral, volante, meia, ponta, atacante) e vira a formação **Personalizada**, que fica salva.
+- **Estilos que se pegam**: além de Retranca, Defensivo, Equilibrado, Ofensivo e Tudo ou nada, tem **Contra-ataque**
+  (ótimo contra quem ataca ou fica com a bola, sofre contra times fechados), **Toque de bola** (fura retrancas, cuidado
+  com o contra-ataque) e **Jogo direto** (pega quem sai tocando). O técnico adversário escolhe o estilo pelo jogo
+  (azarão se fecha ou contra-ataca, favorito vai pra cima) e o relatório do analista diz qual estilo encaixa.
 - **Escalação automática por critério** (na aba Tática ou em "Alterar tática" antes do jogo): ⭐ **Melhores** (overall),
   🔥 **Mais motivados** ou 🔄 **Rodízio** (quem está há 2 jogos ou mais sem entrar ganha a vaga). Vale para todos os jogos seguintes.
 - **Mercado**: busque jogadores no mundo todo (filtros por posição, liga, overall, idade, preço) e faça propostas nas janelas de transferência. A busca por nome procura em todos os jogadores, com ou sem clube, sem ligar para acento ("nene" acha o Nenê). Outros clubes também fazem propostas pelos seus jogadores.
@@ -357,7 +386,7 @@ Aperte **ESC** (ou o botão ⚙️) a qualquer momento para:
 - **Carregar** um jogo salvo
 - **Exportar** o save: baixar arquivo `.txt`, compartilhar (celular) ou **copiar o código**
 - **Importar**: escolher o arquivo ou **colar o código** (saves `.vdc` antigos também abrem)
-- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), o "⏭️ Até algo importante" (parar antes de clássicos, finais e duelos com o rival e o máximo de semanas por vez), menos eventos aleatórios, sons e volume, cutscenes e animações (dá para desligar)
+- **Opções**: resolução (ajustar à janela, 1024×768, 1280×720, 1366×768, 1600×900, 1920×1080, 2560×1440), tela cheia, tamanho da interface, velocidade das partidas, modo destaques, tema claro/escuro, salvamento automático, simular os jogos do seu time direto ao avançar a semana (mais rápido), o "⏭️ Até algo importante" (parar antes de clássicos, finais e duelos com o rival e o máximo de semanas por vez), menos eventos aleatórios, sons e volume, cutscenes e animações (dá para desligar), explicação das abas (ligar/desligar e rever todas)
 - **Voltar ao menu principal**
 
 ## 📝 Observações sobre os dados

@@ -412,7 +412,7 @@ const Ritmo = {
     lembrar(s, chave, rotulo, icone, opcoes, i) {
         const txt = Ritmo.limpo(opcoes[i]);
         Ritmo.estado(s).lembrar[chave] = { i, txt, titulo: Ritmo.limpo(rotulo), icone: icone || '🔁', n: 0 };
-        UI.toast(`🔁 Escolha lembrada: <b>${U.esc(txt)}</b>. Para mudar, vá em Vida → 🔁 Automático.`);
+        UI.toast(`🔁 Escolha lembrada: <b>${U.esc(txt)}</b>. Para mudar, vá em ❤️ Vida pessoal → 🔁 Automático.`);
     },
 
     htmlLembrar() {
@@ -520,7 +520,7 @@ const Ritmo = {
     htmlOpcoes() {
         const s = Jogo.s;
         const n = s ? Object.keys(Ritmo.estado(s).lembrar).length : 0;
-        return Ritmo.htmlOpcoesRitmo() + (s ? `<div class="campo check rt-op-lembradas"><span>🔁 Respostas lembradas: <b>${n}</b> <small class="cinza">(lista em Vida → 🔁 Automático)</small></span>
+        return Ritmo.htmlOpcoesRitmo() + (s ? `<div class="campo check rt-op-lembradas"><span>🔁 Respostas lembradas: <b>${n}</b> <small class="cinza">(lista em ❤️ Vida pessoal → 🔁 Automático)</small></span>
             <button class="btn btn-pequeno" data-acao="rtEsquecerTodas" ${n ? '' : 'disabled'}>Esquecer todas</button></div>` : '');
     },
 

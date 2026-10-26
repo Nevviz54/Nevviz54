@@ -1479,3 +1479,83 @@ body[data-tema="claro"] .neg-modal .amarelo, body[data-tema="claro"] .neg-estim 
 .sem-gap .neg-bt.so-texto > * + * { margin-left: 0; }
 .sem-gap .dsf-tags > *, .sem-gap .ccl-paletas > *, .sem-gap .neg-item-info > * { margin: 0 .3rem .3rem 0; }
 .sem-gap .neg-lista > * + *, .sem-gap .dsf-txt > * + * { margin-top: .3rem; }
+
+/* ---------- navegação: grupos de abas + ❓ ajuda de cada aba (js/ajuda.js) ---------- */
+.navegacao { background: var(--fundo2); border-bottom: 1px solid var(--borda); min-width: 0; }
+.abas-grupos { display: flex; gap: .3rem; padding: .35rem .6rem 0; overflow-x: auto; }
+.aba-grupo { font: inherit; flex: 1 1 0; min-width: max-content; display: flex; align-items: center; justify-content: center; gap: .4rem; background: transparent; color: var(--cinza); border: none; border-bottom: 3px solid transparent; border-radius: 10px 10px 0 0; padding: .5rem .7rem .45rem; cursor: pointer; font-weight: 700; white-space: nowrap; transition: background .2s, color .2s; }
+.aba-grupo:hover { color: var(--texto); background: var(--cartao2); }
+.aba-grupo.ativa { color: var(--primaria); border-bottom-color: var(--primaria); background: var(--cartao); }
+.navegacao .abas { background: var(--cartao); border-bottom: none; align-items: center; padding: .35rem .6rem; }
+.navegacao .aba { padding: .38rem .75rem; flex: none; }
+.aba-desc { margin-left: auto; padding-left: .8rem; color: var(--cinza); font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.aba-ajuda { font: inherit; flex: none; width: 2rem; height: 2rem; margin-left: .5rem; border-radius: 999px; border: 1px solid var(--borda); background: var(--cartao2); color: var(--texto); cursor: pointer; position: sticky; right: 0; box-shadow: -12px 0 10px var(--cartao); }
+.aba-ajuda:hover { border-color: var(--primaria); }
+.modal-ajuda .modal-corpo { text-align: left; }
+.ajuda-intro { font-size: 1.02rem; margin: 0 0 .6rem; }
+.ajuda-itens { margin: 0 0 .8rem; padding-left: 1.2rem; }
+.ajuda-itens li { margin: .35rem 0; }
+.ajuda-check { display: flex; align-items: center; gap: .4rem; font-size: .88rem; cursor: pointer; }
+@media (max-width: 860px) {
+    .navegacao .aba span { display: inline; }
+    .navegacao .aba { padding: .36rem .55rem; font-size: .9rem; }
+    .aba-desc { display: none; }
+    .aba-ajuda { margin-left: auto; }
+    .abas-grupos { padding: .3rem .4rem 0; gap: .15rem; }
+    .aba-grupo { padding: .45rem .45rem .4rem; gap: .3rem; font-size: .92rem; }
+}
+.sem-gap .abas-grupos > * + * { margin-left: .3rem; }
+.sem-gap .aba-grupo > span { margin-left: .4rem; }
+
+/* ---------- partida: nota ao vivo, mexer no time e intervalo com o auxiliar (js/telaPartida.js) ---------- */
+.pl-nota .nota { font-size: .78rem; padding: .02rem .3rem; }
+.pl-titulo small { text-transform: none; font-weight: 600; margin-left: .3rem; opacity: .8; }
+.pl-titulo .pl-dica { color: var(--primaria); }
+.pl-jog.clicavel { cursor: pointer; border-radius: 6px; transition: background .15s; }
+.pl-jog.clicavel:hover { background: var(--cartao2); }
+.modal-fundo.minimizado { display: none; }
+.modal-intervalo .modal-corpo { position: relative; }
+.pl-minimizar { float: right; margin: -.2rem 0 .4rem .5rem; }
+.pl-volta-vest { animation: pulsa-vest 1.6s ease-in-out infinite; }
+@keyframes pulsa-vest { 50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, .25); } }
+.pl-fala { margin: .8rem 0 0; }
+.aux-intervalo { text-align: left; border: 1px solid var(--borda); background: var(--cartao2); border-radius: 12px; padding: .6rem .7rem; margin: .4rem 0 .5rem; clear: both; }
+.aux-topo { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: .4rem; margin-bottom: .4rem; }
+.aux-trocas { display: flex; flex-direction: column; gap: .4rem; }
+.aux-troca { display: grid; grid-template-columns: 1fr 1fr auto; gap: .6rem; align-items: center; background: var(--cartao); border-radius: 10px; padding: .45rem .55rem; }
+.aux-sai, .aux-entra { display: flex; flex-direction: column; min-width: 0; }
+.aux-sai small, .aux-entra small { color: var(--cinza); font-size: .78rem; }
+.aux-dica { margin-top: .4rem; font-size: .92rem; }
+.aux-dica .chip-btn { margin-left: .3rem; }
+.aux-ok { margin: .2rem 0; }
+.pj-ficha { margin-bottom: .6rem; line-height: 1.8; }
+@media (max-width: 640px) {
+    .aux-troca { grid-template-columns: 1fr; gap: .25rem; }
+    .pl-minimizar { float: none; display: block; width: 100%; margin: 0 0 .5rem; }
+}
+.sem-gap .aux-trocas > * + * { margin-top: .4rem; }
+
+/* ---------- tática livre: arrastar, trocar e mover posições (js/tatica.js) ---------- */
+.campinho .slot { touch-action: none; -webkit-user-select: none; user-select: none; }
+.lista-escalar .jog-escalar { touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.slot.arrastando { opacity: .45; }
+.campinho.editando .slot { cursor: grab; }
+.campinho.editando .slot.arrastando { opacity: 1; z-index: 5; }
+.campinho.editando .slot.arrastando .slot-camisa { outline: 3px dashed var(--ouro); outline-offset: 3px; }
+.slot.alvo .slot-camisa { outline: 3px solid var(--primaria); outline-offset: 3px; transform: scale(1.15); }
+.slot-camisa { transition: transform .12s; }
+.arraste-fantasma { position: fixed; z-index: 500; pointer-events: none; transform: translate(-50%, -130%); background: var(--primaria); color: #04120a; font-weight: 800; padding: .3rem .7rem; border-radius: 999px; box-shadow: var(--sombra); white-space: nowrap; font-size: .9rem; }
+body.arrastando-tatica, body.arrastando-tatica * { cursor: grabbing !important; }
+.campinho.editando { outline: 2px dashed var(--ouro); outline-offset: 3px; }
+.zona-campo { position: absolute; left: 0; right: 0; border-top: 1px dashed rgba(255, 255, 255, .35); pointer-events: none; }
+.zona-campo span { position: absolute; right: .3rem; top: .15rem; font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: rgba(255, 255, 255, .55); }
+.tatica-estilo { margin: -.3rem 0 .7rem; }
+.dica-tatica { line-height: 1.45; }
+/* celular: o seu time aparece primeiro na lista, mesmo jogando fora de casa */
+@media (max-width: 860px) {
+    .tela-partida.meu-lado-1 #pl-lado1 { order: -1; }
+    .tela-partida.meu-lado-1 #pl-lado0 { order: 1; }
+}
+.navegacao .abas, .abas-grupos { scrollbar-width: thin; }
+.navegacao .abas::-webkit-scrollbar, .abas-grupos::-webkit-scrollbar { height: 4px; }
+.navegacao .abas::-webkit-scrollbar-thumb, .abas-grupos::-webkit-scrollbar-thumb { background: var(--borda); border-radius: 4px; }

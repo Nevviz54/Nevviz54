@@ -20,37 +20,38 @@ const Tecnico = {
     time: s => s.car.tid >= 0 ? s.times[s.car.tid] : null,
 
     abas(s) {
+        // grupo: a primeira linha da navegação (js/ajuda.js) · desc: o que tem na aba
         if (s.car.tid < 0) {
             return [
-                { id: 'inicio', nome: 'Início', icone: '🏠', render: Tecnico.inicio },
-                { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
-                { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
-                { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
-                { id: 'selecao', nome: 'Seleção', icone: '🌎', render: Selecoes.tela },
-                { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
-                { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
-                { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
+                { id: 'inicio', grupo: 'inicio', nome: 'Propostas', icone: '📨', desc: 'Propostas de emprego', render: Tecnico.inicio },
+                { id: 'tabelas', grupo: 'futebol', nome: 'Campeonatos', icone: '📊', desc: 'Tabelas, rodadas, artilharia e copas', render: Comum.tabelas },
+                { id: 'selecao', grupo: 'futebol', nome: 'Seleção', icone: '🌎', desc: 'Seleções nacionais', render: Selecoes.tela },
+                { id: 'noticias', grupo: 'futebol', nome: 'Notícias', icone: '📰', desc: 'Notícias do futebol', render: Comum.noticias },
+                { id: 'mundo', grupo: 'futebol', nome: 'Prêmios e craques', icone: '🌟', desc: 'Melhores do mundo, Bola de Ouro e joias', render: Comum.mundo },
+                { id: 'carreira', grupo: 'voce', nome: 'Minha carreira', icone: '🏆', desc: 'Reputação, títulos e histórico', render: Tecnico.carreira },
+                { id: 'vida', grupo: 'voce', nome: 'Vida pessoal', icone: '❤️', desc: 'Atividades, família, bens e investimentos', render: Comum.vida },
+                { id: 'conquistas', grupo: 'voce', nome: 'Conquistas', icone: '🏅', desc: 'Conquistas desbloqueadas', render: Conquistas.tela },
             ];
         }
         return [
-            { id: 'inicio', nome: 'Clube', icone: '🏟️', render: Tecnico.inicio },
-            { id: 'elenco', nome: 'Elenco', icone: '👥', render: Tecnico.elenco },
-            { id: 'base', nome: 'Base', icone: '🌱', render: Base.tela },
-            { id: 'vestiario', nome: 'Vestiário', icone: '💬', render: Mot.tela },
-            { id: 'comissao', nome: 'Comissão', icone: '🧑‍💼', render: Comissao.tela },   // comissao: auxiliar, preparador, médico e analista
-            { id: 'clima', nome: 'Bastidores', icone: '🎙️', render: Clube.tela },   // clima (js/clube.js): torcida, objetivos, técnicos rivais e coletivas
-            { id: 'tatica', nome: 'Tática', icone: '📋', render: Tecnico.tatica },
-            { id: 'mercado', nome: 'Mercado', icone: '💸', render: Tecnico.mercado },
-            { id: 'calendario', nome: 'Jogos', icone: '📅', render: Tecnico.calendario },
-            { id: 'tabelas', nome: 'Tabelas', icone: '📊', render: Comum.tabelas },
-            { id: 'financas', nome: 'Finanças', icone: '💰', render: Tecnico.financas },
-            { id: 'estrutura', nome: 'Estrutura', icone: '🏗️', render: Tecnico.estrutura },
-            { id: 'vida', nome: 'Vida', icone: '❤️', render: Comum.vida },
-            { id: 'carreira', nome: 'Carreira', icone: '🏆', render: Tecnico.carreira },
-            { id: 'selecao', nome: 'Seleção', icone: '🌎', render: Selecoes.tela },
-            { id: 'conquistas', nome: 'Conquistas', icone: '🏅', render: Conquistas.tela },
-            { id: 'noticias', nome: 'Notícias', icone: '📰', render: Comum.noticias },
-            { id: 'mundo', nome: 'Mundo', icone: '🌍', render: Comum.mundo },
+            { id: 'inicio', grupo: 'clube', nome: 'Resumo', icone: '🏠', desc: 'Pendências, próximos jogos, diretoria e caixa', render: Tecnico.inicio },
+            { id: 'calendario', grupo: 'clube', nome: 'Calendário', icone: '📅', desc: 'Todos os jogos do time na temporada', render: Tecnico.calendario },
+            { id: 'clima', grupo: 'clube', nome: 'Bastidores', icone: '🎙️', desc: 'Torcida, ingressos, objetivos da diretoria e rivais', render: Clube.tela },   // clima (js/clube.js): torcida, objetivos, técnicos rivais e coletivas
+            { id: 'financas', grupo: 'clube', nome: 'Finanças', icone: '💰', desc: 'Caixa, receitas e salários', render: Tecnico.financas },
+            { id: 'estrutura', grupo: 'clube', nome: 'Estrutura', icone: '🏗️', desc: 'Obras no estádio, CT e base', render: Tecnico.estrutura },
+            { id: 'elenco', grupo: 'time', nome: 'Elenco', icone: '👥', desc: 'Jogadores, contratos, vendas e renovações', render: Tecnico.elenco },
+            { id: 'tatica', grupo: 'time', nome: 'Tática', icone: '📋', desc: 'Formação, estilo, titulares, treino e capitão', render: Tecnico.tatica },
+            { id: 'vestiario', grupo: 'time', nome: 'Vestiário', icone: '💬', desc: 'Motivação e conversas com os jogadores', render: Mot.tela },
+            { id: 'comissao', grupo: 'time', nome: 'Comissão técnica', icone: '🧑‍💼', desc: 'Auxiliar, preparador, médico e analista', render: Comissao.tela },   // comissao: auxiliar, preparador, médico e analista
+            { id: 'base', grupo: 'time', nome: 'Base', icone: '🌱', desc: 'Garotos da base e olheiros', render: Base.tela },
+            { id: 'mercado', grupo: 'time', nome: 'Mercado', icone: '💸', desc: 'Contratar jogadores', render: Tecnico.mercado },
+            { id: 'tabelas', grupo: 'futebol', nome: 'Campeonatos', icone: '📊', desc: 'Tabelas, rodadas, artilharia e copas', render: Comum.tabelas },
+            { id: 'selecao', grupo: 'futebol', nome: 'Seleção', icone: '🌎', desc: 'Seleções nacionais', render: Selecoes.tela },
+            { id: 'noticias', grupo: 'futebol', nome: 'Notícias', icone: '📰', desc: 'Notícias do futebol', render: Comum.noticias },
+            { id: 'mundo', grupo: 'futebol', nome: 'Prêmios e craques', icone: '🌟', desc: 'Melhores do mundo, Bola de Ouro e joias', render: Comum.mundo },
+            { id: 'carreira', grupo: 'voce', nome: 'Minha carreira', icone: '🏆', desc: 'Reputação, títulos, histórico e desafios', render: Tecnico.carreira },
+            { id: 'vida', grupo: 'voce', nome: 'Vida pessoal', icone: '❤️', desc: 'Atividades, família, bens e investimentos', render: Comum.vida },
+            { id: 'conquistas', grupo: 'voce', nome: 'Conquistas', icone: '🏅', desc: 'Conquistas desbloqueadas', render: Conquistas.tela },
         ];
     },
 
@@ -169,7 +170,7 @@ const Tecnico = {
 
     rodape(s) {
         const t = Tecnico.time(s);
-        if (!t) return '😶 Você está desempregado. Aguarde propostas na aba Início.';
+        if (!t) return '😶 Você está desempregado. Aguarde propostas na aba 📨 Propostas.';
         const prox = Mundo.calendarioDoTime(s, t.id).find(j => !j.res && j.sem >= s.semana);
         if (!prox) return 'Sem mais jogos nesta temporada.';
         const casa = prox.h === t.id;
@@ -277,13 +278,18 @@ const Tecnico = {
         const slots = FORMACOES[t.form];
         const esc = Escalacao.doTime(s, t);
         const sel = Jogo.ui.slotSel;
+        const editar = !!Jogo.ui.editarForm;   // ✏️ mover posições (js/tatica.js)
         const campo = slots.map(([pos, x, y], i) => {
             const p = s.jog[esc[i]];
             const ef = p ? Math.round(Escalacao.efetivo(p, pos)) : 0;
             const fora = p && p.pos !== pos;
-            return `<button class="slot ${sel === i ? 'sel' : ''} ${fora ? 'fora-pos' : ''}" style="left:${x}%;top:${100 - y}%" data-acao="tcSlot" data-i="${i}">
-                <span class="slot-pos">${pos}${p && s.car.capitao === p.id ? ' ©' : ''}</span><span class="slot-camisa" style="background:${t.c1};color:${t.c2}">${p ? ef : '?'}</span><span class="slot-nome">${p ? U.esc(p.nome.split(' ').slice(-1)[0]) : '—'}</span></button>`;
+            const nome = p ? U.esc(p.nome.split(' ').slice(-1)[0]) : '—';
+            return `<button class="slot ${sel === i ? 'sel' : ''} ${fora ? 'fora-pos' : ''}" style="left:${x}%;top:${100 - y}%" data-acao="tcSlot" data-i="${i}" data-arrastar="slot" data-nome="${nome}">
+                <span class="slot-pos">${pos}${p && s.car.capitao === p.id ? ' ©' : ''}</span><span class="slot-camisa" style="background:${t.c1};color:${t.c2}">${p ? ef : '?'}</span><span class="slot-nome">${nome}</span></button>`;
         }).join('');
+        // ✏️ faixas do campo: a posição de cada bolinha depende de onde ela fica
+        const zonas = editar ? [[32, 'defesa'], [50, 'volantes'], [72, 'meio-campo'], [100, 'ataque']].map(([y], k, arr) => `<div class="zona-campo" style="bottom:${k ? arr[k - 1][0] : 0}%;height:${y - (k ? arr[k - 1][0] : 0)}%"><span>${arr[k][1]}</span></div>`).join('') : '';
+        const est = ESTILOS[t.estilo] || ESTILOS.equilibrado;
         const usados = new Set(esc);
         const slotPos = sel != null ? slots[sel][0] : null;
         const lista = Mundo.elenco(s, t).sort(slotPos
@@ -292,15 +298,19 @@ const Tecnico = {
         return `<div class="grade-tatica">
             <div class="cartao">
                 <div class="tatica-controles">
-                    <label>Formação <select class="sel" data-mudar="tcForm">${Object.keys(FORMACOES).map(f => `<option ${f === t.form ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+                    <label>Formação <select class="sel" data-mudar="tcForm">${Object.keys(FORMACOES).map(f => `<option value="${f}" ${f === t.form ? 'selected' : ''}>${f === 'Personalizada' ? '✏️ Personalizada' : f}</option>`).join('')}</select></label>
                     <label>Estilo <select class="sel" data-mudar="tcEstilo">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${k === t.estilo ? 'selected' : ''}>${e.nome}</option>`).join('')}</select></label>
+                    <button class="chip-btn ${editar ? 'ativo' : ''}" data-acao="tcEditarForm" title="Arraste as posições para qualquer lugar do campo e crie a sua formação">✏️ ${editar ? 'Pronto' : 'Mover posições'}</button>
                 </div>
+                <p class="cinza pequeno tatica-estilo">📋 <b>${est.nome}:</b> ${est.desc || ''}</p>
                 <div class="escala-auto">
                     <span class="cinza pequeno">🤖 Escalar automático:</span>
                     ${Object.entries(CRITERIOS_ESCALA).map(([k, c]) => `<button class="chip-btn ${!t.tit && (t.criterio || 'ovr') === k ? 'ativo' : ''}" data-acao="tcAuto" data-c="${k}" title="${c.desc}">${c.icone} ${c.nome}</button>`).join('')}
                 </div>
-                <div class="campinho">${campo}<div class="campo-linha-meio"></div><div class="campo-circulo"></div><div class="campo-area cima"></div><div class="campo-area baixo"></div></div>
-                <p class="cinza pequeno">${sel != null ? `Escolha na lista quem vai jogar de <b>${POS_NOME[slotPos]}</b>.` : 'Clique numa posição do campo e depois no jogador da lista. Números em vermelho = jogador fora de posição.'}</p>
+                <div class="campinho ${editar ? 'editando' : ''}">${zonas}${campo}<div class="campo-linha-meio"></div><div class="campo-circulo"></div><div class="campo-area cima"></div><div class="campo-area baixo"></div></div>
+                <p class="cinza pequeno dica-tatica">${editar ? '✏️ Arraste as bolinhas para qualquer lugar do campo: a posição muda conforme o lugar (zagueiro, lateral, volante, meia, ponta ou atacante) e vira a formação <b>Personalizada</b>. O goleiro fica no gol. Toque em <b>Pronto</b> quando terminar.'
+            : sel != null ? `Agora toque em <b>outra posição do campo</b> para trocar os dois de lugar, ou num <b>jogador da lista</b> para ele jogar de <b>${POS_NOME[slotPos]}</b>.`
+                : '🔀 Arraste um jogador para cima de outro para trocar os dois de posição. 🔁 Arraste da lista para o campo para colocar um reserva. (Ou toque numa posição e depois em outra / no jogador da lista.) Número vermelho = fora de posição.'}</p>
                 <h3>🏋️ Treino da semana</h3>
                 <div class="grade-treino-time">${Object.entries(TREINOS_TIME).map(([k, tr]) => `<button class="atividade ${s.car.treinoTime === k ? 'ativa' : ''}" data-acao="tcTreino" data-t="${k}"><span class="at-icone">${tr.icone}</span><b>${tr.nome}</b><small>${tr.desc}</small></button>`).join('')}</div>
                 <h3>©️ Capitão</h3>
@@ -313,7 +323,7 @@ const Tecnico = {
                 <div class="rolavel lista-escalar">${lista.map(p => {
             const disp = Escalacao.disponivel(p);
             const ef = slotPos ? Math.round(Escalacao.efetivo(p, slotPos)) : p.ovr;
-            return `<button class="jog-escalar ${usados.has(p.id) ? 'em-campo' : ''}" data-acao="tcEscolherJog" data-pid="${p.id}" ${disp ? '' : 'disabled'}>
+            return `<button class="jog-escalar ${usados.has(p.id) ? 'em-campo' : ''}" data-acao="tcEscolherJog" data-pid="${p.id}" data-arrastar="jog" data-nome="${U.esc(p.nome.split(' ').slice(-1)[0])}" ${disp ? '' : 'disabled'}>
                     ${UI.pos(p.pos)} ${Mot.icone(p)}<span class="je-nome">${U.esc(p.nome)}</span> ${!disp ? (p.les > 0 ? '🚑' : '🟥') : ''} <span class="pequeno">${Math.round(p.cond)}%</span> ${UI.ovr(slotPos ? ef : p.ovr)}</button>`;
         }).join('')}</div>
             </div>
@@ -733,7 +743,7 @@ const Tecnico = {
             const ofs = Tecnico.gerarOfertas(s, U.int(1, 2)).filter(o => s.times[o.tid].rep > t.rep);
             for (const o of ofs) { o.ate = s.semana + 6; o.ano = s.ano; }
             s.car.ofertas = ofs;
-            if (ofs.length) UI.toast('📨 Você recebeu propostas de outros clubes! Veja na aba Clube.');
+            if (ofs.length) UI.toast('📨 Você recebeu propostas de outros clubes! Veja em 🏟️ Clube → 🏠 Resumo.');
         }
         s.car.conf = U.clamp(50 + (s.car.conf - 50) * 0.5, 0, 100);
         await Base.fimTemporada(s);
@@ -955,8 +965,13 @@ Object.assign(ACOES, {
         setTimeout(() => Tecnico.iniciar(Jogo.formTmp, d.nome), 30);
     },
     tcSlot: d => {
-        const i = +d.i;
-        Jogo.ui.slotSel = Jogo.ui.slotSel === i ? null : i;
+        const i = +d.i, sel = Jogo.ui.slotSel;
+        if (sel != null && sel !== i) {
+            // segundo toque em outra posição: os dois trocam de lugar (js/tatica.js)
+            const s = Jogo.s;
+            Tatica.trocar(s, Tecnico.time(s), sel, i);
+            Jogo.ui.slotSel = null;
+        } else Jogo.ui.slotSel = sel === i ? null : i;
         Jogo.manterRolagem = true;
         Jogo.atualizar();
     },
@@ -983,7 +998,7 @@ Object.assign(ACOES, {
         Jogo.atualizar();
         UI.toast(`${CRITERIOS_ESCALA[c].icone} Escalação automática: ${CRITERIOS_ESCALA[c].nome}. Vale para os próximos jogos.`);
     },
-    tcForm: (d, el) => { const t = Tecnico.time(Jogo.s); t.form = el.value; t.tit = null; Jogo.ui.slotSel = null; Jogo.atualizar(); },
+    tcForm: (d, el) => { const t = Tecnico.time(Jogo.s); if (!FORMACOES[el.value]) return; t.form = el.value; t.tit = null; Jogo.ui.slotSel = null; Jogo.atualizar(); },
     tcEstilo: (d, el) => { Tecnico.time(Jogo.s).estilo = el.value; Jogo.atualizar(); },
     tcFiltrar: () => {
         const v = id => document.getElementById(id);

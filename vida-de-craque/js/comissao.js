@@ -539,8 +539,9 @@ const Comissao = {
         const idade = U.media(emCampo, p => p.idade);
         let d;
         if (craque && gap >= 6) d = { k: 'marcar', txt: `${craque.nome} decide os jogos deles: tire o craque do jogo.`, como: '🎯 Marcar o craque deles' };
-        else if (estilo === 'ofensivo' || estilo === 'tudo') d = { k: 'estilo', estilos: ['defensivo', 'retranca'], txt: 'Eles vão para cima e deixam espaço atrás: jogue no contra-ataque.', como: 'Estilo Defensivo (ou Retranca)' };
-        else if (estilo === 'retranca' || estilo === 'defensivo') d = { k: 'pontas', txt: 'Eles se fecham no meio: abra o jogo pelas pontas.', como: '↔️ Jogar pelas pontas' };
+        else if (estilo === 'ofensivo' || estilo === 'tudo' || estilo === 'posse') d = { k: 'estilo', estilos: ['contra', 'defensivo', 'retranca'], txt: estilo === 'posse' ? 'Eles ficam com a bola e sobem os laterais: espere e saia no contra-ataque.' : 'Eles vão para cima e deixam espaço atrás: jogue no contra-ataque.', como: 'Estilo Contra-ataque (ou Defensivo)' };
+        else if (estilo === 'retranca' || estilo === 'defensivo') d = { k: 'pontas', txt: 'Eles se fecham no meio: abra o jogo pelas pontas (o Toque de bola também fura retranca).', como: '↔️ Jogar pelas pontas' };
+        else if (estilo === 'contra') d = { k: 'estilo', estilos: ['defensivo', 'direto', 'equilibrado'], txt: 'Eles esperam para sair no contra-ataque: não dê espaço atrás e evite o Toque de bola.', como: 'Estilo Defensivo, Jogo direto ou Equilibrado' };
         else if (ult.filter(x => x === 'D').length >= 3) d = { k: 'estilo', estilos: ['ofensivo', 'tudo'], txt: 'Chegam em má fase e sem confiança: pressione desde o começo.', como: 'Estilo Ofensivo' };
         else if (idade >= 29.5) d = { k: 'pressao', txt: 'Time experiente, mas que cansa: aperte com pressão total no 2º tempo.', como: '⚡ Pressão total' };
         else if (craque && gap >= 3.5) d = { k: 'marcar', txt: `${craque.nome} é a principal arma deles: marcação individual nele.`, como: '🎯 Marcar o craque deles' };
@@ -580,7 +581,7 @@ const Comissao = {
         if (!Comissao.jogoDoClube(m)) return '';
         const s = m.s, l = m.controle;
         const ana = Comissao.membro(s, 'ana');
-        if (!ana) return '<p class="cinza pequeno cm-pre-sem">📊 Sem analista de desempenho: contrate um na aba 🧑‍💼 Comissão para receber o relatório do adversário.</p>';
+        if (!ana) return '<p class="cinza pequeno cm-pre-sem">📊 Sem analista de desempenho: contrate um na aba 🧑‍💼 Comissão técnica para receber o relatório do adversário.</p>';
         const d = Comissao.dica(m, l);
         if (!d) return '';
         const o = 1 - l;
@@ -994,7 +995,7 @@ Object.assign(ACOES, {
             // primeira vez: ele já assume tudo (dá para desligar cada tarefa)
             cm.delegIni = true;
             Object.keys(DELEG_CM).forEach(k => { cm.deleg[k] = true; });
-            UI.toast(`🧑‍💼 ${U.esc(o.nome)} já assume treino, vestiário, mensagens, renovações e base. Desligue o que quiser aqui na aba Comissão.`);
+            UI.toast(`🧑‍💼 ${U.esc(o.nome)} já assume treino, vestiário, mensagens, renovações e base. Desligue o que quiser aqui na aba Comissão técnica.`);
         } else UI.toast(`${P.icone} ${U.esc(o.nome)} é o novo ${P.nome.toLowerCase()}!`);
         Som.tocar('moeda');
         Jogo.manterRolagem = true;

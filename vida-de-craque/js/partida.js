@@ -53,10 +53,31 @@ const Partida = {
             m.banco.push(banco);
             for (const pid of esc) if (pid != null) m.st[pid] = Partida.novoStat(0, lado);
         });
+        // contra o técnico usuário, o técnico do outro time escolhe o estilo pelo jogo
+        if (m.controle >= 0) Partida.estiloIA(m, 1 - m.controle);
         PartidaExtras.criar(m);   // [partida] clima/gramado, instruções, VAR e técnico suspenso (m.px)
         if (m.usuario != null && m.st[m.usuario]) Partida.planejarLances(m, 1);
         Partida.recalcular(m);
         return m;
+    },
+
+    // estilo do time da IA contra o usuário: azarão se fecha ou contra-ataca, favorito vai pra cima.
+    // Fica guardado no jogo (o mesmo se a partida for recriada ao mudar a tática antes do apito).
+    estiloIA(m, lado) {
+        const s = m.s, t = s.times[lado ? m.a : m.h];
+        if (Mundo.timeDoUsuario(s, t.id)) return;
+        const jogo = m.jogo;
+        if (!jogo.estiloIA || !ESTILOS[jogo.estiloIA]) {
+            const forca = l => U.media(m.esc[l].filter(id => id != null).map(id => s.jog[id].ovr));
+            const rel = forca(lado) - forca(1 - lado) + (lado === 0 && m.fatorCasa > 1 ? 2 : lado === 1 && m.fatorCasa > 1 ? -2 : 0);
+            const op = rel <= -6 ? { retranca: 2, defensivo: 3, contra: 4 }
+                : rel <= -2 ? { defensivo: 2, contra: 3, equilibrado: 3 }
+                    : rel < 2 ? { equilibrado: 5, posse: 2, direto: 2, contra: 1 }
+                        : rel < 6 ? { equilibrado: 2, posse: 3, ofensivo: 3, direto: 2 }
+                            : { ofensivo: 4, posse: 4, tudo: 1 };
+            jogo.estiloIA = U.pesado(Object.keys(op), k => op[k]);
+        }
+        m.estilo[lado] = jogo.estiloIA;
     },
 
     novoStat: (entrou, lado) => ({ lado, g: 0, a: 0, am: 0, vm: false, les: false, entrou, saiu: null }),
@@ -125,13 +146,14 @@ const Partida = {
             const fator = 1 - 0.07 * ausentes;
             const moral = (t.moral - 50) / 25;
             const est = ESTILOS[m.estilo[lado]] || ESTILOS.equilibrado;
+            const vs = (est.vs && est.vs[m.estilo[1 - lado]]) || {};   // um estilo "pega" o outro
             const bt = Partida.bonusTime(m, lado, t);
             const D = md(gr.D), M = md(gr.M), A = md(gr.A);
             return {
-                ata: (0.55 * A + 0.35 * M + 0.10 * D) * fator + moral + est.ata + bt.ata,
-                def: (0.60 * D + 0.30 * M + 0.10 * A) * fator + moral + est.def + bt.def,
+                ata: (0.55 * A + 0.35 * M + 0.10 * D) * fator + moral + est.ata + (vs.ata || 0) + bt.ata,
+                def: (0.60 * D + 0.30 * M + 0.10 * A) * fator + moral + est.def + (vs.def || 0) + bt.def,
                 gol: md(gr.G),
-                meio: M * fator,
+                meio: M * fator + (est.meio || 0),
             };
         });
         PartidaExtras.ajustar(m);   // [partida] efeitos do clima, das instruções e do técnico expulso
@@ -179,7 +201,12 @@ const Partida = {
                     novos.push(...Partida.gol(m, lado, autor, U.chance(0.75)));
                 } else if (U.chance(0.3)) {
                     const gk = Partida.goleiro(m, 1 - lado);
-                    add({ tipo: 'chance', lado, txt: U.escolha(JEITOS_PERDE).replace('{n}', autor.nome).replace('{g}', gk ? gk.nome : 'o goleiro') });
+                    const k = U.int(0, JEITOS_PERDE.length - 1);
+                    add({ tipo: 'chance', lado, txt: JEITOS_PERDE[k].replace('{n}', autor.nome).replace('{g}', gk ? gk.nome : 'o goleiro') });
+                    // a nota ao vivo também conta as chances: defesa do goleiro, bola na trave, chute pra fora
+                    const defesa = k === 0 || k === 4 || k === 5;
+                    Partida.somarNota(m, autor.id, defesa ? 0.05 : k === 2 ? 0.1 : -0.04);
+                    if (defesa && gk) Partida.somarNota(m, gk.id, 0.12);
                 }
             }
             // Cartões
@@ -312,6 +339,43 @@ const Partida = {
         return evs;
     },
 
+    // desempenho no jogo além de gols, assistências e cartões (chances, defesas)
+    somarNota(m, pid, v) {
+        const st = m.st[pid];
+        if (st) st.d = (st.d || 0) + v;
+    },
+
+    // Nota do jogador: ao vivo (fim = false) é a nota até agora; no fim, a nota da partida.
+    // A "sorte do dia" (st.ru) é sorteada uma vez e pesa mais conforme ele fica em campo;
+    // o bônus de não sofrer gols cresce com o relógio.
+    nota(m, pid, fim) {
+        const st = m.st[pid], p = m.s.jog[pid];
+        if (!st || !p) return null;
+        if (st.ru == null) st.ru = U.normal(0, 0.45);
+        const meus = m.gols[st.lado], deles = m.gols[1 - st.lado];
+        const grupo = POS_GRUPO[p.pos];
+        const minutos = (st.saiu != null ? st.saiu : fim ? 90 : m.min) - st.entrou;
+        const sorte = fim ? 1 : U.clamp(minutos / 45, 0, 1);
+        const relogio = fim ? 1 : U.clamp(m.min / 90, 0, 1);
+        let n = 6.2 + st.ru * sorte + st.g * 1.0 + st.a * 0.6 - st.am * 0.2 + (st.d || 0);
+        if (grupo === 'G') n += deles === 0 ? 0.9 * relogio : -0.35 * deles + 0.3;
+        if (grupo === 'D') n += deles === 0 ? 0.5 * relogio : -0.15 * deles;
+        n += meus > deles ? 0.3 : meus < deles ? -0.3 : 0;
+        if (st.vm) n -= 1.5;
+        if (minutos < 20 && (fim || st.entrou > 0)) n = 6.0 + (n - 6.2) * 0.5;
+        n += m.bonus[pid] || 0;
+        return Math.round(U.clamp(n, 3, 10) * 10) / 10;
+    },
+
+    // fôlego agora (a forma física cai com os minutos em campo, como no fim do jogo)
+    folego(m, p) {
+        const st = m.st[p.id];
+        if (!st) return p.cond;
+        const minutos = Math.max(0, (st.saiu != null ? st.saiu : m.min) - st.entrou);
+        const desgaste = (p.id === m.usuario && Partida.hab(m, 'motorzinho')) ? 0.6 : 1;
+        return Math.max(30, p.cond - minutos / 90 * (10 + Math.max(0, p.idade - 28) * 1.2) * desgaste);
+    },
+
     melhorReserva(m, lado, slot) {
         const grupo = POS_GRUPO[slot];
         const banco = m.banco[lado].map(id => m.s.jog[id]).filter(p => !(slot !== 'GOL' && p.pos === 'GOL'));
@@ -335,6 +399,17 @@ const Partida = {
         if (entraId === m.usuario && m.min < 86) Partida.planejarLances(m, m.min);
         Partida.recalcular(m);
         return Partida.evento(m, { tipo: 'sub', lado, pid: entraId, pid2: saiId, txt: `🔁 ${forcada ? 'Substituição forçada' : 'Substituição'} no ${Partida.nomeTime(m, lado)}: sai ${sai.nome}, entra ${entra.nome}.` });
+    },
+
+    // o técnico troca dois jogadores de posição em campo (não gasta substituição)
+    trocarPosicao(m, lado, a, b) {
+        const i = m.esc[lado].indexOf(a), j = m.esc[lado].indexOf(b);
+        if (i < 0 || j < 0 || i === j) return null;
+        m.esc[lado][i] = b;
+        m.esc[lado][j] = a;
+        Partida.recalcular(m);
+        const pa = m.s.jog[a], pb = m.s.jog[b];
+        return Partida.evento(m, { tipo: 'apito', lado, txt: `🔀 ${pa.nome} passa a jogar de ${POS_NOME[m.slots[lado][j]].toLowerCase()} e ${pb.nome} de ${POS_NOME[m.slots[lado][i]].toLowerCase()}.` });
     },
 
     subIA(m, lado) {
@@ -517,17 +592,8 @@ const Partida = {
         for (const [pidS, st] of Object.entries(m.st)) {
             const p = s.jog[pidS];
             if (!p) continue;
-            const meus = m.gols[st.lado], deles = m.gols[1 - st.lado];
-            const slot = POS_GRUPO[p.pos];
             const minutos = (st.saiu != null ? st.saiu : 90) - st.entrou;
-            let n = 6.2 + U.normal(0, 0.45) + st.g * 1.0 + st.a * 0.6 - st.am * 0.2;
-            if (slot === 'G') n += deles === 0 ? 0.9 : -0.35 * deles + 0.3;
-            if (slot === 'D') n += deles === 0 ? 0.5 : -0.15 * deles;
-            n += meus > deles ? 0.3 : meus < deles ? -0.3 : 0;
-            if (st.vm) n -= 1.5;
-            if (minutos < 20) n = 6.0 + (n - 6.2) * 0.5;
-            n += m.bonus[p.id] || 0;
-            n = Math.round(U.clamp(n, 3, 10) * 10) / 10;
+            const n = Partida.nota(m, p.id, true);   // a mesma conta da nota ao vivo
             r.notas[p.id] = n;
             if (n > melhorNota) { melhorNota = n; r.melhor = p.id; }
 

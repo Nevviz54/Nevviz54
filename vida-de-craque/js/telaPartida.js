@@ -56,7 +56,7 @@ const TelaPartida = {
         const comp = this.jogo.rotulo || Mundo.nomeCompeticao(s, this.jogo.comp) + (this.jogo.tipo === 'copa' ? ` · ${Mundo.fasesCopa(Mundo.copa(s, this.jogo.comp))[this.jogo.r]}` : ` · Rodada ${this.jogo.r + 1}`);
         const selo = m.final ? '<div class="selo-jogo final">🏆 FINAL</div>' : m.classico ? '<div class="selo-jogo classico">🔥 CLÁSSICO</div>' : '';
         UI.render(`
-        <div class="tela-partida">
+        <div class="tela-partida ${m.controle === 1 || (m.controle < 0 && Partida.ladoDoUsuario(m) === 1) ? 'meu-lado-1' : ''}">
             <div class="placar">
                 <div class="placar-time">${UI.escudo(th, true)}<span>${U.esc(th.nome)}</span><small>${th.form} · ${ESTILOS[m.estilo[0]].nome}</small></div>
                 <div class="placar-centro">
@@ -104,7 +104,10 @@ const TelaPartida = {
 
     lado(lado) {
         const m = this.m, s = m.s;
-        const linha = (pid, slot) => {
+        const aoVivo = this.fase !== 'pre';
+        // técnico: tocar num jogador do seu time em campo abre "substituir / trocar de posição"
+        const mexe = m.controle === lado && this.fase === 'jogo' && !m.terminou && !PartidaExtras.bloqueado(m);
+        const linha = (pid, slot, emCampo) => {
             const p = s.jog[pid], st = m.st[pid];
             let ic = '';
             if (st) {
@@ -114,14 +117,18 @@ const TelaPartida = {
                 if (st.les) ic += '🚑';
                 if (st.entrou > 0) ic += '🔼';
                 if (st.saiu != null && !st.vm) ic += '🔽';
+                if (emCampo && aoVivo && Partida.folego(m, p) < 70) ic += '<span title="Cansado">🥵</span>';
             }
-            return `<div class="pl-jog ${p.user ? 'eu' : ''} ${st && st.saiu != null ? 'saiu' : ''}">
-                ${UI.pos(slot || p.pos)}${p.user ? '' : Mot.icone(p)}<span class="pl-nome">${U.esc(p.nome)}</span>${UI.ovr(p.ovr)}<span class="pl-ic">${ic}</span></div>`;
+            // nota ao vivo ao lado do nome (a mesma conta da nota do fim do jogo)
+            const nota = aoVivo && st ? `<span class="pl-nota" title="Nota no jogo até agora">${UI.nota(Partida.nota(m, pid))}</span>` : '';
+            const clique = mexe && emCampo ? ` data-acao="plJogador" data-pid="${pid}" title="Substituir ou trocar de posição"` : '';
+            return `<div class="pl-jog ${p.user ? 'eu' : ''} ${st && st.saiu != null ? 'saiu' : ''} ${clique ? 'clicavel' : ''}"${clique}>
+                ${UI.pos(slot || p.pos)}${p.user ? '' : Mot.icone(p)}<span class="pl-nome">${U.esc(p.nome)}</span>${nota}${UI.ovr(p.ovr)}<span class="pl-ic">${ic}</span></div>`;
         };
-        const campo = m.esc[lado].map((pid, i) => pid != null ? linha(pid, m.slots[lado][i]) : `<div class="pl-jog vazio">${UI.pos(m.slots[lado][i])}<span class="pl-nome">— (vago)</span></div>`).join('');
+        const campo = m.esc[lado].map((pid, i) => pid != null ? linha(pid, m.slots[lado][i], true) : `<div class="pl-jog vazio">${UI.pos(m.slots[lado][i])}<span class="pl-nome">— (vago)</span></div>`).join('');
         const sairam = Object.entries(m.st).filter(([pid, st]) => st.lado === lado && st.saiu != null && !m.esc[lado].includes(+pid)).map(([pid]) => linha(+pid)).join('');
         const banco = m.banco[lado].map(pid => linha(pid)).join('');
-        return `<div class="pl-titulo">Em campo</div>${campo}
+        return `<div class="pl-titulo">Em campo${aoVivo ? ' <small>nota · OVR</small>' : ''}${mexe ? ' <small class="pl-dica">toque para mexer</small>' : ''}</div>${campo}
             ${sairam ? `<div class="pl-titulo">Saíram</div>${sairam}` : ''}
             <div class="pl-titulo">Banco (${m.subs[lado]}/5 trocas)</div><div class="pl-banco">${banco || '<small class="cinza">vazio</small>'}</div>`;
     },
@@ -181,6 +188,15 @@ const TelaPartida = {
             return `<div class="resumo-fim">${this.resumoFim()}</div><button class="btn btn-primario btn-grande" data-acao="plSair">Continuar ▶</button>`;
         }
         const vel = Jogo.opcoes.velocidade;
+        if (this.noIntervalo) {
+            // janela do vestiário minimizada: mexa no time e volte para conversar e começar o 2º tempo
+            const n = m.subs[m.controle];
+            return `<button class="btn btn-primario btn-grande pl-volta-vest" data-acao="plMaximizar">🗣️ Voltar ao vestiário e começar o 2º tempo</button>
+                <button class="btn" data-acao="plSub" ${n >= 5 ? 'disabled' : ''}>🔁 Substituir (${n}/5)</button>
+                <select data-mudar="plEstilo" class="sel">${Object.entries(ESTILOS).map(([k, e]) => `<option value="${k}" ${m.estilo[m.controle] === k ? 'selected' : ''}>${e.nome}</option>`).join('')}</select>
+                <div class="px-linha cinza pequeno">⏸️ Intervalo: toque num jogador do seu time para substituir ou trocar de posição. As notas mostram quem está bem e quem está mal.</div>
+                ${PartidaExtras.htmlControles(this)}`;
+        }
         let html = `<button class="btn ${this.rodando ? '' : 'btn-primario'}" data-acao="plPausar">${this.rodando ? '⏸ Pausar' : '▶ Continuar'}</button>
             <div class="vel">${[1, 2, 3, 4].map(v => `<button class="btn btn-pequeno ${vel === v ? 'ativo' : ''}" data-acao="plVel" data-v="${v}">${['', '1x', '2x', '4x', '8x'][v]}</button>`).join('')}</div>
             ${PartidaExtras.botaoDestaques(this)}`;
@@ -272,7 +288,12 @@ const TelaPartida = {
             const t = s.times[lado === 0 ? m.h : m.a];
             const dif = m.gols[lado] - m.gols[1 - lado];
             // [partida] a conversa do vestiário também deixa mudar as instruções para o 2º tempo
-            const i = await PartidaExtras.perguntaIntervalo(m);
+            // a janela pode ser minimizada para ver as notas e mexer no time (plMinimizar)
+            this.noIntervalo = true;
+            let i;
+            try { i = await PartidaExtras.perguntaIntervalo(m); } finally { this.noIntervalo = false; }
+            document.body.classList.remove('vestiario-minimizado');
+            if (this.m !== m) return;
             let txt;
             if (i === 0) { const v = dif >= 0 ? 6 : -2; t.moral += v; txt = v > 0 ? 'O time voltou motivado!' : 'Os jogadores acharam estranho ser elogiados perdendo...'; }
             else if (i === 1) { const v = dif < 0 ? (U.chance(0.65) ? 8 : -5) : -4; t.moral += v; txt = v > 0 ? 'A bronca acordou o time!' : 'A bronca pegou mal no vestiário.'; }
@@ -286,6 +307,109 @@ const TelaPartida = {
             if (m.controle >= 0) UI.toast('🟥 Sem você no vestiário: o auxiliar conversa com o time.');
             setTimeout(() => { if (this.fase === 'jogo' && !this.pausaMenu && this.m === m) this.iniciar(); }, 900);
         }
+    },
+
+    // ---------------------------------------------------------------
+    //  Intervalo: o auxiliar técnico analisa o 1º tempo
+    // ---------------------------------------------------------------
+    // trocas sugeridas: quem está mal (nota), pendurado, cansado ou fora de posição
+    sugestoesAux(m) {
+        const s = m.s, lado = m.controle;
+        const aux = Comissao.membro(s, 'aux');
+        const est = aux ? aux.est : 1;
+        const vagas = Math.min(5 - m.subs[lado], est >= 4 ? 3 : est >= 2 ? 2 : 1);
+        if (vagas <= 0 || !m.banco[lado].length) return [];
+        const cands = [];
+        m.esc[lado].forEach((pid, i) => {
+            if (pid == null) return;
+            const p = s.jog[pid], slot = m.slots[lado][i], st = m.st[pid];
+            if (p.user || !st) return;
+            const nota = Partida.nota(m, pid), fol = Partida.folego(m, p);
+            const motivos = [];
+            let peso = 0;
+            if (nota <= 6.0) { motivos.push(`📉 nota ${nota.toFixed(1)}`); peso += (6.4 - nota) * 2.5; }
+            if (st.am >= 1 && slot !== 'GOL' && PESO_CARTAO[slot] >= 2) { motivos.push('🟨 pendurado, pode ser expulso'); peso += 2; }
+            if (fol < 75) { motivos.push(`🥵 cansado (${Math.round(fol)}% de fôlego)`); peso += (75 - fol) / 6; }
+            const pen = penalidadePos(p.pos, slot);
+            if (pen >= 6) { motivos.push(`🔀 ${POS_NOME[p.pos].toLowerCase()} improvisado de ${POS_NOME[slot].toLowerCase()}`); peso += pen / 5; }
+            if (!peso) return;
+            // auxiliar fraco às vezes lê mal o jogo (o "erro" é fixo por jogador, não muda a cada olhada)
+            peso += (((pid * 9301 + 49297) % 233280) / 233280 - 0.5) * (5 - est) * 1.2;
+            cands.push({ p, slot, motivos, peso });
+        });
+        cands.sort((a, b) => b.peso - a.peso);
+        const usados = new Set(), res = [];
+        for (const c of cands) {
+            if (res.length >= vagas) break;
+            let entra = null, bv = -1e9;
+            for (const id of m.banco[lado]) {
+                const b = s.jog[id];
+                if (usados.has(id) || (c.slot !== 'GOL' && b.pos === 'GOL') || (c.slot === 'GOL' && b.pos !== 'GOL')) continue;
+                const v = Escalacao.efetivo(b, c.slot) + (POS_GRUPO[b.pos] === POS_GRUPO[c.slot] ? 3 : 0);
+                if (v > bv) { bv = v; entra = b; }
+            }
+            if (!entra) continue;
+            const ganho = Escalacao.efetivo(entra, c.slot) - Escalacao.efetivo(c.p, c.slot);
+            if (ganho < -8 || (ganho < -5 && c.peso < 2.5)) continue;   // a troca pioraria demais o time
+            usados.add(entra.id);
+            res.push({ sai: c.p, entra, slot: c.slot, motivos: c.motivos });
+        }
+        return res;
+    },
+
+    // dicas de postura: placar, finalizações e (auxiliar bom) o estilo que encaixa contra o deles
+    dicasAux(m) {
+        const s = m.s, l = m.controle, o = 1 - l;
+        const aux = Comissao.membro(s, 'aux'), est = aux ? aux.est : 1;
+        const dif = m.gols[l] - m.gols[o];
+        const d = [];
+        if (dif <= -2) d.push({ txt: 'Perdendo por dois ou mais: é hora de arriscar tudo.', estilo: 'tudo' });
+        else if (dif === -1) d.push({ txt: 'Estamos atrás no placar: dá para ir mais pra cima.', estilo: 'ofensivo' });
+        else if (dif === 1) d.push({ txt: 'Vantagem mínima: cuidado para não tomar o empate.', estilo: 'defensivo' });
+        else if (dif >= 2) d.push({ txt: 'Jogo na mão: dá para administrar sem correr riscos.', estilo: 'equilibrado' });
+        else d.push({ txt: 'Empate: o jogo está aberto, paciência e atenção atrás.' });
+        if (est >= 2) {
+            if (m.fin[o] >= m.fin[l] + 3) d.push({ txt: `Eles finalizaram ${m.fin[o]} vezes contra ${m.fin[l]} nossas: a defesa está sofrendo.` });
+            else if (m.fin[l] >= m.fin[o] + 3 && dif <= 0) d.push({ txt: `Criamos ${m.fin[l]} chances contra ${m.fin[o]}: o gol está amadurecendo.` });
+        }
+        if (est >= 3) {
+            const adv = m.estilo[o];
+            let melhor = null, bv = 0.9;
+            for (const [k, e] of Object.entries(ESTILOS)) {
+                const v = (e.vs && e.vs[adv]) || {};
+                const g = (v.ata || 0) + (v.def || 0);
+                if (g > bv) { bv = g; melhor = k; }
+            }
+            if (melhor && melhor !== m.estilo[l]) d.push({ txt: `Eles jogam no estilo ${ESTILOS[adv].nome}: o ${ESTILOS[melhor].nome} encaixa bem contra isso.`, estilo: melhor });
+        }
+        return d;
+    },
+
+    htmlAux(m) {
+        const s = m.s, l = m.controle, aux = Comissao.membro(s, 'aux');
+        const quem = aux ? `🧑‍💼 ${Comissao.nome(aux)} <span class="estrelas-olh">${U.estrelas(aux.est)}</span>` : '🧑‍💼 Auxiliar do clube';
+        const sug = this.sugestoesAux(m), dicas = this.dicasAux(m), n = m.subs[l];
+        return `<div class="aux-intervalo" id="aux-intervalo">
+            <div class="aux-topo"><b>${quem}</b><small class="cinza">análise do 1º tempo</small></div>
+            ${sug.length ? `<div class="aux-trocas">${sug.map(x => `<div class="aux-troca">
+                <div class="aux-sai"><span>🔽 ${UI.pos(x.slot)} <b>${U.esc(x.sai.nome)}</b> ${UI.nota(Partida.nota(m, x.sai.id))}</span><small>${x.motivos.join(' · ')}</small></div>
+                <div class="aux-entra"><span>🔼 <b>${U.esc(x.entra.nome)}</b> ${UI.ovr(Math.round(Escalacao.efetivo(x.entra, x.slot)))}</span><small>${x.entra.pos === x.slot ? 'mesma posição' : `${POS_NOME[x.entra.pos].toLowerCase()} improvisado`}</small></div>
+                <button class="btn btn-pequeno btn-primario" data-acao="plSugTroca" data-sai="${x.sai.id}" data-entra="${x.entra.id}" ${n >= 5 ? 'disabled' : ''}>✅ Fazer a troca</button>
+            </div>`).join('')}</div>`
+            : `<p class="aux-ok">✅ ${n >= 5 ? 'Já fizemos as 5 trocas.' : 'Ninguém precisa sair: o time está bem.'}</p>`}
+            ${dicas.map(d => `<div class="aux-dica">💡 ${d.txt}${d.estilo && d.estilo !== m.estilo[l] ? ` <button class="chip-btn" data-acao="plSugEstilo" data-e="${d.estilo}">📋 Mudar para ${ESTILOS[d.estilo].nome}</button>` : ''}</div>`).join('')}
+            ${aux ? '' : '<small class="cinza">Contrate um auxiliar técnico (👥 Time → 🧑‍💼 Comissão técnica) para análises melhores.</small>'}
+        </div>`;
+    },
+
+    // depois de mexer no time no intervalo, a janela do vestiário mostra o time novo
+    atualizarVestiario() {
+        const m = this.m;
+        if (!m || !this.noIntervalo) return;
+        const box = document.getElementById('aux-intervalo');
+        if (box) box.outerHTML = this.htmlAux(m);
+        const ins = document.getElementById('px-instr-intervalo');
+        if (ins) ins.innerHTML = PartidaExtras.chipsInstr(m, m.controle, true);
     },
 
     async lance() {
@@ -337,12 +461,14 @@ ACOES.plSimular = () => {
     TelaPartida.fim();
 };
 ACOES.plPular = () => {
+    if (TelaPartida.noIntervalo) return ACOES.plMaximizar();
     TelaPartida.parar();
     Partida.simularAteOFim(TelaPartida.m);
     TelaPartida.atualizar();
     TelaPartida.fim();
 };
 ACOES.plPausar = () => {
+    if (TelaPartida.noIntervalo) return ACOES.plMaximizar();
     if (TelaPartida.rodando) { TelaPartida.parar(); TelaPartida.atualizar(); } else TelaPartida.iniciar();
 };
 ACOES.plVel = d => {
@@ -358,6 +484,7 @@ ACOES.plEstilo = (d, el) => {
     Partida.recalcular(m);
     Partida.evento(m, { tipo: 'apito', txt: `📋 Você mudou a postura do time para "${ESTILOS[el.value].nome}".` });
     TelaPartida.atualizar();
+    TelaPartida.atualizarVestiario();
 };
 ACOES.plSub = async () => {
     const m = TelaPartida.m, s = m.s, lado = m.controle;
@@ -370,13 +497,91 @@ ACOES.plSub = async () => {
     let escolha = null;
     const r = await UI.modal({
         titulo: '🔁 Substituição',
-        html: `<label class="campo">Sai:<select id="sub-sai" class="sel">${campo.map(c => `<option value="${c.p.id}">${c.slot} · ${U.esc(c.p.nome)} (${c.p.ovr})${m.st[c.p.id].am ? ' 🟨' : ''}</option>`).join('')}</select></label>
+        html: `<label class="campo">Sai:<select id="sub-sai" class="sel">${campo.map(c => `<option value="${c.p.id}">${c.slot} · ${U.esc(c.p.nome)} (${c.p.ovr}) · nota ${Partida.nota(m, c.p.id).toFixed(1)} · 💨${Math.round(Partida.folego(m, c.p))}%${m.st[c.p.id].am ? ' 🟨' : ''}</option>`).join('')}</select></label>
             <label class="campo">Entra:<select id="sub-entra" class="sel">${banco.map(p => `<option value="${p.id}">${p.pos} · ${U.esc(p.nome)} (${p.ovr})</option>`).join('')}</select></label>`,
         botoes: [{ txt: 'Confirmar', valor: 'ok', antes: f => { escolha = [+f.querySelector('#sub-sai').value, +f.querySelector('#sub-entra').value]; } }, { txt: 'Cancelar', valor: false, classe: 'btn-fantasma' }],
     });
     if (r === 'ok' && escolha) Partida.substituir(m, lado, escolha[0], escolha[1], false);
     TelaPartida.atualizar();
+    TelaPartida.atualizarVestiario();
     if (estava) TelaPartida.iniciar();
+};
+// toque num jogador do seu time em campo: substituir ou trocar de posição
+ACOES.plJogador = async d => {
+    const t = TelaPartida, m = t.m;
+    if (!m || m.terminou || m.controle < 0) return;
+    if (PartidaExtras.bloqueado(m)) return UI.toast('🟥 Você foi expulso: só o auxiliar pode mexer no time.', 'erro');
+    const s = m.s, lado = m.controle, pid = +d.pid;
+    const i = m.esc[lado].indexOf(pid);
+    if (i < 0) return;
+    const p = s.jog[pid], slot = m.slots[lado][i];
+    const estava = t.rodando;
+    t.parar();
+    t.atualizar();
+    const banco = m.banco[lado].map(id => s.jog[id]).sort((a, b) => Escalacao.efetivo(b, slot) - Escalacao.efetivo(a, slot));
+    const outros = m.esc[lado].map((id, j) => id != null && id !== pid ? { p: s.jog[id], slot: m.slots[lado][j] } : null).filter(Boolean);
+    const podeSub = m.subs[lado] < 5 && banco.length > 0;
+    let esc = null;
+    const r = await UI.modal({
+        titulo: `${UI.pos(slot)}&nbsp;${U.esc(p.nome)}`,
+        html: `<div class="pj-ficha">Nota ${UI.nota(Partida.nota(m, pid))} · OVR ${UI.ovr(p.ovr)} · rende <b>${Math.round(Escalacao.efetivo(p, slot))}</b> de ${POS_NOME[slot].toLowerCase()} · 💨 ${Math.round(Partida.folego(m, p))}%${m.st[pid].am ? ' · 🟨 pendurado' : ''}</div>
+            <label class="campo">🔁 Substituir por:<select id="pj-entra" class="sel" ${podeSub ? '' : 'disabled'}>${banco.map(b => `<option value="${b.id}">${b.pos} · ${U.esc(b.nome)} — rende ${Math.round(Escalacao.efetivo(b, slot))} de ${slot}</option>`).join('') || '<option value="">banco vazio</option>'}</select></label>
+            <label class="campo">🔀 Ou trocar de posição com:<select id="pj-troca" class="sel"><option value="">— escolha com quem trocar —</option>${outros.map(o => `<option value="${o.p.id}">${o.slot} · ${U.esc(o.p.nome)} (${o.p.pos})</option>`).join('')}</select></label>
+            <p class="cinza pequeno">Trocar de posição não gasta substituição. Trocas feitas: ${m.subs[lado]}/5.</p>`,
+        botoes: [
+            { txt: '🔁 Substituir', valor: 'sub', desativado: !podeSub, antes: f => { esc = +f.querySelector('#pj-entra').value; } },
+            { txt: '🔀 Trocar de posição', valor: 'troca', classe: 'btn', antes: f => {
+                esc = +f.querySelector('#pj-troca').value;
+                if (!esc) { UI.toast('Escolha com quem ele troca de posição.'); return false; }
+            } },
+            { txt: 'Cancelar', valor: false, classe: 'btn-fantasma' },
+        ],
+    });
+    let ev = null;
+    if (r === 'sub' && esc) ev = Partida.substituir(m, lado, pid, esc, false);
+    else if (r === 'troca' && esc) ev = Partida.trocarPosicao(m, lado, pid, esc);
+    if (ev) UI.toast(ev.txt);
+    t.atualizar();
+    t.atualizarVestiario();
+    if (estava) t.iniciar();
+};
+// intervalo: sugestões do auxiliar com um toque
+ACOES.plSugTroca = d => {
+    const t = TelaPartida, m = t.m;
+    if (!m || m.controle < 0 || m.terminou) return;
+    if (PartidaExtras.bloqueado(m)) return UI.toast('🟥 Você foi expulso: só o auxiliar pode mexer no time.', 'erro');
+    const lado = m.controle;
+    if (!m.esc[lado].includes(+d.sai) || !m.banco[lado].includes(+d.entra)) { t.atualizarVestiario(); return; }
+    const ev = Partida.substituir(m, lado, +d.sai, +d.entra, false);
+    if (ev) UI.toast(ev.txt);
+    t.atualizar();
+    t.atualizarVestiario();
+};
+ACOES.plSugEstilo = d => {
+    const m = TelaPartida.m;
+    if (!m || !ESTILOS[d.e]) return;
+    ACOES.plEstilo({}, { value: d.e });
+    UI.toast(`📋 Postura do time: ${ESTILOS[d.e].nome}.`);
+    TelaPartida.atualizarVestiario();
+};
+// esconde a janela do vestiário para ver o jogo (notas, placar, eventos) e mexer no time
+ACOES.plMinimizar = () => {
+    const box = document.querySelector('#modais .modal-intervalo');
+    const fundo = box && box.closest('.modal-fundo');
+    if (!fundo) return;
+    fundo.classList.add('minimizado');
+    document.body.classList.add('vestiario-minimizado');
+    TelaPartida.atualizar();
+    const c = document.getElementById('pl-controles');
+    if (c && c.scrollIntoView) c.scrollIntoView({ block: 'nearest' });
+};
+ACOES.plMaximizar = () => {
+    const box = document.querySelector('#modais .modal-intervalo');
+    const fundo = box && box.closest('.modal-fundo');
+    if (!fundo) return;
+    TelaPartida.atualizarVestiario();
+    fundo.classList.remove('minimizado');
+    document.body.classList.remove('vestiario-minimizado');
 };
 ACOES.plTatica = async () => {
     const m = TelaPartida.m, s = m.s;
