@@ -4,8 +4,8 @@ Um jogo de sobrevivência contra hordas no estilo **Vampire Survivors / Brotato*
 em versão **medieval**. Feito em HTML, CSS e JavaScript puro — sem nenhuma biblioteca,
 sem instalar nada.
 
-**7 heróis · 12 armas · 6 evoluções · 12 monstros · 4 chefes · 15 minutos para sobreviver
-— e, se você cair, ainda tem o Purgatório.**
+**7 heróis · 12 armas · 6 evoluções · 14 monstros · 4 chefes · 15 minutos para sobreviver
+— e, se você cair, ainda tem o Purgatório. Sobreviveu aos 15? Entra o Ragnarök, que não acaba.**
 
 ![Preview do jogo](preview.png)
 
@@ -43,6 +43,10 @@ Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mai
 - **Ímã** 🧲 puxa todas as gemas do mapa de uma vez. **Ira Divina** ⚡ fulmina todo mundo
   na tela. Os dois são raros e caem de qualquer inimigo.
 - **Chefes** aparecem aos 5, 10 e 15 minutos. Derrotar o **Rei Vampiro** é a vitória.
+- Ao subir de nível, o botão 🔄 **troca as três cartas** oferecidas. São 2 trocas por
+  partida (compre mais na Ferraria com o *Presságio*).
+- Cuidado com o **Carniçal Inchado**, que explode ao morrer, e com a **Gosma Pútrida**,
+  que se parte em duas menores e mais rápidas.
 - O **cenário muda** junto com os chefes: campo → criptas → terra queimada.
 - **Evoluções:** arma no nível MÁX + o item passivo certo no nível 5 = arma lendária.
 
@@ -69,6 +73,18 @@ reaparecer; na terceira enlouquece e cobre a arena de espirais.
 - **Venceu** → sua alma sobe para **Valhalla**: prêmio em ouro e a **Valquíria** liberada.
 - **Perdeu** → sua alma afunda em **Helheim**, o reino frio de quem não venceu. O ouro
   da partida fica guardado do mesmo jeito.
+
+## ♾️ Ragnarök (modo infinito)
+
+Depois de derrotar o Rei Vampiro você pode **continuar jogando**. A dificuldade não tem
+mais teto, os chefes voltam a cada 2 minutos e o cenário fica girando. O recorde passa a
+ser simplesmente: quanto tempo você aguentou.
+
+## 📊 Relatório de fim de partida
+
+Toda partida termina mostrando **de onde veio o seu dano**, arma por arma, e quem te
+derrubou. É a forma mais rápida de descobrir se aquela arma que você vem subindo está
+carregando a build ou só ocupando espaço.
 
 ## 🧙 Heróis
 

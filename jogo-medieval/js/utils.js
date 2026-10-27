@@ -92,6 +92,7 @@ const Save = {
         desbloqueados: ['cavaleiro', 'arqueiro', 'bruxa'],
         melhorTempo: 0,
         melhorAbates: 0,
+        melhorInfinito: 0,
         vitorias: 0,
         valhalla: 0,
         helheim: 0,
@@ -118,7 +119,7 @@ const Save = {
     reset() {
         this.data = {
             ouro: 0, melhorias: {}, desbloqueados: ['cavaleiro', 'arqueiro', 'bruxa'],
-            melhorTempo: 0, melhorAbates: 0, vitorias: 0, valhalla: 0, helheim: 0,
+            melhorTempo: 0, melhorAbates: 0, melhorInfinito: 0, vitorias: 0, valhalla: 0, helheim: 0,
             partidas: 0, som: true, musica: true
         };
         this.save();

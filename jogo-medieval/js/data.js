@@ -392,14 +392,13 @@ const ARMAS = {
             const alvo = inimigoMaisProximo(p.x, p.y, 520);
             const base = alvo ? angleTo(p.x, p.y, alvo.x, alvo.y) : (p.olhar >= 0 ? 0 : Math.PI);
             for (let i = 0; i < s.qtd; i++) {
-                setTimeout(() => {
-                    if (Game.estado !== 'jogando') return;
-                    criarProjetil({
-                        x: p.x, y: p.y - 4, ang: base + rand(-0.1, 0.1), vel: V(640),
-                        dano: D(s.dano), perfura: s.perfura, vida: 1.1,
-                        tipo: 'faca', raio: 6, cor: '#dfe8ff', knock: 60
-                    });
-                }, i * 70);
+                // a rajada sai escalonada, mas pelo relógio do próprio jogo
+                criarProjetil({
+                    x: p.x, y: p.y - 4, ang: base + rand(-0.1, 0.1), vel: V(640),
+                    dano: D(s.dano), perfura: s.perfura, vida: 1.1,
+                    tipo: 'faca', raio: 6, cor: '#dfe8ff', knock: 60,
+                    atraso: i * 0.07
+                });
             }
             Som.efeito('flecha');
         }
@@ -628,6 +627,18 @@ const MONSTROS = {
     alma: {
         nome: 'Alma Penada', sprite: 'alma', escala: 1.2, r: 17,
         vida: 130, vel: 104, dano: 22, xp: 14, ouro: 0.6, ia: 'fantasma', desde: 720, peso: 5
+    },
+    carnical: {
+        nome: 'Carniçal Inchado', sprite: 'hum_carnical', escala: 1.15, r: 18,
+        vida: 52, vel: 94, dano: 12, xp: 6, ouro: 0.24, ia: 'perseguir', desde: 330, peso: 5,
+        // estoura ao morrer: matar colado é perigoso
+        explode: { raio: 95, dano: 26, duracao: 2.6 }
+    },
+    gosma: {
+        nome: 'Gosma Pútrida', sprite: 'gosma', escala: 1.25, r: 18,
+        vida: 78, vel: 72, dano: 13, xp: 7, ouro: 0.26, ia: 'perseguir', desde: 400, peso: 5,
+        // morre e vira duas menores
+        divide: { quantidade: 2, escala: 0.62, vida: 0.34, velocidade: 1.5 }
     }
 };
 
@@ -696,6 +707,7 @@ const LOJA = [
     { id: 'ganancia', nome: 'Ganância',     icone: '💰', max: 5, custo: n => 200 + n * 160, desc: '+12% de ouro' },
     { id: 'sabedoria',nome: 'Sabedoria',    icone: '📜', max: 5, custo: n => 220 + n * 170, desc: '+8% de experiência' },
     { id: 'ima',      nome: 'Ímã Arcano',   icone: '🧲', max: 3, custo: n => 260 + n * 200, desc: '+20% de coleta' },
+    { id: 'presagio', nome: 'Presságio',    icone: '🔄', max: 3, custo: n => 240 + n * 190, desc: '+1 troca de cartas por partida' },
     { id: 'renascer', nome: 'Renascer',     icone: '⚜️', max: 2, custo: n => 1200 + n * 1500, desc: 'Reviva 1 vez por partida' }
 ];
 
@@ -710,6 +722,7 @@ function bonusPermanentes() {
         ouro: 1 + (m.ganancia || 0) * 0.12,
         xp: 1 + (m.sabedoria || 0) * 0.08,
         ima: 1 + (m.ima || 0) * 0.20,
-        vidas: (m.renascer || 0)
+        vidas: (m.renascer || 0),
+        rerolagens: 2 + (m.presagio || 0)
     };
 }

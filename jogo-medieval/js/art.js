@@ -249,6 +249,18 @@ const MAPA_CEIFADOR = [
     '................'
 ];
 
+// Gosma Pútrida (8x8) - ao morrer se parte em duas menores
+const MAPA_GOSMA = [
+    '..oooo..',
+    '.oggggo.',
+    'oggffggo',
+    'oggggggo',
+    'ogggggggo',
+    'oggggggo',
+    '.oooooo.',
+    '........'
+];
+
 // Objetos e cenário
 const MAPA_GEMA = [
     '..ggg..',
@@ -375,7 +387,12 @@ const PAL_INIMIGO = {
     orc:       { o: '#101a14', h: '#4f7a3a', f: '#16220f', t: '#5f6470', s: '#4f7a3a', l: '#3a3f47' },
     arqueiro:  { o: '#161a20', h: '#d8d4c0', f: '#2b3a20', t: '#4a6b3a', s: '#d8d4c0', l: '#5a4a30' },
     cavaleiro: { o: '#0b0910', h: '#4a4468', f: '#e0453a', t: '#2f2a48', s: '#4a4468', l: '#1e1b2c' },
-    cultista:  { o: '#140f1c', h: '#c9a882', f: '#2b1f38', t: '#6b3fa0', s: '#c9a882', l: '#4a2a70' }
+    cultista:  { o: '#140f1c', h: '#c9a882', f: '#2b1f38', t: '#6b3fa0', s: '#c9a882', l: '#4a2a70' },
+    carnical:  { o: '#2a1408', h: '#c9b05a', f: '#ff6b2a', t: '#9a6a2a', s: '#c9b05a', l: '#5a3a14' }
+};
+
+const PAL_GOSMA = {
+    gosma: { o: '#1a2a12', g: '#6fa83a', f: '#1b2a14' }
 };
 
 const PAL_LOBO = {
@@ -460,6 +477,7 @@ function prepararArte() {
     montar('arvore', MAPA_ARVORE, PAL_ITENS.arvore, 4);
     montar('pedra', MAPA_PEDRA, PAL_ITENS.pedra, 3);
     montar('cranio', MAPA_CRANIO, PAL_ITENS.cranio, 3);
+    for (const k in PAL_GOSMA) montar(k, MAPA_GOSMA, PAL_GOSMA[k], 4);
     montar('ima', MAPA_IMA, PAL_ITENS.ima, 4);
     montar('trovao', MAPA_TROVAO, PAL_ITENS.trovao, 4);
 }

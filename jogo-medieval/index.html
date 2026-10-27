@@ -20,7 +20,7 @@
     <!-- ===================== HUD ===================== -->
     <div id="hud" class="escondido">
         <div class="hud-topo">
-            <div class="hud-caixa"><span class="hud-rotulo">⏱</span><span id="tempo">00:00</span></div>
+            <div class="hud-caixa" id="caixa-tempo"><span class="hud-rotulo">⏱</span><span id="tempo">00:00</span></div>
             <div class="hud-caixa"><span class="hud-rotulo">💀</span><span id="abates">0</span></div>
             <div class="hud-caixa"><span class="hud-rotulo">🪙</span><span id="ouro-hud">0</span></div>
         </div>
@@ -64,6 +64,7 @@
                 <div><span>Mais abates</span><b id="recorde-abates">0</b></div>
                 <div><span>Vitórias</span><b id="recorde-vitorias">0</b></div>
                 <div><span>Valhalla</span><b id="recorde-valhalla">0</b></div>
+                <div><span>Ragnarök</span><b id="recorde-infinito">00:00</b></div>
             </div>
 
             <div class="ouro-linha">Ouro guardado: <b id="ouro-menu">0</b> 🪙</div>
@@ -135,6 +136,10 @@
                 <li><b>Purgatório:</b> ao cair, você pode recusar a morte uma vez por partida e duelar com
                     <b>Mordrek, o Ceifador de Almas</b>, usando tudo o que tinha. Vencer leva sua alma a
                     <b>Valhalla</b>; perder, a <b>Helheim</b>.</li>
+                <li><b>Trocar as cartas:</b> ao subir de nível, o botão 🔄 troca as três opções.
+                    Você começa com 2 trocas por partida e pode comprar mais na Ferraria.</li>
+                <li><b>Ragnarök:</b> depois de vencer o Rei Vampiro, dá para continuar jogando sem fim,
+                    com a dificuldade subindo e os chefes voltando.</li>
                 <li><b>Pausar:</b> botão ❚❚ no canto da tela, ou as teclas ESC / P.</li>
             </ul>
             <button id="btn-voltar-ajuda" class="btn btn-fantasma">← Voltar</button>
@@ -147,6 +152,7 @@
             <h2 class="titulo-secao brilho" id="nivel-titulo">NÍVEL 2</h2>
             <p class="ajuda-texto">Escolha uma recompensa</p>
             <div id="lista-nivel" class="grade-nivel"></div>
+            <button id="btn-reroll" class="btn btn-pequeno btn-reroll escondido">🔄 Trocar as cartas</button>
         </div>
     </div>
 
@@ -177,6 +183,8 @@
                 <div class="linha-resumo"><span>Inimigos abatidos</span><b id="fim-abates">0</b></div>
                 <div class="linha-resumo"><span>Ouro guardado</span><b id="fim-ouro">0</b> 🪙</div>
             </div>
+            <div id="rel-fim" class="relatorio"></div>
+
             <div id="oferta-purgatorio" class="oferta">
                 <p class="oferta-texto">Uma porta se abre na escuridão. Do outro lado, <b>Mordrek, o Ceifador
                 de Almas</b>, espera para julgar você — com as armas e a força que você tem agora.</p>
@@ -203,6 +211,7 @@
                 <div class="linha-resumo"><span>Ouro guardado</span><b id="val-ouro">0</b> 🪙</div>
                 <div class="linha-resumo destaque"><span>Prêmio dos deuses</span><b id="val-bonus">+0</b> 🪙</div>
             </div>
+            <div id="rel-valhalla" class="relatorio"></div>
             <div id="val-desbloqueio" class="desbloqueio escondido">
                 ⚡ <b>Valquíria desbloqueada!</b><br>
                 <span>A guerreira de Valhalla agora luta ao seu lado. Escolha ela no menu.</span>
@@ -226,6 +235,7 @@
                 <div class="linha-resumo"><span>Inimigos abatidos</span><b id="hel-abates">0</b></div>
                 <div class="linha-resumo"><span>Ouro guardado</span><b id="hel-ouro">0</b> 🪙</div>
             </div>
+            <div id="rel-helheim" class="relatorio"></div>
             <div class="botoes-menu">
                 <button id="btn-reiniciar-helheim" class="btn btn-grande">⚔️ Tentar de novo</button>
                 <button id="btn-menu-helheim" class="btn btn-fantasma">Menu principal</button>
@@ -243,6 +253,12 @@
                 <div class="linha-resumo"><span>Nível</span><b id="vit-nivel">1</b></div>
                 <div class="linha-resumo"><span>Inimigos abatidos</span><b id="vit-abates">0</b></div>
                 <div class="linha-resumo"><span>Ouro guardado</span><b id="vit-ouro">0</b> 🪙</div>
+            </div>
+            <div id="rel-vitoria" class="relatorio"></div>
+            <div class="oferta oferta-infinito">
+                <p class="oferta-texto">O reino está salvo — mas a horda não para de vir. Quer continuar
+                enquanto aguentar? A dificuldade sobe sem teto e os chefes voltam.</p>
+                <button id="btn-infinito" class="btn btn-grande btn-infinito">♾️ Continuar no Ragnarök</button>
             </div>
             <div class="botoes-menu">
                 <button id="btn-reiniciar-vitoria" class="btn btn-grande">⚔️ Jogar de novo</button>
