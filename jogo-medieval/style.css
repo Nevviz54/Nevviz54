@@ -13,6 +13,7 @@
     --texto-fraco: #a89ab0;
     --vermelho: #c0392b;
     --verde: #4aa04a;
+    color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -58,7 +59,8 @@ html, body {
     inset: 0;
     pointer-events: none;
     z-index: 10;
-    padding: 10px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px))
+             calc(10px + env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -91,7 +93,7 @@ html, body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     width: min(560px, 92vw);
     display: flex;
     flex-direction: column;
@@ -132,8 +134,8 @@ html, body {
 
 #itens-hud {
     position: absolute;
-    left: 10px;
-    top: 56px;
+    left: max(10px, env(safe-area-inset-left, 0px));
+    top: calc(56px + env(safe-area-inset-top, 0px));
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -170,10 +172,63 @@ html, body {
     text-shadow: 0 1px 2px #000;
 }
 
+/* botões sobre o jogo (pausa e tela cheia) */
+.hud-controles {
+    position: absolute;
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    right: calc(10px + env(safe-area-inset-right, 0px));
+    display: flex;
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.btn-icone {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: rgba(15, 12, 22, .8);
+    border: 1px solid var(--borda);
+    color: var(--ouro-claro);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s, transform .08s;
+}
+
+.btn-icone:hover { border-color: var(--ouro); }
+.btn-icone:active { transform: scale(.92); }
+
+/* lembrete de controles no início da partida */
+#dica {
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    background: rgba(12, 10, 18, .72);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--texto);
+    text-shadow: 0 1px 3px #000;
+    transition: opacity .9s;
+    max-width: min(420px, 86vw);
+}
+
+#dica b { color: var(--ouro-claro); letter-spacing: 1px; }
+#dica span { font-size: 13px; color: var(--texto-fraco); }
+#dica.sumindo { opacity: 0; }
+
 /* barra do chefe */
 #barra-chefe {
     position: fixed;
-    top: 54px;
+    top: calc(54px + env(safe-area-inset-top, 0px));
     left: 50%;
     transform: translateX(-50%);
     width: min(620px, 94vw);
@@ -353,6 +408,11 @@ html, body {
 .btn-pequeno { font-size: 13px; padding: 7px 12px; }
 .btn-fantasma { background: transparent; color: var(--texto-fraco); }
 .btn-perigo { border-color: #6b2a2a; color: #e08a8a; }
+.btn-perigo.armado {
+    border-color: var(--vermelho);
+    background: rgba(192, 57, 43, .25);
+    color: #ffd6d6;
+}
 
 .opcoes-audio {
     display: flex;
@@ -589,6 +649,9 @@ html, body {
     .painel { padding: 16px 14px; }
     .hud-caixa { font-size: 14px; padding: 4px 9px; }
     .item-hud { width: 34px; height: 34px; font-size: 17px; }
-    #itens-hud { top: 48px; max-height: 52vh; }
+    #itens-hud { top: calc(100px + env(safe-area-inset-top, 0px)); max-height: 52vh; }
     .heroi-desc { min-height: 0; }
+    .hud-topo { padding-right: 96px; flex-wrap: wrap; justify-content: flex-start; }
+    #dica { font-size: 14px; padding: 10px 14px; }
 }
+#tela:focus { outline: none; }

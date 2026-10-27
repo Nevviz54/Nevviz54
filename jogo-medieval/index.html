@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0d0b12">
-    <title>Reino Sombrio — Sobrevivência Medieval</title>
+    <title>Reino Sombrio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
@@ -24,6 +24,13 @@
             <div class="hud-caixa"><span class="hud-rotulo">💀</span><span id="abates">0</span></div>
             <div class="hud-caixa"><span class="hud-rotulo">🪙</span><span id="ouro-hud">0</span></div>
         </div>
+
+        <div class="hud-controles">
+            <button id="btn-pausa" class="btn-icone" title="Pausar" aria-label="Pausar">❚❚</button>
+            <button class="btn-icone btn-tela-cheia" title="Tela cheia" aria-label="Tela cheia">⛶</button>
+        </div>
+
+        <div id="dica" class="escondido"></div>
 
         <div class="hud-barras">
             <div class="barra barra-xp">
@@ -69,6 +76,7 @@
             <div class="opcoes-audio">
                 <button id="btn-som" class="btn btn-pequeno">🔊 Efeitos</button>
                 <button id="btn-musica" class="btn btn-pequeno">🎵 Música</button>
+                <button class="btn btn-pequeno btn-tela-cheia">⛶ Tela cheia</button>
             </div>
 
             <p class="creditos">D.F.B.G PRODUCTIONS</p>
@@ -120,9 +128,10 @@
                 <li><b>Gemas azuis</b> dão experiência. Ao subir de nível você escolhe uma melhoria.</li>
                 <li><b>Moedas 🪙</b> ficam guardadas e são gastas na Ferraria entre as partidas.</li>
                 <li><b>Baús</b> caem de inimigos de elite (os que brilham) e dos chefes.</li>
+                <li><b>Ímã</b> puxa todas as gemas do mapa. <b>Ira Divina</b> fulmina todo mundo na tela. Os dois são raros.</li>
                 <li><b>Evoluções:</b> arma no nível MÁX + o item passivo certo no nível 5 = arma lendária.</li>
                 <li><b>Chefes</b> aparecem aos 5, 10 e 15 minutos. Derrote o Rei Vampiro para vencer.</li>
-                <li><b>Pausar:</b> tecla ESC ou P.</li>
+                <li><b>Pausar:</b> botão ❚❚ no canto da tela, ou as teclas ESC / P.</li>
             </ul>
             <button id="btn-voltar-ajuda" class="btn btn-fantasma">← Voltar</button>
         </div>
@@ -145,6 +154,7 @@
             <div class="opcoes-audio">
                 <button id="btn-som2" class="btn btn-pequeno">🔊 Efeitos</button>
                 <button id="btn-musica2" class="btn btn-pequeno">🎵 Música</button>
+                <button class="btn btn-pequeno btn-tela-cheia">⛶ Tela cheia</button>
             </div>
             <div class="botoes-menu">
                 <button id="btn-continuar" class="btn btn-grande">▶ Continuar</button>

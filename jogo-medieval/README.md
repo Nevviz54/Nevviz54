@@ -8,8 +8,13 @@ sem instalar nada.
 
 ## ▶️ Como jogar
 
-**Jeito mais fácil:** abra o arquivo `index.html` com dois cliques. Ele roda direto no
-navegador (Chrome, Edge, Firefox), inclusive sem internet.
+**Jeito mais fácil:** baixe o arquivo **`reino-sombrio.html`** e abra com dois cliques.
+Esse é o jogo inteiro espremido num arquivo só — não precisa de mais nada junto, roda
+offline e dá para mandar por WhatsApp ou pendrive.
+
+Se baixar o projeto completo, também dá para abrir o `index.html` (é a versão separada
+em vários arquivos, usada para programar). Só lembre que o `index.html` **precisa** estar
+acompanhado do `style.css` e da pasta `js/` — sozinho ele não funciona.
 
 Se quiser jogar pelo celular ou mandar o link para alguém, dá para publicar de graça
 com o GitHub Pages: em **Settings → Pages**, escolha a branch e salve. O jogo fica em
@@ -21,7 +26,8 @@ com o GitHub Pages: em **Settings → Pages**, escolha a branch e salve. O jogo 
 |------|---------|---------|
 | Mover | `W A S D` ou setas | arraste o dedo na tela |
 | Atacar | automático | automático |
-| Pausar | `ESC` ou `P` | botão de pausa do menu |
+| Pausar | `ESC`, `P` ou o botão ❚❚ | botão ❚❚ no canto da tela |
+| Tela cheia | botão ⛶ | botão ⛶ |
 
 Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mais próximo.
 
@@ -31,7 +37,10 @@ Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mai
 - **Moedas** ficam guardadas mesmo quando você morre e são gastas na **Ferraria**
   (melhorias permanentes que valem para todas as próximas partidas).
 - **Baús** caem de inimigos de elite (os que brilham em laranja) e dos chefes.
+- **Ímã** 🧲 puxa todas as gemas do mapa de uma vez. **Ira Divina** ⚡ fulmina todo mundo
+  na tela. Os dois são raros e caem de qualquer inimigo.
 - **Chefes** aparecem aos 5, 10 e 15 minutos. Derrotar o **Rei Vampiro** é a vitória.
+- O **cenário muda** junto com os chefes: campo → criptas → terra queimada.
 - **Evoluções:** arma no nível MÁX + o item passivo certo no nível 5 = arma lendária.
 
 | Arma no máximo | + Passivo nível 5 | = Evolução |
@@ -54,15 +63,20 @@ Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mai
 
 ```
 jogo-medieval/
-├── index.html      → estrutura das telas (menu, loja, HUD)
-├── style.css       → visual da interface
-└── js/
-    ├── utils.js    → funções de matemática, grade de colisão e salvamento
-    ├── audio.js    → música e efeitos gerados na hora (Web Audio API)
-    ├── art.js      → a pixel art, desenhada por código a partir de mapas de texto
-    ├── data.js     → CONTEÚDO: heróis, armas, monstros, chefes e loja
-    └── game.js     → o motor: laço principal, colisões, desenho e telas
+├── index.html           → estrutura das telas (menu, loja, HUD)
+├── style.css            → visual da interface
+├── js/
+│   ├── utils.js         → funções de matemática, grade de colisão e salvamento
+│   ├── audio.js         → música e efeitos gerados na hora (Web Audio API)
+│   ├── art.js           → a pixel art, desenhada por código a partir de mapas de texto
+│   ├── data.js          → CONTEÚDO: heróis, armas, monstros, chefes e loja
+│   └── game.js          → o motor: laço principal, colisões, desenho e telas
+├── construir.js         → junta tudo num arquivo só (rode: node construir.js)
+└── reino-sombrio.html   → gerado pelo construir.js, é o jogo em arquivo único
 ```
+
+⚠️ O `reino-sombrio.html` é **gerado automaticamente**. Não edite ele direto: mexa nos
+arquivos de origem e rode `node construir.js` de novo, senão suas mudanças somem.
 
 ## 🔧 Quer mexer no jogo?
 

@@ -17,7 +17,8 @@ const Game = {
     abates: 0, ouro: 0, gemasColetadas: 0,
     dificuldade: 'normal',
     camX: 0, camY: 0, tremor: 0, tremorT: 0,
-    chao: null, padrao: null,
+    chao: null, padrao: null, tema: 'campo',
+    proximoMinuto: 1,
     proximoChefe: 0,
     chefeAtivo: null,
     timerSpawn: 0, timerHorda: 0,
@@ -40,8 +41,7 @@ function iniciar() {
     Game.canvas = document.getElementById('tela');
     Game.ctx = Game.canvas.getContext('2d');
     Game.grade = new SpatialGrid(72);
-    Game.chao = criarTexturaChao('campo');
-    Game.padrao = Game.ctx.createPattern(Game.chao, 'repeat');
+    trocarCenario('campo');
 
     redimensionar();
     window.addEventListener('resize', redimensionar);
@@ -75,6 +75,14 @@ function redimensionar() {
     Game.escala = Math.max(3, Math.round(bruto * 3)) / 3;
 }
 
+/** Troca o chão da arena (o cenário muda conforme a partida avança). */
+function trocarCenario(tema) {
+    if (Game.tema === tema && Game.padrao) return;
+    Game.tema = tema;
+    Game.chao = criarTexturaChao(tema);
+    Game.padrao = Game.ctx.createPattern(Game.chao, 'repeat');
+}
+
 function meiaLargura() { return Game.w / (2 * Game.escala); }
 function meiaAltura() { return Game.h / (2 * Game.escala); }
 
@@ -91,6 +99,14 @@ function configurarEntrada() {
     window.addEventListener('blur', () => { Game.teclas = {}; });
 
     const c = Game.canvas;
+
+    // garante que o teclado funcione mesmo quando o jogo está dentro
+    // de uma moldura (como aqui no Claude): o primeiro toque dá o foco
+    c.setAttribute('tabindex', '0');
+    c.addEventListener('pointerdown', () => {
+        try { window.focus(); c.focus({ preventScroll: true }); } catch (e) { /* sem foco, segue o jogo */ }
+    });
+
     c.addEventListener('touchstart', e => {
         for (const t of e.changedTouches) {
             if (!Game.joystick.ativo) {
@@ -164,6 +180,8 @@ function iniciarPartida(heroiId, dificuldade) {
     Game.timerSpawn = 0; Game.timerHorda = 12; Game.filaNivel = 0;
     Game.proximoChefe = 0; Game.chefeAtivo = null;
     Game.tremor = 0;
+    Game.proximoMinuto = 1;
+    trocarCenario('campo');
 
     const bon = heroi.bonus || {};
     Game.jogador = {
@@ -196,9 +214,32 @@ function iniciarPartida(heroiId, dificuldade) {
     Game.hudSujo = true;
     mostrarTela(null);
     document.getElementById('hud').classList.remove('escondido');
+    mostrarDica();
     Som.iniciar();
     Som.tocarMusica();
     atualizarHUD();
+}
+
+/** Lembrete de controles no começo da partida (some sozinho). */
+function mostrarDica() {
+    const el = document.getElementById('dica');
+    if (!el) return;
+    const toque = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    el.innerHTML = toque
+        ? '<b>Arraste o dedo</b> na tela para andar<br><span>Seus ataques são automáticos</span>'
+        : '<b>W A S D</b> ou as setas para andar<br><span>Seus ataques são automáticos · ESC pausa</span>';
+    el.classList.remove('escondido', 'sumindo');
+    clearTimeout(mostrarDica.t1);
+    clearTimeout(mostrarDica.t2);
+    mostrarDica.t1 = setTimeout(() => el.classList.add('sumindo'), 4200);
+    mostrarDica.t2 = setTimeout(() => el.classList.add('escondido'), 5400);
+}
+
+function esconderDica() {
+    const el = document.getElementById('dica');
+    if (el) el.classList.add('escondido');
+    clearTimeout(mostrarDica.t1);
+    clearTimeout(mostrarDica.t2);
 }
 
 function darArma(id) {
@@ -263,6 +304,9 @@ function atualizar(dt) {
         }
     }
 
+    /* ---- marcos de tempo e cenário ---- */
+    marcosDoTempo();
+
     /* ---- surgimento de monstros ---- */
     atualizarSpawn(dt);
     atualizarChefes();
@@ -304,6 +348,30 @@ function atualizar(dt) {
     if (Game.tempo >= Game.DURACAO + 30 && !Game.chefeAtivo) vencer();
 
     atualizarHUD();
+}
+
+/* =========================================================
+   MARCOS DE TEMPO
+   A cada minuto aparece um aviso, e o cenário muda junto
+   com os chefes para a partida não ficar sempre igual.
+   ========================================================= */
+function marcosDoTempo() {
+    const minuto = Math.floor(Game.tempo / 60);
+    if (minuto < Game.proximoMinuto) return;
+    Game.proximoMinuto = minuto + 1;
+    if (minuto <= 0) return;
+
+    const faltam = Math.ceil((Game.DURACAO - Game.tempo) / 60);
+    if (minuto === 5) trocarCenario('cripta');
+    else if (minuto === 10) trocarCenario('inferno');
+
+    if (minuto === 5 || minuto === 10) {
+        mostrarAviso(minuto === 5 ? 'As criptas se abrem...' : 'A terra queima...', 2.2);
+    } else if (faltam > 0 && faltam <= 3) {
+        mostrarAviso('Faltam ' + faltam + (faltam === 1 ? ' minuto!' : ' minutos!'), 1.6);
+    } else {
+        mostrarAviso(minuto + (minuto === 1 ? ' MINUTO' : ' MINUTOS'), 1.2);
+    }
 }
 
 /* =========================================================
@@ -825,6 +893,8 @@ function matarInimigo(e) {
         soltarItem(e.x, e.y, 'moeda', 1);
     }
     if (chance(0.012 + Game.jogador.sorte * 0.01)) soltarItem(e.x, e.y, 'coracao', 20);
+    if (chance(0.004 + Game.jogador.sorte * 0.004)) soltarItem(e.x, e.y, 'ima', 1);
+    if (chance(0.003 + Game.jogador.sorte * 0.003)) soltarItem(e.x, e.y, 'trovao', 1);
     if (e.elite || e.chefe) soltarItem(e.x, e.y, 'bau', 1);
 
     if (e.chefe) {
@@ -906,6 +976,10 @@ function soltarGema(x, y, valor) {
     soltarItem(x, y, 'gema', valor, sprite);
 }
 
+const SPRITE_DE_ITEM = {
+    moeda: 'moeda', coracao: 'coracao', bau: 'bau', ima: 'ima', trovao: 'trovao'
+};
+
 function soltarItem(x, y, tipo, valor, sprite) {
     if (Game.coletaveis.length > 900) {
         // se o chão estiver lotado, junta o valor no item mais antigo
@@ -914,7 +988,7 @@ function soltarItem(x, y, tipo, valor, sprite) {
     }
     Game.coletaveis.push({
         x: x + rand(-6, 6), y: y + rand(-6, 6), tipo, valor,
-        sprite: sprite || (tipo === 'moeda' ? 'moeda' : tipo === 'coracao' ? 'coracao' : 'bau'),
+        sprite: sprite || SPRITE_DE_ITEM[tipo] || 'bau',
         t: rand(0, 6), atraido: false, vx: 0, vy: 0, morto: false
     });
 }
@@ -956,6 +1030,28 @@ function coletar(c) {
             criarTexto(p.x, p.y - 34, '+' + c.valor, '#7fff8a', 17);
             Som.efeito('cura');
             break;
+        case 'ima':
+            // puxa TODAS as gemas espalhadas pelo mapa
+            for (const outro of Game.coletaveis) {
+                if (outro.tipo === 'gema') outro.atraido = true;
+            }
+            criarTexto(p.x, p.y - 40, 'ÍMÃ!', '#ff7b7b', 20);
+            criarEfeito({ tipo: 'aneis', x: p.x, y: p.y, raio: 260, vida: 0.5, cor: '#ff8a8a' });
+            Som.efeito('nivel');
+            break;
+        case 'trovao': {
+            // raio em todos os inimigos visíveis
+            const alvos = inimigosNaTela(14);
+            for (const e of alvos) {
+                criarEfeito({ tipo: 'raio', x: e.x, y: e.y, vida: 0.3, raio: 60, semente: randInt(0, 9999) });
+            }
+            const dano = 60 + Game.tempo * 0.9;
+            danoNaArea(p.x, p.y, Math.max(meiaLargura(), meiaAltura()) + 80, dano, 260);
+            criarTexto(p.x, p.y - 40, 'IRA DIVINA!', '#ffe9a8', 22);
+            Game.tremor = 14;
+            Som.efeito('raio');
+            break;
+        }
         case 'bau':
             abrirBau();
             break;
@@ -1129,9 +1225,11 @@ function desenhar() {
     desenharEfeitos(g);
     desenharTextos(g);
 
-    // vinheta
+    // efeitos de tela cheia
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     desenharVinheta(g);
+    desenharAlertaVida(g);
+    desenharSetaChefe(g);
     if (Game.joystick.ativo) desenharJoystick(g);
 }
 
@@ -1190,6 +1288,8 @@ function desenharColetaveis(g, x0, y0, x1, y1) {
         const bob = Math.sin(c.t * 3.5) * 3;
         if (c.tipo === 'gema') desenharBrilho(g, c.x, c.y + bob, 16, 'rgba(140,200,255,0.5)', 0.5);
         if (c.tipo === 'bau') desenharBrilho(g, c.x, c.y + bob, 30, 'rgba(255,210,120,0.6)', 0.6);
+        if (c.tipo === 'ima') desenharBrilho(g, c.x, c.y + bob, 28, 'rgba(255,120,120,0.7)', 0.7);
+        if (c.tipo === 'trovao') desenharBrilho(g, c.x, c.y + bob, 28, 'rgba(255,230,140,0.75)', 0.75);
         g.drawImage(spr.dir, Math.round(c.x - spr.w / 2), Math.round(c.y - spr.h / 2 + bob));
     }
 }
@@ -1399,6 +1499,65 @@ function desenharVinheta(g) {
     g.drawImage(_vinheta, 0, 0);
 }
 
+/** Borda vermelha pulsando quando a vida está acabando. */
+let _vermelho = null, _vermelhoTam = '';
+function desenharAlertaVida(g) {
+    const p = Game.jogador;
+    if (!p || p.morto) return;
+    const fracao = p.vida / p.vidaMax;
+    if (fracao > 0.3) return;
+
+    const chave = Game.w + 'x' + Game.h;
+    if (chave !== _vermelhoTam) {
+        _vermelhoTam = chave;
+        _vermelho = novoCanvas(Game.w, Game.h);
+        const vg = _vermelho.getContext('2d');
+        const grad = vg.createRadialGradient(Game.w / 2, Game.h / 2, Math.min(Game.w, Game.h) * 0.42,
+            Game.w / 2, Game.h / 2, Math.max(Game.w, Game.h) * 0.68);
+        grad.addColorStop(0, 'rgba(180,20,20,0)');
+        grad.addColorStop(1, 'rgba(180,20,20,1)');
+        vg.fillStyle = grad;
+        vg.fillRect(0, 0, Game.w, Game.h);
+    }
+    const perigo = (0.3 - fracao) / 0.3;
+    const pulso = 0.5 + 0.5 * Math.sin(Game.tempo * 7);
+    g.globalAlpha = clamp((0.14 + 0.26 * perigo) * (0.55 + 0.45 * pulso), 0, 0.5);
+    g.drawImage(_vermelho, 0, 0);
+    g.globalAlpha = 1;
+}
+
+/** Seta na borda da tela apontando para o chefe quando ele está fora de vista. */
+function desenharSetaChefe(g) {
+    const c = Game.chefeAtivo;
+    if (!c || c.morto) return;
+    const margem = 46;
+    const sx = (c.x - Game.camX) * Game.escala + Game.w / 2;
+    const sy = (c.y - Game.camY) * Game.escala + Game.h / 2;
+    if (sx > margem && sx < Game.w - margem && sy > margem && sy < Game.h - margem) return;
+
+    const ang = Math.atan2(c.y - Game.camY, c.x - Game.camX);
+    const cos = Math.cos(ang), sen = Math.sin(ang);
+    const limite = Math.min(
+        (Game.w / 2 - margem) / Math.max(Math.abs(cos), 0.0001),
+        (Game.h / 2 - margem) / Math.max(Math.abs(sen), 0.0001)
+    );
+    const px = Game.w / 2 + cos * limite;
+    const py = Game.h / 2 + sen * limite;
+    const pulso = 0.6 + 0.4 * Math.sin(Game.tempo * 6);
+
+    g.save();
+    g.translate(px, py);
+    g.rotate(ang);
+    g.globalAlpha = 0.55 + 0.35 * pulso;
+    g.fillStyle = '#e0453a';
+    g.beginPath();
+    g.moveTo(16, 0); g.lineTo(-10, -11); g.lineTo(-5, 0); g.lineTo(-10, 11);
+    g.closePath(); g.fill();
+    g.strokeStyle = '#ffd6d6'; g.lineWidth = 2; g.stroke();
+    g.restore();
+    g.globalAlpha = 1;
+}
+
 function desenharJoystick(g) {
     const j = Game.joystick;
     g.globalAlpha = 0.28;
@@ -1541,12 +1700,55 @@ function configurarMenus() {
     }));
     sincronizarAudio();
 
-    const resetBtn = document.getElementById('btn-apagar');
-    if (resetBtn) resetBtn.addEventListener('click', () => {
-        if (confirm('Apagar todo o progresso salvo (ouro e melhorias)?')) {
-            Save.reset(); montarLoja(); atualizarMenuPrincipal(); montarSelecaoHerois();
-        }
+    // botões que ficam sobre o jogo
+    const pausaBtn = document.getElementById('btn-pausa');
+    if (pausaBtn) pausaBtn.addEventListener('click', () => { Som.efeito('ui'); alternarPausa(); });
+    document.querySelectorAll('.btn-tela-cheia').forEach(b => {
+        b.addEventListener('click', () => { Som.efeito('ui'); alternarTelaCheia(); });
     });
+
+    // apagar progresso pede confirmação no próprio botão (dois toques)
+    const resetBtn = document.getElementById('btn-apagar');
+    if (resetBtn) {
+        const textoOriginal = resetBtn.textContent;
+        let armado = false, tempoArmado = null;
+        const desarmar = () => { armado = false; resetBtn.textContent = textoOriginal; resetBtn.classList.remove('armado'); };
+        resetBtn.addEventListener('click', () => {
+            clearTimeout(tempoArmado);
+            if (!armado) {
+                armado = true;
+                resetBtn.textContent = 'Tem certeza? Toque de novo';
+                resetBtn.classList.add('armado');
+                tempoArmado = setTimeout(desarmar, 4000);
+                Som.efeito('erro');
+                return;
+            }
+            desarmar();
+            Save.reset();
+            montarLoja(); atualizarMenuPrincipal(); montarSelecaoHerois();
+            Som.efeito('compra');
+        });
+    }
+}
+
+/** Tela cheia: funciona no computador e na maioria dos celulares. */
+function alternarTelaCheia() {
+    try {
+        const el = document.documentElement;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            const pedir = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (!pedir) return;
+            const r = pedir.call(el);
+            if (r && r.catch) r.catch(() => {});
+        } else {
+            const sair = document.exitFullscreen || document.webkitExitFullscreen;
+            if (!sair) return;
+            const r = sair.call(document);
+            if (r && r.catch) r.catch(() => {});
+        }
+    } catch (e) {
+        // alguns navegadores (e telas embutidas) não permitem - segue o jogo
+    }
 }
 
 function atualizarMenuPrincipal() {
@@ -1799,6 +2001,7 @@ function aplicarPassivo(id) {
 function alternarPausa() {
     if (Game.estado === 'jogando') {
         Game.estado = 'pausa';
+        esconderDica();
         mostrarTela('tela-pausa');
         montarResumoPausa();
     } else if (Game.estado === 'pausa') {
@@ -1822,6 +2025,7 @@ function montarResumoPausa() {
 
 function finalizarPartida() {
     Som.pararMusica();
+    esconderDica();
     document.getElementById('hud').classList.add('escondido');
     document.getElementById('barra-chefe').classList.add('escondido');
 
@@ -1872,4 +2076,7 @@ function voltarAoMenu() {
     mostrarTela('tela-menu');
 }
 
-window.addEventListener('load', iniciar);
+// arranca assim que a página estiver pronta (ou já estiver, se o script
+// for carregado depois do load)
+if (document.readyState === 'complete') iniciar();
+else window.addEventListener('load', iniciar);

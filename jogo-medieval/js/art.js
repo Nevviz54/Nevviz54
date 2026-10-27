@@ -308,6 +308,26 @@ const MAPA_CRANIO = [
     '.s.s.s',
     '......'
 ];
+// Ímã: puxa todas as gemas da tela
+const MAPA_IMA = [
+    '.rr.rr.',
+    'rRRrRRr',
+    'rRR.RRr',
+    'rRR.RRr',
+    'rRRRRRr',
+    'rSR.RSr',
+    '.SS.SS.'
+];
+// Ira Divina: raio que atinge todos os inimigos na tela
+const MAPA_TROVAO = [
+    '..ooo..',
+    '.oyYo..',
+    '.oYo...',
+    'ooYYYoo',
+    '..oYYo.',
+    '...oYo.',
+    '...oo..'
+];
 
 /* =========================================================
    PALETAS
@@ -360,7 +380,9 @@ const PAL_ITENS = {
     tumulo:    { s: '#4a4a52', S: '#787884', o: '#2a2a30', d: '#3a3020' },
     arvore:    { g: '#1e3a1e', G: '#2f5a2c', t: '#4a3520', d: '#2a2414' },
     pedra:     { p: '#4a4a52', P: '#6a6a74' },
-    cranio:    { s: '#8a8676', S: '#c8c4b0', o: '#241f28' }
+    cranio:    { s: '#8a8676', S: '#c8c4b0', o: '#241f28' },
+    ima:       { r: '#7a1f1a', R: '#d8453a', S: '#dfe6f0' },
+    trovao:    { o: '#3a2a08', y: '#e0a82a', Y: '#ffe9a8' }
 };
 
 /* =========================================================
@@ -405,20 +427,27 @@ function prepararArte() {
     montar('arvore', MAPA_ARVORE, PAL_ITENS.arvore, 4);
     montar('pedra', MAPA_PEDRA, PAL_ITENS.pedra, 3);
     montar('cranio', MAPA_CRANIO, PAL_ITENS.cranio, 3);
+    montar('ima', MAPA_IMA, PAL_ITENS.ima, 4);
+    montar('trovao', MAPA_TROVAO, PAL_ITENS.trovao, 4);
 }
 
 /* =========================================================
    CHÃO INFINITO
    ========================================================= */
 
+/* Os três cenários por onde a batalha passa ao longo dos 15 minutos. */
+const TEMAS_CHAO = {
+    campo:   { base: '#20301f', escuro: '#1a2819', claro: '#27391f', detalhe: '#33471f' },
+    cripta:  { base: '#221d26', escuro: '#1b1720', claro: '#2b2530', detalhe: '#3a3242' },
+    inferno: { base: '#2a1a14', escuro: '#1f120e', claro: '#36201a', detalhe: '#5a2a18' }
+};
+
 /** Gera uma textura de 256x256 que se repete formando o campo de batalha. */
 function criarTexturaChao(tema) {
     const T = 256;
     const c = novoCanvas(T, T);
     const g = c.getContext('2d');
-    const cores = tema === 'cripta'
-        ? { base: '#221d26', escuro: '#1b1720', claro: '#2b2530', detalhe: '#3a3242' }
-        : { base: '#20301f', escuro: '#1a2819', claro: '#27391f', detalhe: '#33471f' };
+    const cores = TEMAS_CHAO[tema] || TEMAS_CHAO.campo;
 
     g.fillStyle = cores.base;
     g.fillRect(0, 0, T, T);
