@@ -19,6 +19,7 @@ const Game = {
     camX: 0, camY: 0, tremor: 0, tremorT: 0,
     chao: null, padrao: null, tema: 'campo',
     proximoMinuto: 1,
+    purgatorio: false, purgatorioUsado: false, animacao: null, ouroJaSalvo: 0,
     proximoChefe: 0,
     chefeAtivo: null,
     timerSpawn: 0, timerHorda: 0,
@@ -181,6 +182,10 @@ function iniciarPartida(heroiId, dificuldade) {
     Game.proximoChefe = 0; Game.chefeAtivo = null;
     Game.tremor = 0;
     Game.proximoMinuto = 1;
+    Game.purgatorio = false;
+    Game.purgatorioUsado = false;
+    Game.ouroJaSalvo = 0;
+    Game.animacao = null;
     trocarCenario('campo');
 
     const bon = heroi.bonus || {};
@@ -197,7 +202,7 @@ function iniciarPartida(heroiId, dificuldade) {
         velProjMul: 1,
         duracaoMul: 1,
         imaRaio: 95 * (bon.imaMul || 1) * b.ima,
-        sorte: 0,
+        sorte: bon.sorte || 0,
         regen: bon.regen || 0,
         xpMul: b.xp,
         ouroMul: b.ouro,
@@ -259,6 +264,7 @@ function laco(agora) {
     Game.dt = dt;
 
     if (Game.estado === 'jogando') atualizar(dt);
+    else if (Game.estado === 'animacao') atualizarAnimacao(dt);
     desenhar();
 
     requestAnimationFrame(laco);
@@ -269,7 +275,7 @@ function laco(agora) {
    ========================================================= */
 function atualizar(dt) {
     const p = Game.jogador;
-    Game.tempo += dt;
+    if (!Game.purgatorio) Game.tempo += dt;
 
     /* ---- movimento do jogador ---- */
     const dir = direcaoEntrada();
@@ -304,12 +310,14 @@ function atualizar(dt) {
         }
     }
 
-    /* ---- marcos de tempo e cenário ---- */
-    marcosDoTempo();
-
-    /* ---- surgimento de monstros ---- */
-    atualizarSpawn(dt);
-    atualizarChefes();
+    /* ---- no Purgatório não há horda nem relógio: só o duelo ---- */
+    if (Game.purgatorio) {
+        limitarNaArena();
+    } else {
+        marcosDoTempo();
+        atualizarSpawn(dt);
+        atualizarChefes();
+    }
 
     /* ---- monstros ---- */
     Game.grade.clear();
@@ -345,7 +353,7 @@ function atualizar(dt) {
     if (Game.tremor > 0) Game.tremor = Math.max(0, Game.tremor - dt * 26);
 
     /* ---- vitória por tempo (caso o chefe final já tenha caído) ---- */
-    if (Game.tempo >= Game.DURACAO + 30 && !Game.chefeAtivo) vencer();
+    if (!Game.purgatorio && Game.tempo >= Game.DURACAO + 30 && !Game.chefeAtivo) vencer();
 
     atualizarHUD();
 }
@@ -467,7 +475,7 @@ function criarInimigo(tipoId, x, y, op) {
         ouro: def.ouro * (elite ? 10 : 1),
         ia: def.ia,
         elite, chefe: false,
-        olhar: 1, flash: 0, ataque: 0, timer: rand(0, 2),
+        olhar: 1, flash: 0, ataque: 0, timer: rand(0, 2), lentidao: 0,
         empX: 0, empY: 0, morto: false
     };
     Game.inimigos.push(e);
@@ -558,6 +566,194 @@ function ataqueDeChefe(e, dt) {
 }
 
 /* =========================================================
+   O PURGATÓRIO
+   Segunda chance: o herói recusa a morte e enfrenta Mordrek
+   com exatamente as armas e os atributos que tinha ao cair.
+   Vencer = Valhalla. Perder = Helheim.
+   ========================================================= */
+function entrarNoPurgatorio() {
+    const p = Game.jogador;
+    if (!p || Game.purgatorioUsado) return;
+
+    Game.purgatorio = true;
+    Game.purgatorioUsado = true;
+
+    // limpa o mundo: aqui não existe mais horda, só o julgamento
+    Game.inimigos = []; Game.projeteis = []; Game.projInimigos = [];
+    Game.areas = []; Game.zonas = []; Game.coletaveis = []; Game.efeitos = []; Game.textos = [];
+    Game.chefeAtivo = null;
+    Game.filaNivel = 0;
+
+    // o herói volta inteiro, mas com o mesmo arsenal com que morreu
+    p.morto = false;
+    p.vida = p.vidaMax;
+    p.vidas = 0;
+    p.invuln = 2.2;
+    p.x = 0; p.y = 180;
+    p.vx = 0; p.vy = 0;
+
+    trocarCenario('purgatorio');
+
+    const chefe = {
+        id: ++criarInimigo.contador,
+        tipo: 'ceifador', def: CEIFADOR,
+        nome: CEIFADOR.nome, sprite: CEIFADOR.sprite,
+        x: 0, y: -210, vx: 0, vy: 0,
+        escala: CEIFADOR.escala, r: CEIFADOR.r,
+        vidaMax: CEIFADOR.vida(p.nivel) * DIFICULDADES[Game.dificuldade].vidaMul,
+        vida: CEIFADOR.vida(p.nivel) * DIFICULDADES[Game.dificuldade].vidaMul,
+        vel: CEIFADOR.vel,
+        dano: CEIFADOR.dano * (1 + Game.tempo / 60 * 0.06),
+        xp: 0, ouro: 0,
+        ia: 'ceifador', fase: 0, ataque: 2.4, espiral: null, foice: 0,
+        elite: false, chefe: true, final: false,
+        olhar: 1, flash: 0, timer: 0, lentidao: 0,
+        empX: 0, empY: 0, morto: false
+    };
+    Game.inimigos.push(chefe);
+    Game.chefeAtivo = chefe;
+
+    document.getElementById('barra-chefe').classList.remove('escondido');
+    document.getElementById('nome-chefe').textContent = CEIFADOR.nome;
+    document.getElementById('hud').classList.remove('escondido');
+
+    mostrarTela(null);
+    Game.estado = 'jogando';
+    Game.ultimoQuadro = performance.now();
+    mostrarAviso('O PURGATÓRIO', 2.6);
+    Som.iniciar();
+    Som.tocarMusica();
+    Som.efeito('chefe');
+    Game.tremor = 16;
+}
+
+/** Mantém o herói dentro do círculo do Purgatório. */
+function limitarNaArena() {
+    const p = Game.jogador;
+    const d = Math.hypot(p.x, p.y);
+    const limite = ARENA_RAIO - p.r;
+    if (d > limite) {
+        p.x = p.x / d * limite;
+        p.y = p.y / d * limite;
+    }
+}
+
+/** Ataques do Ceifador, que mudam conforme a vida dele cai. */
+function ataqueDoCeifador(e, dt) {
+    const p = Game.jogador;
+    const fracao = e.vida / e.vidaMax;
+    const fase = fracao > 0.6 ? 1 : (fracao > 0.3 ? 2 : 3);
+
+    if (fase !== e.fase) {
+        e.fase = fase;
+        e.ataque = 1.0;
+        mostrarAviso(CEIFADOR.frases[fase], 1.8);
+        criarEfeito({ tipo: 'aneis', x: e.x, y: e.y, raio: 220, vida: 0.6, cor: '#8affd0' });
+        Som.efeito('chefe');
+        if (fase >= 2) teleportarCeifador(e);
+    }
+
+    if (e.foice > 0) e.foice -= dt;
+
+    // rajada em espiral (fase 3) dispara aos poucos
+    if (e.espiral && e.espiral.restantes > 0) {
+        e.espiral.t -= dt;
+        if (e.espiral.t <= 0) {
+            e.espiral.t = 0.08;
+            e.espiral.ang += 0.44;
+            for (let i = 0; i < 2; i++) {
+                criarProjetilInimigo(e.x, e.y - 24, e.espiral.ang + i * Math.PI, 215,
+                    e.dano * 0.65, '#b07bff', 8);
+            }
+            e.espiral.restantes--;
+        }
+        return;
+    }
+
+    e.ataque -= dt;
+    if (e.ataque > 0) return;
+
+    const opcoes = fase === 1 ? ['ceifada', 'almas', 'ceifada']
+        : fase === 2 ? ['ceifada', 'almas', 'invocar', 'teleporte']
+        : ['espiral', 'almas', 'ceifada', 'invocar', 'espiral'];
+    const escolha = pick(opcoes);
+    e.ataque = (fase === 3 ? 1.5 : fase === 2 ? 2.0 : 2.6) * rand(0.85, 1.15);
+
+    switch (escolha) {
+        case 'ceifada': {
+            // golpe de foice: avisa antes, depois corta tudo na frente
+            const ang = angleTo(e.x, e.y, p.x, p.y);
+            const raio = 260, abertura = 1.5;
+            e.foice = 0.9;
+            criarEfeito({
+                tipo: 'avisoArco', x: e.x, y: e.y, raio, ang, abertura,
+                vida: 0.55, cor: '#8affd0',
+                aoFim: () => {
+                    criarEfeito({ tipo: 'golpeArco', x: e.x, y: e.y, raio, ang, abertura, vida: 0.3, cor: '#aaffe0' });
+                    if (dentroDoArco(e.x, e.y, raio, ang, abertura, p.x, p.y, p.r)) danoNoJogador(e.dano * 1.15);
+                    Som.efeito('espada');
+                    Game.tremor = 7;
+                }
+            });
+            break;
+        }
+        case 'almas': {
+            // anel de almas com uma brecha para escapar
+            const total = fase === 3 ? 18 : 13;
+            const brecha = randInt(0, total - 1);
+            const base = angleTo(e.x, e.y, p.x, p.y);
+            for (let i = 0; i < total; i++) {
+                if (i === brecha || i === (brecha + 1) % total) continue;
+                criarProjetilInimigo(e.x, e.y - 20, base + (i / total) * TAU, 190,
+                    e.dano * 0.7, '#8affd0', 8);
+            }
+            Som.efeito('magia');
+            break;
+        }
+        case 'invocar': {
+            const qtd = fase === 3 ? 7 : 5;
+            for (let i = 0; i < qtd; i++) {
+                const a = (i / qtd) * TAU + rand(-0.3, 0.3);
+                const d = ARENA_RAIO * 0.75;
+                const alma = criarInimigo('espectro', Math.cos(a) * d, Math.sin(a) * d, {});
+                if (alma) { alma.doPurgatorio = true; alma.vidaMax *= 0.6; alma.vida = alma.vidaMax; }
+            }
+            criarEfeito({ tipo: 'aneis', x: e.x, y: e.y, raio: 160, vida: 0.5, cor: '#8affd0' });
+            Som.efeito('magia');
+            break;
+        }
+        case 'teleporte':
+            teleportarCeifador(e);
+            e.ataque = 0.45;
+            break;
+        case 'espiral':
+            e.espiral = { restantes: 16, ang: rand(0, TAU), t: 0 };
+            Som.efeito('magia');
+            break;
+    }
+}
+
+function teleportarCeifador(e) {
+    const p = Game.jogador;
+    criarParticulas(e.x, e.y, 18, '#8affd0', 180);
+    const ang = rand(0, TAU), d = rand(230, 330);
+    e.x = clamp(p.x + Math.cos(ang) * d, -ARENA_RAIO + 60, ARENA_RAIO - 60);
+    e.y = clamp(p.y + Math.sin(ang) * d, -ARENA_RAIO + 60, ARENA_RAIO - 60);
+    criarParticulas(e.x, e.y, 18, '#8affd0', 180);
+    criarEfeito({ tipo: 'aneis', x: e.x, y: e.y, raio: 90, vida: 0.4, cor: '#8affd0' });
+}
+
+/** O ponto (x,y) está dentro do arco com centro em (cx,cy)? */
+function dentroDoArco(cx, cy, raio, ang, abertura, x, y, folga) {
+    const r = raio + (folga || 0);
+    if (dist2(cx, cy, x, y) > r * r) return false;
+    let dif = Math.atan2(y - cy, x - cx) - ang;
+    while (dif > Math.PI) dif -= TAU;
+    while (dif < -Math.PI) dif += TAU;
+    return Math.abs(dif) <= abertura / 2;
+}
+
+/* =========================================================
    IA DOS MONSTROS
    ========================================================= */
 function atualizarInimigo(e, dt) {
@@ -621,14 +817,34 @@ function atualizarInimigo(e, dt) {
             vx = nx * e.vel; vy = ny * e.vel;
             ataqueDeChefe(e, dt);
             break;
+
+        case 'ceifador': {
+            const velocidade = e.vel * (e.fase === 3 ? 1.35 : e.fase === 2 ? 1.12 : 1);
+            if (d > 150) { vx = nx * velocidade; vy = ny * velocidade; }
+            else { vx = -nx * velocidade * 0.35; vy = -ny * velocidade * 0.35; }
+            ataqueDoCeifador(e, dt);
+            break;
+        }
     }
 
     // empurrão (knockback) some com o tempo
     e.empX *= Math.pow(0.0016, dt);
     e.empY *= Math.pow(0.0016, dt);
 
-    e.x += (vx + e.empX) * dt;
-    e.y += (vy + e.empY) * dt;
+    // inimigo congelado anda devagar
+    let freio = 1;
+    if (e.lentidao > 0) { e.lentidao -= dt; freio = 0.42; }
+
+    e.x += (vx * freio + e.empX) * dt;
+    e.y += (vy * freio + e.empY) * dt;
+
+    // no Purgatório ninguém sai do círculo
+    if (Game.purgatorio) {
+        const dc = Math.hypot(e.x, e.y);
+        const limite = ARENA_RAIO - e.r * 0.5;
+        if (dc > limite) { e.x = e.x / dc * limite; e.y = e.y / dc * limite; }
+        return;
+    }
 
     // monstros que ficaram muito longe voltam para perto;
     // se já houver gente demais no mapa, eles simplesmente somem
@@ -686,6 +902,7 @@ function criarProjetil(op) {
         knock: op.knock || 0,
         gira: op.gira || 0, rot: 0,
         bumerangue: !!op.bumerangue,
+        teleguiado: op.teleguiado || 0,
         alcance: op.alcance || 0,
         andou: 0, voltando: false,
         explodir: op.explodir || null,
@@ -712,6 +929,20 @@ function atualizarProjeteis(dt) {
                 b.vx = Math.cos(ang) * b.vel * 1.15;
                 b.vy = Math.sin(ang) * b.vel * 1.15;
                 if (dist2(b.x, b.y, p.x, p.y) < 24 * 24) { b.morto = true; continue; }
+            }
+        }
+
+        // runas do Grimório: viram aos poucos na direção do alvo mais próximo
+        if (b.teleguiado) {
+            const alvo = inimigoMaisProximo(b.x, b.y, 460);
+            if (alvo) {
+                const desejado = angleTo(b.x, b.y, alvo.x, alvo.y);
+                let dif = desejado - Math.atan2(b.vy, b.vx);
+                while (dif > Math.PI) dif -= TAU;
+                while (dif < -Math.PI) dif += TAU;
+                const novo = Math.atan2(b.vy, b.vx) + clamp(dif, -b.teleguiado * dt, b.teleguiado * dt);
+                b.vx = Math.cos(novo) * b.vel;
+                b.vy = Math.sin(novo) * b.vel;
             }
         }
 
@@ -782,6 +1013,7 @@ function criarArea(op) {
         dano: op.dano, knock: op.knock || 0,
         vida: op.vida || 0.2, vidaMax: op.vida || 0.2,
         cor: op.cor || '#ffffff',
+        lentidao: op.lentidao || 0,
         acertados: new Set()
     });
 }
@@ -801,6 +1033,7 @@ function atualizarAreas(dt) {
                 if (Math.abs(dif) > a.abertura / 2) return;
             }
             a.acertados.add(e.id);
+            if (a.lentidao > 0) e.lentidao = Math.max(e.lentidao, a.lentidao);
             const ang = angleTo(a.x, a.y, e.x, e.y);
             aplicarDano(e, a.dano, Math.cos(ang), Math.sin(ang), a.knock);
         });
@@ -883,6 +1116,21 @@ function matarInimigo(e) {
     criarParticulas(e.x, e.y, e.chefe ? 26 : (e.elite ? 14 : 6), e.chefe ? '#ff5a5a' : '#c0393b', e.chefe ? 220 : 130);
     Som.efeito('morte');
 
+    // no Purgatório não há experiência nem ouro: o duelo é com o que se tem
+    if (Game.purgatorio) {
+        if (e.ia === 'ceifador') {
+            Game.chefeAtivo = null;
+            document.getElementById('barra-chefe').classList.add('escondido');
+            Game.tremor = 22;
+            criarParticulas(e.x, e.y, 40, '#8affd0', 260);
+            mostrarAviso('MORDREK CAIU!', 2.4);
+            setTimeout(irParaValhalla, 1300);
+        } else if (chance(0.14)) {
+            soltarItem(e.x, e.y, 'coracao', 18);
+        }
+        return;
+    }
+
     // recompensas
     soltarGema(e.x, e.y, e.xp);
     const ouro = e.ouro * (1 + Game.jogador.sorte * 0.5);
@@ -947,6 +1195,7 @@ function morrerJogador() {
         return;
     }
     p.morto = true;
+    if (Game.purgatorio) { irParaHelheim(); return; }
     perder();
 }
 
@@ -1096,6 +1345,7 @@ function criarEfeito(op) {
         tipo: op.tipo, x: op.x, y: op.y,
         raio: op.raio || 20, vida: op.vida || 0.3, vidaMax: op.vida || 0.3,
         cor: op.cor || '#fff', semente: op.semente || 0,
+        ang: op.ang || 0, abertura: op.abertura || TAU,
         vx: op.vx || 0, vy: op.vy || 0,
         aoFim: op.aoFim || null
     });
@@ -1191,7 +1441,8 @@ function desenhar() {
     const y0 = Game.camY - hh, y1 = Game.camY + hh;
 
     desenharChao(g, x0, y0, x1, y1);
-    desenharCenario(g, x0, y0, x1, y1);
+    if (Game.purgatorio) desenharArena(g);
+    else desenharCenario(g, x0, y0, x1, y1);
     desenharZonas(g);
 
     // aura por baixo das criaturas
@@ -1207,7 +1458,7 @@ function desenhar() {
     for (const e of Game.inimigos) {
         if (e.x > x0 && e.x < x1 && e.y > y0 && e.y < y1) lista.push(e);
     }
-    lista.push(Game.jogador);
+    if (!Game.jogador.oculto) lista.push(Game.jogador);
     lista.sort((a, b) => a.y - b.y);
     for (const ent of lista) {
         if (ent === Game.jogador) desenharJogador(g);
@@ -1230,6 +1481,7 @@ function desenhar() {
     desenharVinheta(g);
     desenharAlertaVida(g);
     desenharSetaChefe(g);
+    desenharAnimacao(g);
     if (Game.joystick.ativo) desenharJoystick(g);
 }
 
@@ -1260,6 +1512,45 @@ function desenharCenario(g, x0, y0, x1, y1) {
             g.drawImage(spr.dir, Math.round(px - spr.w / 2), Math.round(py - spr.h));
         }
     }
+}
+
+/** O círculo do Purgatório: a borda de onde não se sai, e as almas penadas ao fundo. */
+function desenharArena(g) {
+    const t = Game.ultimoQuadro / 1000;
+
+    // almas flutuando dentro do círculo
+    for (let i = 0; i < 26; i++) {
+        const a = hash2(i, 11) * TAU + t * (0.1 + hash2(i, 12) * 0.2);
+        const d = ARENA_RAIO * (0.2 + hash2(i, 13) * 0.75);
+        const x = Math.cos(a) * d;
+        const y = Math.sin(a) * d * 0.9 + Math.sin(t * 1.5 + i) * 14;
+        desenharBrilho(g, x, y, 26 + hash2(i, 14) * 22, 'rgba(120,200,255,0.16)', 0.5);
+    }
+
+    // a borda
+    const pulso = 0.6 + 0.4 * Math.sin(t * 2);
+    g.save();
+    g.globalAlpha = 0.35 + 0.2 * pulso;
+    g.strokeStyle = '#8affd0';
+    g.lineWidth = 6;
+    g.beginPath(); g.arc(0, 0, ARENA_RAIO, 0, TAU); g.stroke();
+    g.globalAlpha = 0.14;
+    g.lineWidth = 26;
+    g.stroke();
+    g.restore();
+    g.globalAlpha = 1;
+
+    // runas marcando o círculo
+    g.save();
+    g.globalAlpha = 0.5;
+    g.fillStyle = '#8affd0';
+    for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * TAU + t * 0.08;
+        const x = Math.cos(a) * ARENA_RAIO, y = Math.sin(a) * ARENA_RAIO;
+        g.fillRect(x - 3, y - 3, 6, 6);
+    }
+    g.restore();
+    g.globalAlpha = 1;
 }
 
 function desenharZonas(g) {
@@ -1305,7 +1596,8 @@ function desenharInimigo(g, e) {
     desenharSombra(g, e.x, e.y, w * 0.32, h * 0.11, 0.3);
 
     if (e.elite) desenharBrilho(g, e.x, e.y - h * 0.4, w * 0.9, 'rgba(255,120,60,0.45)', 0.55);
-    if (e.chefe) desenharBrilho(g, e.x, e.y - h * 0.4, w * 1.0, 'rgba(255,60,60,0.4)', 0.6);
+    if (e.chefe) desenharBrilho(g, e.x, e.y - h * 0.4, w * 1.0,
+        e.ia === 'ceifador' ? 'rgba(90,255,200,0.34)' : 'rgba(255,60,60,0.4)', 0.6);
 
     g.globalAlpha = e.ia === 'fantasma' ? 0.75 : 1;
     const img = e.flash > 0
@@ -1315,6 +1607,12 @@ function desenharInimigo(g, e) {
     else g.drawImage(img, px, py, w, h);
     g.globalAlpha = 1;
 
+    // congelado pelo Sopro Gélido
+    if (e.lentidao > 0) desenharBrilho(g, e.x, e.y - h * 0.4, w * 0.75, 'rgba(150,225,255,0.55)', 0.55);
+
+    // a foice de Mordrek
+    if (e.ia === 'ceifador') desenharFoice(g, e, w, h, bob);
+
     // barra de vida dos grandões
     if ((e.elite || e.chefe) && e.vida < e.vidaMax) {
         const bw = w * 0.9, bh = 4;
@@ -1322,6 +1620,32 @@ function desenharInimigo(g, e) {
         g.fillStyle = e.chefe ? '#e04a4a' : '#ff9b3a';
         g.fillRect(e.x - bw / 2, py - 8, bw * clamp(e.vida / e.vidaMax, 0, 1), bh);
     }
+}
+
+/** A foice do Ceifador: fica balançando de leve e gira no golpe. */
+function desenharFoice(g, e, w, h, bob) {
+    const giro = e.foice > 0
+        ? (1 - e.foice / 0.9) * 3.0 - 0.9          // varre durante a ceifada
+        : Math.sin(Game.tempo * 1.1 + e.id) * 0.12;
+    const r = e.r;
+    g.save();
+    g.translate(e.x + r * 1.05 * e.olhar, e.y - r * 0.3 + bob);
+    g.rotate(giro * e.olhar);
+    g.scale(e.olhar, 1);
+
+    // cabo
+    g.strokeStyle = '#1d1526';
+    g.lineWidth = 6; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(0, r * 0.8); g.lineTo(0, -r * 1.5); g.stroke();
+
+    // lâmina curva, voltada para fora
+    g.beginPath();
+    g.moveTo(0, -r * 1.5);
+    g.quadraticCurveTo(r * 0.9, -r * 1.75, r * 1.0, -r * 0.95);
+    g.strokeStyle = '#cfe8ff'; g.lineWidth = 7; g.stroke();
+    g.strokeStyle = '#8affd0'; g.lineWidth = 3; g.stroke();
+    g.restore();
+    g.globalAlpha = 1;
 }
 
 function desenharJogador(g) {
@@ -1390,6 +1714,15 @@ function desenharProjeteis(g) {
                 g.strokeStyle = '#8a6a20'; g.lineWidth = 2; g.strokeRect(-13, -14, 26, 14);
                 break;
             }
+            case 'runa': {
+                desenharBrilho(g, 0, 0, b.raio * 2.4, 'rgba(176,123,255,0.8)', 0.8);
+                g.rotate(Game.tempo * 3);
+                g.fillStyle = b.cor;
+                g.fillRect(-b.raio * 0.55, -b.raio * 0.55, b.raio * 1.1, b.raio * 1.1);
+                g.strokeStyle = '#efe4ff'; g.lineWidth = 2;
+                g.strokeRect(-b.raio * 0.55, -b.raio * 0.55, b.raio * 1.1, b.raio * 1.1);
+                break;
+            }
             case 'bola':
             default: {
                 desenharBrilho(g, 0, 0, b.raio * 2.6, 'rgba(255,150,60,0.75)', 0.75);
@@ -1454,6 +1787,23 @@ function desenharEfeitos(g) {
                 g.strokeStyle = f.cor; g.lineWidth = 4;
                 g.beginPath(); g.ellipse(f.x, f.y, f.raio, f.raio * 0.62, 0, 0, TAU); g.stroke();
                 g.globalAlpha = 1;
+                break;
+            case 'avisoArco': {
+                g.save();
+                g.globalAlpha = 0.22 + 0.22 * Math.sin(Game.tempo * 22);
+                g.fillStyle = f.cor;
+                g.beginPath();
+                g.moveTo(f.x, f.y);
+                g.arc(f.x, f.y, f.raio, f.ang - f.abertura / 2, f.ang + f.abertura / 2);
+                g.closePath(); g.fill();
+                g.globalAlpha = 0.5;
+                g.strokeStyle = f.cor; g.lineWidth = 3; g.stroke();
+                g.restore();
+                g.globalAlpha = 1;
+                break;
+            }
+            case 'golpeArco':
+                desenharArco(g, f.x, f.y, f.raio, f.ang, f.abertura, t, f.cor);
                 break;
             case 'faisca':
                 g.globalAlpha = 1 - t;
@@ -1671,6 +2021,11 @@ function configurarMenus() {
     clique('btn-menu-fim', () => voltarAoMenu());
     clique('btn-menu-vitoria', () => voltarAoMenu());
     clique('btn-reiniciar-vitoria', () => iniciarPartida(Game.ultimoHeroi, Game.dificuldade));
+    clique('btn-purgatorio', () => entrarNoPurgatorio());
+    clique('btn-menu-valhalla', () => voltarAoMenu());
+    clique('btn-reiniciar-valhalla', () => iniciarPartida(Game.ultimoHeroi, Game.dificuldade));
+    clique('btn-menu-helheim', () => voltarAoMenu());
+    clique('btn-reiniciar-helheim', () => iniciarPartida(Game.ultimoHeroi, Game.dificuldade));
 
     document.querySelectorAll('.btn-dificuldade').forEach(b => {
         b.addEventListener('click', () => {
@@ -1756,6 +2111,7 @@ function atualizarMenuPrincipal() {
     document.getElementById('recorde-tempo').textContent = formatTime(Save.data.melhorTempo || 0);
     document.getElementById('recorde-abates').textContent = formatNum(Save.data.melhorAbates || 0);
     document.getElementById('recorde-vitorias').textContent = Save.data.vitorias || 0;
+    document.getElementById('recorde-valhalla').textContent = Save.data.valhalla || 0;
 }
 
 /* ----------------------- seleção de herói ----------------------- */
@@ -1770,14 +2126,21 @@ function montarSelecaoHerois() {
         card.className = 'card-heroi' + (bloqueado ? ' bloqueado' : '');
         card.innerHTML = `
             <div class="heroi-icone">${bloqueado ? '🔒' : h.icone}</div>
-            <div class="heroi-nome">${h.nome}</div>
-            <div class="heroi-desc">${h.desc}</div>
+            <div class="heroi-nome">${bloqueado && h.segredo ? '???' : h.nome}</div>
+            <div class="heroi-desc">${bloqueado && h.segredo ? 'Um herói ainda por merecer.' : h.desc}</div>
             <div class="heroi-detalhe">${h.detalhe}</div>
             <div class="heroi-arma">Arma inicial: <b>${ARMAS[h.arma].nome}</b></div>
-            ${bloqueado ? `<div class="heroi-preco">Desbloquear por ${h.preco} 🪙</div>` : ''}
+            ${bloqueado ? (h.segredo
+                ? `<div class="heroi-preco segredo">🔒 ${h.segredo}</div>`
+                : `<div class="heroi-preco">Desbloquear por ${h.preco} 🪙</div>`) : ''}
         `;
         card.addEventListener('click', () => {
             Som.iniciar();
+            if (bloqueado && h.segredo) {
+                Som.efeito('erro');
+                mostrarAviso(h.segredo, 2.2);
+                return;
+            }
             if (bloqueado) {
                 if (Save.data.ouro >= h.preco) {
                     Save.data.ouro -= h.preco;
@@ -2029,7 +2392,9 @@ function finalizarPartida() {
     document.getElementById('hud').classList.add('escondido');
     document.getElementById('barra-chefe').classList.add('escondido');
 
-    Save.data.ouro += Game.ouro;
+    const aindaNaoGuardado = Game.ouro - (Game.ouroJaSalvo || 0);
+    if (aindaNaoGuardado > 0) Save.data.ouro += aindaNaoGuardado;
+    Game.ouroJaSalvo = Game.ouro;
     if (Game.tempo > (Save.data.melhorTempo || 0)) Save.data.melhorTempo = Game.tempo;
     if (Game.abates > (Save.data.melhorAbates || 0)) Save.data.melhorAbates = Game.abates;
     Save.save();
@@ -2044,6 +2409,7 @@ function perder() {
     document.getElementById('fim-nivel').textContent = Game.jogador.nivel;
     document.getElementById('fim-abates').textContent = Game.abates;
     document.getElementById('fim-ouro').textContent = Game.ouro;
+    document.getElementById('oferta-purgatorio').classList.toggle('escondido', Game.purgatorioUsado);
     mostrarTela('tela-fim');
 }
 
@@ -2061,6 +2427,220 @@ function vencer() {
     mostrarTela('tela-vitoria');
 }
 
+/* =========================================================
+   VALHALLA E HELHEIM
+   Os dois desfechos possíveis do Purgatório, cada um com
+   sua animação antes da tela de resultado.
+   ========================================================= */
+function irParaValhalla() {
+    if (Game.estado === 'animacao' || Game.estado === 'valhalla') return;
+    Game.estado = 'animacao';
+    prepararCena();
+    Game.animacao = { tipo: 'valhalla', t: 0, dur: 4.6 };
+    Som.pararMusica();
+    Som.efeito('vitoria');
+    [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => Som.tom(f, 0.7, 'triangle', 0.16, null, 0.55 + i * 0.24));
+}
+
+function irParaHelheim() {
+    if (Game.estado === 'animacao' || Game.estado === 'helheim') return;
+    Game.estado = 'animacao';
+    prepararCena();
+    Game.animacao = { tipo: 'helheim', t: 0, dur: 4.0 };
+    Som.pararMusica();
+    Som.efeito('gameover');
+    [196, 174, 146, 110].forEach((f, i) => Som.tom(f, 0.9, 'sawtooth', 0.14, null, 0.5 + i * 0.4));
+}
+
+/** Tira a interface da frente para a animação ficar limpa. */
+function prepararCena() {
+    Game.jogador.oculto = true;
+    Game.textos = [];
+    Game.projInimigos = [];
+    Game.areas = [];
+    esconderDica();
+    document.getElementById('hud').classList.add('escondido');
+    document.getElementById('barra-chefe').classList.add('escondido');
+    document.getElementById('flash-dano').classList.remove('ativo');
+}
+
+function atualizarAnimacao(dt) {
+    const a = Game.animacao;
+    if (!a) return;
+    a.t += dt;
+    if (a.t < a.dur) return;
+
+    Game.animacao = null;
+    Game.jogador.oculto = false;
+    if (a.tipo === 'valhalla') concluirValhalla();
+    else concluirHelheim();
+}
+
+function concluirValhalla() {
+    Game.estado = 'valhalla';
+    const bonus = 300 + Math.round(Game.ouro * 0.5);
+    Game.ouro += bonus;
+    Save.data.valhalla = (Save.data.valhalla || 0) + 1;
+
+    // vencer Mordrek liberta a Valquíria
+    const novaHeroina = !Save.data.desbloqueados.includes('valquiria');
+    if (novaHeroina) Save.data.desbloqueados.push('valquiria');
+
+    finalizarPartida();
+    document.getElementById('val-tempo').textContent = formatTime(Game.tempo);
+    document.getElementById('val-nivel').textContent = Game.jogador.nivel;
+    document.getElementById('val-abates').textContent = Game.abates;
+    document.getElementById('val-ouro').textContent = Game.ouro;
+    document.getElementById('val-bonus').textContent = '+' + bonus;
+    document.getElementById('val-desbloqueio').classList.toggle('escondido', !novaHeroina);
+    mostrarTela('tela-valhalla');
+}
+
+function concluirHelheim() {
+    Game.estado = 'helheim';
+    Save.data.helheim = (Save.data.helheim || 0) + 1;
+    finalizarPartida();
+    document.getElementById('hel-tempo').textContent = formatTime(Game.tempo);
+    document.getElementById('hel-nivel').textContent = Game.jogador.nivel;
+    document.getElementById('hel-abates').textContent = Game.abates;
+    document.getElementById('hel-ouro').textContent = Game.ouro;
+    mostrarTela('tela-helheim');
+}
+
+/** Desenha a subida a Valhalla ou a descida a Helheim. */
+function desenharAnimacao(g) {
+    const a = Game.animacao;
+    if (!a) return;
+    const p = Game.jogador;
+    const spr = SPR[p.sprite];
+    const cx = Game.w / 2, cy = Game.h / 2;
+    const t = a.t;
+
+    if (a.tipo === 'valhalla') {
+        const subida = clamp((t - 1.2) / 1.8, 0, 1);
+        const clarao = clamp((t - 3.0) / 1.6, 0, 1);
+        const heroiY = cy - subida * (cy * 0.55);
+
+        // escurece o campo de batalha
+        g.globalAlpha = clamp(t / 1.2, 0, 1) * 0.72;
+        g.fillStyle = '#1a1206';
+        g.fillRect(0, 0, Game.w, Game.h);
+        g.globalAlpha = 1;
+
+        // raios girando
+        g.save();
+        g.translate(cx, heroiY);
+        g.rotate(t * 0.5);
+        g.globalAlpha = 0.24 + 0.12 * Math.sin(t * 5);
+        g.fillStyle = '#ffe9a8';
+        for (let i = 0; i < 12; i++) {
+            g.rotate(TAU / 12);
+            g.beginPath();
+            g.moveTo(0, 0);
+            g.lineTo(Game.h * 1.2, -34);
+            g.lineTo(Game.h * 1.2, 34);
+            g.closePath(); g.fill();
+        }
+        g.restore();
+        g.globalAlpha = 1;
+
+        // coluna de luz
+        const larguraFeixe = 90 + 50 * Math.sin(t * 3);
+        const feixe = g.createLinearGradient(0, 0, 0, Game.h);
+        feixe.addColorStop(0, 'rgba(255,233,168,0.75)');
+        feixe.addColorStop(1, 'rgba(255,233,168,0)');
+        g.globalAlpha = clamp(t / 0.8, 0, 1);
+        g.fillStyle = feixe;
+        g.fillRect(cx - larguraFeixe / 2, 0, larguraFeixe, Game.h);
+        g.globalAlpha = 1;
+
+        // fagulhas subindo
+        for (let i = 0; i < 40; i++) {
+            const fase = (t * 0.4 + hash2(i, 3)) % 1;
+            const px = cx + (hash2(i, 1) - 0.5) * 320;
+            const py = Game.h - fase * Game.h * 1.1;
+            g.globalAlpha = (1 - fase) * 0.85;
+            g.fillStyle = i % 3 === 0 ? '#fff6d8' : '#e0b04a';
+            const s = 2 + hash2(i, 2) * 4;
+            g.fillRect(px, py, s, s);
+        }
+        g.globalAlpha = 1;
+
+        // o herói sobe
+        if (spr) {
+            desenharBrilho(g, cx, heroiY, 120 + 40 * subida, 'rgba(255,233,168,0.85)', 0.75);
+            const esc = Game.escala * (1 + subida * 0.35);
+            g.save();
+            g.translate(cx, heroiY);
+            g.scale(esc, esc);
+            g.drawImage(spr.dir, -spr.w / 2, -spr.h);
+            g.restore();
+        }
+
+        // clarão final + nome
+        if (clarao > 0) {
+            g.globalAlpha = clarao * 0.92;
+            g.fillStyle = '#fff3d0';
+            g.fillRect(0, 0, Game.w, Game.h);
+            g.globalAlpha = 1;
+            g.textAlign = 'center';
+            g.globalAlpha = clamp((clarao - 0.3) / 0.5, 0, 1);
+            g.fillStyle = '#6b4a10';
+            g.font = 'bold ' + Math.round(Math.min(Game.w * 0.13, 92)) + 'px Cinzel, Georgia, serif';
+            g.fillText('VALHALLA', cx, cy + 20);
+            g.globalAlpha = 1;
+            g.textAlign = 'left';
+        }
+
+    } else {
+        const descida = clamp((t - 1.0) / 1.6, 0, 1);
+        const escuro = clamp((t - 2.6) / 1.4, 0, 1);
+        const heroiY = cy + descida * 70;
+
+        // o mundo esfria
+        g.globalAlpha = clamp(t / 1.0, 0, 1) * 0.8;
+        g.fillStyle = '#08121c';
+        g.fillRect(0, 0, Game.w, Game.h);
+        g.globalAlpha = 1;
+
+        // névoa caindo
+        for (let i = 0; i < 46; i++) {
+            const fase = (t * 0.25 + hash2(i, 5)) % 1;
+            const px = (hash2(i, 6) * Game.w + Math.sin(t + i) * 20);
+            const py = fase * Game.h;
+            desenharBrilho(g, px, py, 50 + hash2(i, 8) * 80,
+                'rgba(127,168,200,0.22)', 0.35 + hash2(i, 9) * 0.3);
+        }
+        g.globalAlpha = 1;
+
+        // o herói afunda
+        if (spr) {
+            g.save();
+            g.globalAlpha = 1 - descida * 0.85;
+            g.translate(cx, heroiY);
+            g.scale(Game.escala, Game.escala * (1 - descida * 0.45));
+            g.drawImage(spr.dir, -spr.w / 2, -spr.h);
+            g.restore();
+            g.globalAlpha = 1;
+            desenharBrilho(g, cx, heroiY, 90, 'rgba(40,90,130,0.6)', 0.5 * (1 - descida));
+        }
+
+        if (escuro > 0) {
+            g.globalAlpha = escuro * 0.95;
+            g.fillStyle = '#04070c';
+            g.fillRect(0, 0, Game.w, Game.h);
+            g.globalAlpha = 1;
+            g.textAlign = 'center';
+            g.globalAlpha = clamp((escuro - 0.3) / 0.5, 0, 1);
+            g.fillStyle = '#5f8ba8';
+            g.font = 'bold ' + Math.round(Math.min(Game.w * 0.13, 92)) + 'px Cinzel, Georgia, serif';
+            g.fillText('HELHEIM', cx, cy + 20);
+            g.globalAlpha = 1;
+            g.textAlign = 'left';
+        }
+    }
+}
+
 function voltarAoMenu() {
     if (Game.estado === 'jogando' || Game.estado === 'pausa' || Game.estado === 'nivel') finalizarPartida();
     Game.estado = 'menu';
@@ -2068,6 +2648,8 @@ function voltarAoMenu() {
     Game.inimigos = []; Game.projeteis = []; Game.projInimigos = [];
     Game.areas = []; Game.zonas = []; Game.coletaveis = []; Game.efeitos = []; Game.textos = [];
     Game.chefeAtivo = null;
+    Game.purgatorio = false;
+    Game.animacao = null;
     Som.pararMusica();
     document.getElementById('hud').classList.add('escondido');
     document.getElementById('barra-chefe').classList.add('escondido');

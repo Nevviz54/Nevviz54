@@ -4,6 +4,9 @@ Um jogo de sobrevivência contra hordas no estilo **Vampire Survivors / Brotato*
 em versão **medieval**. Feito em HTML, CSS e JavaScript puro — sem nenhuma biblioteca,
 sem instalar nada.
 
+**7 heróis · 12 armas · 6 evoluções · 12 monstros · 4 chefes · 15 minutos para sobreviver
+— e, se você cair, ainda tem o Purgatório.**
+
 ![Preview do jogo](preview.png)
 
 ## ▶️ Como jogar
@@ -49,6 +52,23 @@ Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mai
 | Besta | Ampulheta | **Balista Sagrada** |
 | Aura Sagrada | Coração de Leão | **Círculo Divino** |
 | Fogo Grego | Tomo Antigo | **Inferno Sagrado** |
+| Lança Longa | Botas de Couro | **Gungnir** |
+| Sopro Gélido | Armadura | **Inverno Eterno** |
+
+## ⚰️ O Purgatório
+
+Quando você cai, a partida **não acaba na hora**. Uma porta se abre e você pode recusar
+a morte **uma vez por partida** para duelar com **Mordrek, o Ceifador de Almas** —
+usando exatamente as armas, os níveis e os atributos que tinha no momento da queda
+(a vida volta cheia para o duelo).
+
+É um duelo dentro de um círculo fechado, sem horda e sem relógio. Mordrek tem três
+fases: na primeira ele ceifa e manda anéis de almas; na segunda começa a sumir e
+reaparecer; na terceira enlouquece e cobre a arena de espirais.
+
+- **Venceu** → sua alma sobe para **Valhalla**: prêmio em ouro e a **Valquíria** liberada.
+- **Perdeu** → sua alma afunda em **Helheim**, o reino frio de quem não venceu. O ouro
+  da partida fica guardado do mesmo jeito.
 
 ## 🧙 Heróis
 
@@ -57,7 +77,10 @@ Você só se preocupa em **desviar** — as armas atiram sozinhas no inimigo mai
 | 🛡️ Cavaleiro | Espada Longa | resistente, bom para começar |
 | 🏹 Arqueiro | Besta | rápido e de longe |
 | 🔮 Bruxa | Fogo Grego | frágil, mas com muita área |
-| ✨ Paladino | Aura Sagrada | desbloqueia com 600 de ouro |
+| 🪓 Bárbaro | Machado Giratório | muita vida e dano, mas lento (400 🪙) |
+| 🗡 Ladino | Adagas Velozes | o mais rápido, vive de críticos (450 🪙) |
+| ✨ Paladino | Aura Sagrada | armadura e regeneração (600 🪙) |
+| ⚡ Valquíria | Relâmpago Divino | **só vencendo Mordrek no Purgatório** |
 
 ## 📁 Organização do código
 

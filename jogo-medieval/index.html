@@ -63,6 +63,7 @@
                 <div><span>Melhor tempo</span><b id="recorde-tempo">00:00</b></div>
                 <div><span>Mais abates</span><b id="recorde-abates">0</b></div>
                 <div><span>Vitórias</span><b id="recorde-vitorias">0</b></div>
+                <div><span>Valhalla</span><b id="recorde-valhalla">0</b></div>
             </div>
 
             <div class="ouro-linha">Ouro guardado: <b id="ouro-menu">0</b> 🪙</div>
@@ -131,6 +132,9 @@
                 <li><b>Ímã</b> puxa todas as gemas do mapa. <b>Ira Divina</b> fulmina todo mundo na tela. Os dois são raros.</li>
                 <li><b>Evoluções:</b> arma no nível MÁX + o item passivo certo no nível 5 = arma lendária.</li>
                 <li><b>Chefes</b> aparecem aos 5, 10 e 15 minutos. Derrote o Rei Vampiro para vencer.</li>
+                <li><b>Purgatório:</b> ao cair, você pode recusar a morte uma vez por partida e duelar com
+                    <b>Mordrek, o Ceifador de Almas</b>, usando tudo o que tinha. Vencer leva sua alma a
+                    <b>Valhalla</b>; perder, a <b>Helheim</b>.</li>
                 <li><b>Pausar:</b> botão ❚❚ no canto da tela, ou as teclas ESC / P.</li>
             </ul>
             <button id="btn-voltar-ajuda" class="btn btn-fantasma">← Voltar</button>
@@ -173,9 +177,58 @@
                 <div class="linha-resumo"><span>Inimigos abatidos</span><b id="fim-abates">0</b></div>
                 <div class="linha-resumo"><span>Ouro guardado</span><b id="fim-ouro">0</b> 🪙</div>
             </div>
+            <div id="oferta-purgatorio" class="oferta">
+                <p class="oferta-texto">Uma porta se abre na escuridão. Do outro lado, <b>Mordrek, o Ceifador
+                de Almas</b>, espera para julgar você — com as armas e a força que você tem agora.</p>
+                <p class="oferta-aviso">Vencer leva sua alma a <b>Valhalla</b>. Perder, a <b>Helheim</b>. Uma chance só.</p>
+                <button id="btn-purgatorio" class="btn btn-grande btn-purgatorio">⚰️ Entrar no Purgatório</button>
+            </div>
+
             <div class="botoes-menu">
                 <button id="btn-reiniciar" class="btn btn-grande">⚔️ Tentar de novo</button>
                 <button id="btn-menu-fim" class="btn btn-fantasma">Menu principal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== VALHALLA ===================== -->
+    <div id="tela-valhalla" class="tela-ui escondido">
+        <div class="painel painel-valhalla">
+            <h2 class="titulo-secao dourado brilho">VALHALLA</h2>
+            <p class="ajuda-texto">Mordrek caiu. Os portões se abriram e os deuses chamaram seu nome.</p>
+            <div class="resumo">
+                <div class="linha-resumo"><span>Tempo</span><b id="val-tempo">00:00</b></div>
+                <div class="linha-resumo"><span>Nível</span><b id="val-nivel">1</b></div>
+                <div class="linha-resumo"><span>Inimigos abatidos</span><b id="val-abates">0</b></div>
+                <div class="linha-resumo"><span>Ouro guardado</span><b id="val-ouro">0</b> 🪙</div>
+                <div class="linha-resumo destaque"><span>Prêmio dos deuses</span><b id="val-bonus">+0</b> 🪙</div>
+            </div>
+            <div id="val-desbloqueio" class="desbloqueio escondido">
+                ⚡ <b>Valquíria desbloqueada!</b><br>
+                <span>A guerreira de Valhalla agora luta ao seu lado. Escolha ela no menu.</span>
+            </div>
+            <div class="botoes-menu">
+                <button id="btn-reiniciar-valhalla" class="btn btn-grande">⚔️ Jogar de novo</button>
+                <button id="btn-menu-valhalla" class="btn btn-fantasma">Menu principal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== HELHEIM ===================== -->
+    <div id="tela-helheim" class="tela-ui escondido">
+        <div class="painel painel-helheim">
+            <h2 class="titulo-secao gelado">HELHEIM</h2>
+            <p class="ajuda-texto">A foice desceu. Sua alma afundou no reino frio de quem não venceu —
+            mas o ouro que você arrancou da batalha veio junto.</p>
+            <div class="resumo">
+                <div class="linha-resumo"><span>Tempo</span><b id="hel-tempo">00:00</b></div>
+                <div class="linha-resumo"><span>Nível</span><b id="hel-nivel">1</b></div>
+                <div class="linha-resumo"><span>Inimigos abatidos</span><b id="hel-abates">0</b></div>
+                <div class="linha-resumo"><span>Ouro guardado</span><b id="hel-ouro">0</b> 🪙</div>
+            </div>
+            <div class="botoes-menu">
+                <button id="btn-reiniciar-helheim" class="btn btn-grande">⚔️ Tentar de novo</button>
+                <button id="btn-menu-helheim" class="btn btn-fantasma">Menu principal</button>
             </div>
         </div>
     </div>

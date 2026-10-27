@@ -45,6 +45,30 @@ const HEROIS = [
         bonus: { danoMul: 1.05, regen: 0.6 },
         detalhe: '+3 armadura · regeneração',
         preco: 600
+    },
+    {
+        id: 'barbaro', nome: 'Bárbaro', icone: '🪓', sprite: 'heroi_barbaro',
+        desc: 'Couro, músculo e um machado. Troca velocidade por porrada.',
+        vida: 165, velocidade: 150, armadura: 1, arma: 'machado',
+        bonus: { danoMul: 1.25, areaMul: 1.1 },
+        detalhe: '+25% dano · muita vida · mais lento',
+        preco: 400
+    },
+    {
+        id: 'ladino', nome: 'Ladino', icone: '🗡', sprite: 'heroi_ladino',
+        desc: 'Rápido e traiçoeiro. Vive de golpes críticos e de fugir a tempo.',
+        vida: 80, velocidade: 208, armadura: 0, arma: 'adagas',
+        bonus: { danoMul: 1.05, sorte: 0.22, imaMul: 1.1 },
+        detalhe: 'muitos críticos · o mais rápido · frágil',
+        preco: 450
+    },
+    {
+        id: 'valquiria', nome: 'Valquíria', icone: '⚡', sprite: 'heroi_valquiria',
+        desc: 'Guerreira de Valhalla. Chama os raios e recarrega mais rápido.',
+        vida: 115, velocidade: 184, armadura: 2, arma: 'raio',
+        bonus: { danoMul: 1.1, recargaMul: 0.92 },
+        detalhe: '+10% dano · recarga rápida',
+        preco: 0, segredo: 'Vença Mordrek no Purgatório'
     }
 ];
 
@@ -381,6 +405,132 @@ const ARMAS = {
         }
     },
 
+    /* ---------- Lança: estocada reta que varre a linha ---------- */
+    lanca: {
+        nome: 'Lança Longa', icone: '🔱', max: 8,
+        desc: 'Estocada reta e rápida que atravessa todos na linha.',
+        stats(n) {
+            return {
+                dano: 13 + n * 5.5,
+                recarga: 0.85 - n * 0.045,
+                alcance: 160 + n * 16,
+                abertura: 0.30 + n * 0.012,
+                golpes: n >= 5 ? 2 : 1
+            };
+        },
+        proximo(n) { return (n + 1) === 5 ? '+1 estocada (frente e costas)' : '+dano e alcance'; },
+        disparar(arma) {
+            const p = Game.jogador, s = this.stats(arma.nivel);
+            const alvo = inimigoMaisProximo(p.x, p.y, 620);
+            const base = alvo ? angleTo(p.x, p.y, alvo.x, alvo.y) : (p.olhar >= 0 ? 0 : Math.PI);
+            for (let i = 0; i < s.golpes; i++) {
+                criarArea({
+                    tipo: 'arco', x: p.x, y: p.y - 6,
+                    ang: base + i * Math.PI, raio: A(s.alcance), abertura: s.abertura,
+                    dano: D(s.dano), vida: 0.18, knock: 110, cor: '#cfe8ff'
+                });
+            }
+            Som.efeito('espada');
+        },
+        evolucao: { arma: 'gungnir', passivo: 'botas' }
+    },
+
+    gungnir: {
+        nome: 'Gungnir', icone: '⚜️', max: 1, oculta: true, evoluida: true,
+        desc: 'A lança de Odin: estoca em todas as direções sem parar.',
+        stats() { return { dano: 70, recarga: 0.5, alcance: 310, abertura: 0.42, golpes: 6 }; },
+        proximo() { return 'No poder máximo'; },
+        disparar(arma) {
+            const p = Game.jogador, s = this.stats();
+            const giro = (arma.giro = (arma.giro || 0) + 0.5);
+            for (let i = 0; i < s.golpes; i++) {
+                criarArea({
+                    tipo: 'arco', x: p.x, y: p.y - 6,
+                    ang: giro + i * (TAU / s.golpes), raio: A(s.alcance), abertura: s.abertura,
+                    dano: D(s.dano), vida: 0.2, knock: 180, cor: '#ffe9a8'
+                });
+            }
+            Som.efeito('espada');
+        }
+    },
+
+    /* ---------- Grimório: runas que perseguem sozinhas ---------- */
+    grimorio: {
+        nome: 'Grimório', icone: '📖', max: 8,
+        desc: 'Runas mágicas que caçam os inimigos sozinhas.',
+        stats(n) {
+            return { dano: 11 + n * 4.5, recarga: 1.5 - n * 0.09, qtd: 2 + Math.floor(n / 2), vel: 250 + n * 10 };
+        },
+        proximo(n) { return (n + 1) % 2 === 0 ? '+1 runa' : '+dano e recarga mais rápida'; },
+        disparar(arma) {
+            const p = Game.jogador, s = this.stats(arma.nivel);
+            for (let i = 0; i < s.qtd; i++) {
+                const ang = rand(0, TAU);
+                criarProjetil({
+                    x: p.x, y: p.y - 6, ang, vel: V(s.vel),
+                    dano: D(s.dano), perfura: 0, vida: 3.2,
+                    tipo: 'runa', raio: 9, cor: '#b07bff', knock: 70,
+                    teleguiado: 3.4
+                });
+            }
+            Som.efeito('magia');
+        }
+    },
+
+    /* ---------- Sopro Gélido: cone que congela ---------- */
+    gelo: {
+        nome: 'Sopro Gélido', icone: '❄️', max: 8,
+        desc: 'Um cone de gelo que fere e deixa a horda lenta.',
+        stats(n) {
+            return {
+                dano: 9 + n * 3.5,
+                recarga: 1.7 - n * 0.09,
+                raio: 160 + n * 16,
+                abertura: 0.95 + n * 0.07,
+                lentidao: 1.3 + n * 0.14
+            };
+        },
+        proximo() { return '+dano, cone maior e congelamento mais longo'; },
+        disparar(arma) {
+            const p = Game.jogador, s = this.stats(arma.nivel);
+            const alvo = inimigoMaisProximo(p.x, p.y, 520);
+            const base = alvo ? angleTo(p.x, p.y, alvo.x, alvo.y) : (p.olhar >= 0 ? 0 : Math.PI);
+            criarArea({
+                tipo: 'arco', x: p.x, y: p.y - 6,
+                ang: base, raio: A(s.raio), abertura: s.abertura,
+                dano: D(s.dano), vida: 0.3, knock: 60, cor: '#9fe8ff',
+                lentidao: Du(s.lentidao)
+            });
+            Som.efeito('magia');
+        },
+        evolucao: { arma: 'inverno', passivo: 'armadura' }
+    },
+
+    inverno: {
+        nome: 'Inverno Eterno', icone: '🌨️', max: 1, oculta: true, evoluida: true,
+        desc: 'Uma nevasca permanente ao seu redor: tudo congela e sangra.',
+        stats() { return { dano: 26, raio: 200, intervalo: 0.45, lentidao: 2.2 }; },
+        proximo() { return 'No poder máximo'; },
+        continua: true,
+        atualizar(arma, dt) {
+            const p = Game.jogador, s = this.stats();
+            arma.pulso = (arma.pulso || 0) - dt;
+            if (arma.pulso <= 0) {
+                arma.pulso = s.intervalo * p.recargaMul;
+                criarArea({
+                    tipo: 'circulo', x: p.x, y: p.y, raio: A(s.raio),
+                    dano: D(s.dano), vida: 0.12, knock: 70, cor: '#9fe8ff',
+                    lentidao: Du(s.lentidao)
+                });
+                criarEfeito({ tipo: 'aneis', x: p.x, y: p.y, raio: A(s.raio), vida: 0.35, cor: '#bfeaff' });
+            }
+        },
+        desenhar(arma, g) {
+            const p = Game.jogador, r = A(this.stats().raio);
+            desenharBrilho(g, p.x, p.y, r, 'rgba(150,220,255,0.26)', 0.45);
+        }
+    },
+
     /* ---------- Martelo ---------- */
     martelo: {
         nome: 'Martelo do Trovão', icone: '🔨', max: 8,
@@ -501,6 +651,30 @@ const CHEFES = [
         ataque: 'leque', recarga: 2.0, final: true
     }
 ];
+
+/* =========================================================
+   O PURGATÓRIO
+   Quando o herói cai, ele pode recusar a morte e desafiar o
+   guardião do Purgatório. Vencer leva a alma a Valhalla;
+   perder, a Helheim.
+   ========================================================= */
+const CEIFADOR = {
+    id: 'ceifador',
+    nome: 'Mordrek, o Ceifador de Almas',
+    titulo: 'Guardião do Purgatório',
+    sprite: 'chefe_ceifador',
+    escala: 1.6, r: 46,
+    vel: 84, dano: 32,
+    // a vida acompanha o quanto o herói evoluiu antes de cair
+    vida(nivel) { return 2200 + nivel * 430; },
+    frases: {
+        1: 'Mordrek ergue a foice.',
+        2: 'O Ceifador vacila... e some nas sombras!',
+        3: 'MORDREK ENLOUQUECE!'
+    }
+};
+
+const ARENA_RAIO = 520;
 
 /* =========================================================
    DIFICULDADES

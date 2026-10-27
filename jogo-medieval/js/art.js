@@ -224,6 +224,31 @@ const MAPA_CHEFE = [
     '..oooo   oooo...'
 ];
 
+// Mordrek, o Ceifador de Almas (16x18) - o chefe do Purgatório.
+// Encapuzado, sem rosto, só os olhos acesos no vazio do capuz.
+const MAPA_CEIFADOR = [
+    '......oooo......',
+    '....oohhhhoo....',
+    '...ohhhhhhhho...',
+    '..ohhhffffhhho..',
+    '..ohhffffffhho..',
+    '..ohhfeffefhho..',
+    '..ohhffffffhho..',
+    '..ohhhffffhhho..',
+    '...ohhhhhhhho...',
+    '...oohhhhhhoo...',
+    '..ohhhhhhhhhho..',
+    '.ohhhhhhhhhhhho.',
+    '.ohhhhhhhhhhhho.',
+    '.ohhhhhhhhhhhho.',
+    '..ohhhhhhhhhho..',
+    '..ohhhhhhhhhho..',
+    '...ohhhhhhhho...',
+    '...oh.hhhh.ho...',
+    '...o...oo...o...',
+    '................'
+];
+
 // Objetos e cenário
 const MAPA_GEMA = [
     '..ggg..',
@@ -337,7 +362,10 @@ const PAL_HEROI = {
     cavaleiro: { o: '#141019', h: '#c6cddb', f: '#2b2440', c: '#a8322c', a: '#9aa3b4', t: '#7d8698', l: '#5a4632', b: '#3a2c1e', s: '#c6cddb' },
     arqueiro:  { o: '#101408', h: '#8a6a3f', f: '#241c12', c: '#3f7a3a', a: '#5f8f45', t: '#4a6b32', l: '#5a4632', b: '#3a2c1e', s: '#e8b48a' },
     bruxa:     { o: '#140f1c', h: '#e8b48a', f: '#2b1f38', c: '#7a3fb0', a: '#5f3a8f', t: '#4a2c70', l: '#3a2450', b: '#281a38', s: '#e8b48a' },
-    paladino:  { o: '#1a1408', h: '#f0e2b0', f: '#3a2f14', c: '#e0b04a', a: '#f5efdc', t: '#d8cfae', l: '#a8862e', b: '#6b5420', s: '#f0e2b0' }
+    paladino:  { o: '#1a1408', h: '#f0e2b0', f: '#3a2f14', c: '#e0b04a', a: '#f5efdc', t: '#d8cfae', l: '#a8862e', b: '#6b5420', s: '#f0e2b0' },
+    barbaro:   { o: '#1a1208', h: '#e8b48a', f: '#3a2418', c: '#6b4a28', a: '#8a5a30', t: '#a06a38', l: '#4a3018', b: '#33200f', s: '#e8b48a' },
+    ladino:    { o: '#0d1014', h: '#2b3a30', f: '#141a16', c: '#1e2a22', a: '#3a4a3c', t: '#2b382e', l: '#4a3a22', b: '#241c12', s: '#c9a882' },
+    valquiria: { o: '#141a26', h: '#e6ecf5', f: '#2b3a50', c: '#4a7ad0', a: '#cfd8e8', t: '#9fb0cc', l: '#c0a040', b: '#6b5a20', s: '#f0d8b8' }
 };
 
 const PAL_INIMIGO = {
@@ -367,6 +395,10 @@ const PAL_CHEFE = {
     ogro:    { o: '#101808', h: '#8fae52', f: '#e0453a', m: '#f0e0a0', t: '#7a5a30', s: '#8fae52', l: '#4a3a20', b: '#3a2c18' },
     necro:   { o: '#0e0a16', h: '#dcd6c0', f: '#5fe0a0', m: '#2b2440', t: '#3a2a5a', s: '#dcd6c0', l: '#241a3a', b: '#180f28' },
     rei:     { o: '#120508', h: '#e8dcd4', f: '#ff3a3a', m: '#e0b04a', t: '#6b1020', s: '#e8dcd4', l: '#3a0a12', b: '#28060c' }
+};
+
+const PAL_CEIFADOR = {
+    o: '#07050c', h: '#352a4e', f: '#05030a', e: '#8affd0'
 };
 
 const PAL_ITENS = {
@@ -414,6 +446,7 @@ function prepararArte() {
     for (const k in PAL_ESPECTRO) montar(k, MAPA_ESPECTRO, PAL_ESPECTRO[k], 3);
     // chefes
     for (const k in PAL_CHEFE) montar('chefe_' + k, MAPA_CHEFE, PAL_CHEFE[k], 4);
+    montar('chefe_ceifador', MAPA_CEIFADOR, PAL_CEIFADOR, 4);
     // itens
     montar('gema1', MAPA_GEMA, PAL_ITENS.gemaAzul, 3);
     montar('gema2', MAPA_GEMA, PAL_ITENS.gemaVerde, 3);
@@ -437,9 +470,10 @@ function prepararArte() {
 
 /* Os três cenários por onde a batalha passa ao longo dos 15 minutos. */
 const TEMAS_CHAO = {
-    campo:   { base: '#20301f', escuro: '#1a2819', claro: '#27391f', detalhe: '#33471f' },
-    cripta:  { base: '#221d26', escuro: '#1b1720', claro: '#2b2530', detalhe: '#3a3242' },
-    inferno: { base: '#2a1a14', escuro: '#1f120e', claro: '#36201a', detalhe: '#5a2a18' }
+    campo:      { base: '#20301f', escuro: '#1a2819', claro: '#27391f', detalhe: '#33471f' },
+    cripta:     { base: '#221d26', escuro: '#1b1720', claro: '#2b2530', detalhe: '#3a3242' },
+    inferno:    { base: '#2a1a14', escuro: '#1f120e', claro: '#36201a', detalhe: '#5a2a18' },
+    purgatorio: { base: '#12101c', escuro: '#0b0914', claro: '#1a1628', detalhe: '#2e2450' }
 };
 
 /** Gera uma textura de 256x256 que se repete formando o campo de batalha. */
